@@ -1,0 +1,6 @@
+@Bidzy_HostAddress = http://localhost:5030
+
+GET {{Bidzy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
