@@ -1,4 +1,6 @@
-﻿namespace Bidzy.Modles.Enties
+﻿using Bidzy.Domain.Enum;
+
+namespace Bidzy.Domain.Enties
 {
     public class Auction
     {

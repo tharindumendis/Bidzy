@@ -1,12 +1,12 @@
-﻿using Bidzy.Data;
-using Bidzy.Modles;
-using Bidzy.Modles.Dto;
-using Bidzy.Modles.Enties;
+﻿using Bidzy.API.Dto;
+using Bidzy.Data;
+using Bidzy.Domain.Enum;
+using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Bidzy.Controllers
+namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -1,11 +1,10 @@
-﻿using Bidzy.Modles.Enties;
+﻿using Bidzy.Domain.Enties;
 
-namespace Bidzy.Modles.Dto
+namespace Bidzy.API.Dto
 {
     public class AuctionAddDto
     {
         public Guid ProductId { get; set; }
-        public Product Product { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }

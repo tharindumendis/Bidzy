@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using Bidzy.Domain.Enum;
 
-namespace Bidzy.Modles.Enties
+namespace Bidzy.Domain.Enties
 {
     public class PhoneNumberAttribute : ValidationAttribute
     {

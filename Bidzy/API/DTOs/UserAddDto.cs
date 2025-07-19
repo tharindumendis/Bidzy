@@ -1,4 +1,6 @@
-﻿namespace Bidzy.Modles.Dto
+﻿using Bidzy.Domain.Enum;
+
+namespace Bidzy.API.Dto
 {
     public class UserAddDto
     {

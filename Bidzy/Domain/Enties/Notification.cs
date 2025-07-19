@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Bidzy.Domain.Enum;
 
-namespace Bidzy.Modles.Enties
+namespace Bidzy.Domain.Enties
 {
     public class Notification
     {

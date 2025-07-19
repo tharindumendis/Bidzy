@@ -1,4 +1,4 @@
-﻿namespace Bidzy.Modles
+﻿namespace Bidzy.Domain.Enum
 {
     public enum AuctionStatus
     {

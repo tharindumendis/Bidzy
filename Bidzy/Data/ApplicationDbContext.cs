@@ -1,4 +1,4 @@
-﻿using Bidzy.Modles.Enties;
+﻿using Bidzy.Domain.Enties;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.Data

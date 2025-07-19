@@ -24,7 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <Folder Include="Application\Services\" />
+    <Folder Include="Infrastructure\" />
+    <Folder Include="Domain\Enties\Migrations\" />
   </ItemGroup>
 
 </Project>

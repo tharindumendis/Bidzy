@@ -1,12 +1,12 @@
-﻿using Bidzy.Data;
-using Bidzy.Modles;
-using Bidzy.Modles.Dto;
-using Bidzy.Modles.Enties;
+﻿using Bidzy.API.Dto;
+using Bidzy.Data;
+using Bidzy.Domain.Enties;
+using Bidzy.Domain.Enum;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Bidzy.Controllers
+namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,9 +21,12 @@ namespace Bidzy.Controllers
         [HttpGet]
         public IActionResult GetAllAuction()
         {
-            var auctions = dbContext.Auctions.ToList();
+            var auctions = dbContext.Auctions
+                .Include(a => a.Product)
+                .ThenInclude(p => p.Seller)
+                .ToList();
 
-            return Ok(auctions);
+            return Ok(8);
         }
         [HttpPost]
         public IActionResult AddAuction(AuctionAddDto dto)
@@ -47,6 +50,8 @@ namespace Bidzy.Controllers
             {
                 dbContext.Auctions.Add(auctionEntity);
                 dbContext.SaveChanges();
+                // Load the Product navigation property
+                dbContext.Entry(auctionEntity).Reference(a => a.Product).Load();
                 return Ok(auctionEntity);
             }
             catch (DbUpdateException)

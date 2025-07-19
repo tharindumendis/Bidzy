@@ -1,4 +1,4 @@
-﻿namespace Bidzy.Modles.Enties
+﻿namespace Bidzy.Domain.Enties
 {
     public class Bid
     {

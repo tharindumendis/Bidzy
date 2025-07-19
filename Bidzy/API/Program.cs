@@ -12,6 +12,7 @@ builder.Services.AddSwaggerGen();
 // Configure Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 var app = builder.Build();
 
