@@ -20,7 +20,7 @@ namespace Bidzy.API.Controllers
         [HttpGet]
         public IActionResult getAllProduct()
         {
-            var products = dbContext.products
+            var products = dbContext.Products
                 .Include(p => p.Seller) // Eagerly load the Seller navigation property
                 .ToList();
 
@@ -47,7 +47,7 @@ namespace Bidzy.API.Controllers
             };
             try
             {
-                dbContext.products.Add(productEntity);
+                dbContext.Products.Add(productEntity);
                 dbContext.SaveChanges();
                 return Ok(productEntity);
             }
@@ -65,7 +65,7 @@ namespace Bidzy.API.Controllers
         [HttpPut("{id:guid}")]
         public IActionResult UpdateProduct(Guid id, ProductAddDto dto)
         {
-            var product = dbContext.products.Find(id);
+            var product = dbContext.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
@@ -99,7 +99,7 @@ namespace Bidzy.API.Controllers
         [HttpGet("{id:guid}")]
         public IActionResult GetProductById(Guid id)
         {
-            var product = dbContext.products
+            var product = dbContext.Products
                 .Include(p => p.Seller)
                 .FirstOrDefault(p => p.Id == id);
 
@@ -113,13 +113,13 @@ namespace Bidzy.API.Controllers
         [HttpDelete("{id:guid}")]
         public IActionResult DeleteProduct(Guid id)
         {
-            var product = dbContext.products.Find(id);
+            var product = dbContext.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            dbContext.products.Remove(product);
+            dbContext.Products.Remove(product);
             try
             {
                 dbContext.SaveChanges();

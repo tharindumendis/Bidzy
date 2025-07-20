@@ -12,9 +12,9 @@ namespace Bidzy.Data
         public DbSet<Auction> Auctions { get; set; }
         public DbSet<Bid> Bids { get; set; }
         public DbSet<Delivery> Deliveries { get; set; }
-        public DbSet<Notification> notifications { get; set; }
-        public DbSet<Payment> payments { get; set; }
-        public DbSet<Product> products { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Product> Products { get; set; }
 
 
 

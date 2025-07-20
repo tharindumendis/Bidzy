@@ -1,3 +1,5 @@
+using Bidzy.Application.Repository;
+using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

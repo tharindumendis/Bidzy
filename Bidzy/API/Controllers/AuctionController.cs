@@ -1,4 +1,5 @@
 ﻿using Bidzy.API.Dto;
+using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
@@ -12,119 +13,51 @@ namespace Bidzy.API.Controllers
     [ApiController]
     public class AuctionController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly IAuctionRepository auctionRepository;
 
-        public AuctionController(ApplicationDbContext dbContext)
+        public AuctionController(IAuctionRepository auctionRepository)
         {
-            this.dbContext = dbContext;
+            this.auctionRepository = auctionRepository;
         }
+
         [HttpGet]
-        public IActionResult GetAllAuction()
+        public async Task<IActionResult> GetAllAuction()
         {
-            var auctions = dbContext.Auctions
-                .Include(a => a.Product)
-                .ThenInclude(p => p.Seller)
-                .ToList();
-
-            return Ok(8);
+            var auctions = await auctionRepository.GetAllAuctionsAsync();
+            return Ok(auctions);
         }
+
         [HttpPost]
-        public IActionResult AddAuction(AuctionAddDto dto)
+        public async Task<IActionResult> AddAuction(AuctionAddDto dto)
         {
-            var product = dbContext.products.Find(dto.ProductId);
-            if (product == null)
+            var auctionEntity = await auctionRepository.AddAuctionAsync(dto);
+            if (auctionEntity == null)
             {
-                return BadRequest("Product Id is invalid");
+                return BadRequest("Product Id is invalid or database error occurred.");
             }
-
-            var auctionEntity = new Auction
-            {
-                ProductId = dto.ProductId,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
-                MinimumBid = dto.MinimumBid,
-                Status = AuctionStatus.Scheduled,
-            };
-
-            try
-            {
-                dbContext.Auctions.Add(auctionEntity);
-                dbContext.SaveChanges();
-                // Load the Product navigation property
-                dbContext.Entry(auctionEntity).Reference(a => a.Product).Load();
-                return Ok(auctionEntity);
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return Ok(auctionEntity);
         }
 
         [HttpPut("{id:guid}")]
-        public IActionResult UpdateAuction(Guid id, Auction dto)
+        public async Task<IActionResult> UpdateAuction(Guid id, Auction dto)
         {
-            var auction = dbContext.Auctions.Find(id);
-            if (auction == null)
+            var result = await auctionRepository.UpdateAuctionAsync(id, dto);
+            if (!result)
             {
-                return NotFound();
+                return BadRequest("Auction or Product Id is invalid or database error occurred.");
             }
-
-            var product = dbContext.products.Find(dto.ProductId);
-            if (product == null)
-            {
-                return BadRequest("Product Id is invalid");
-            }
-
-            auction.ProductId = dto.ProductId;
-            auction.StartTime = dto.StartTime;
-            auction.EndTime = dto.EndTime;
-            auction.MinimumBid = dto.MinimumBid;
-            auction.Status = dto.Status;
-            auction.WinnerId = dto.WinnerId;
-
-            try
-            {
-                dbContext.SaveChanges();
-                return Ok(auction);
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return Ok(dto);
         }
 
         [HttpDelete("{id:guid}")]
-        public IActionResult DeleteAuction(Guid id)
+        public async Task<IActionResult> DeleteAuction(Guid id)
         {
-            var auction = dbContext.Auctions.Find(id);
-            if (auction == null)
+            var result = await auctionRepository.DeleteAuctionAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
-
-            dbContext.Auctions.Remove(auction);
-            try
-            {
-                dbContext.SaveChanges();
-                return NoContent();
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return NoContent();
         }
-
     }
 }
