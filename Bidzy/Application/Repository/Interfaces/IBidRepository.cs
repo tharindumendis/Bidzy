@@ -1,15 +1,14 @@
-﻿using Bidzy.API.Dto;
-using Bidzy.Domain.Enties;
+﻿using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Repository.Interfaces
 {
     public interface IBidRepository
     {
-        Task<Bid> GetBidByIdAsync(Guid bidId);
+        Task<Bid?> GetBidByIdAsync(Guid bidId);
         Task<List<Bid>> GetAllBidsAsync();
-        Task AddBidAsync(Bid bid);
-        Task UpdateBidAsync(Bid bid);
-        Task DeleteBidAsync(Guid bidId);
+        Task<Bid?> AddBidAsync(Bid bid);
+        Task<Bid?> UpdateBidAsync(Bid bid);
+        Task<Bid?> DeleteBidAsync(Guid bidId);
     }
 }
 

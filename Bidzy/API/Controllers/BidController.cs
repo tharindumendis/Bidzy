@@ -1,9 +1,9 @@
-﻿using Bidzy.API.Dto;
-using Bidzy.Data;
-using Bidzy.Domain.Enties;
-using Microsoft.AspNetCore.Http;
+﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.bidDtos;
+using Bidzy.Application.Repository;
+using Bidzy.Application.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 
 namespace Bidzy.API.Controllers
 {
@@ -11,139 +11,61 @@ namespace Bidzy.API.Controllers
     [ApiController]
     public class BidController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly IBidRepository bidRepository;
 
-        public BidController(ApplicationDbContext dbContext)
+        public BidController(IBidRepository bidRepository)
         {
-            this.dbContext = dbContext;
+            this.bidRepository = bidRepository;
         }
+
         [HttpGet]
-        public IActionResult GetAllBids()
+        public async Task<IActionResult> GetAllBids()
         {
-            var bids = dbContext.Bids
-                .Include(a => a.Auction)
-                    .ThenInclude(p => p.Product)
-                .Include(a => a.Auction)
-                    .ThenInclude(w => w.Winner)
-                .Include(b => b.Bidder)
-                .ToList();
-            return Ok(bids);
+            var bids = await bidRepository.GetAllBidsAsync();
+            return Ok(bids.Select(x => x.ToReadDto()));
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetBidById([FromRoute] Guid id)
+        {
+            var bid = await bidRepository.GetBidByIdAsync(id);
+            if (bid == null)
+            {
+                return NotFound("Bid not found.");
+            }
+            return Ok(bid.ToReadDto());
         }
 
         [HttpPost]
-        public IActionResult AddBid(BidAddDto dto)
+        public async Task<IActionResult> CreateBid([FromBody] BidAddDto bidAddDto)
         {
-            var auction = dbContext.Auctions.Find(dto.AuctionId);
-            if (auction == null)
-            {
-                return BadRequest("Auction Id is invalid");
-            }
-
-            var bidder = dbContext.Users.Find(dto.BidderId);
-            if (bidder == null)
-            {
-                return BadRequest("Bidder Id is invalid");
-            }
-
-            if (dto.Amount < auction.MinimumBid)
-            {
-                return BadRequest("Bid amount is less than minimum bid.");
-            }
-
-            var bidEntity = new Bid
-            {
-                AuctionId = dto.AuctionId,
-                BidderId = dto.BidderId,
-                Amount = dto.Amount,
-                Timestamp = DateTime.UtcNow
-            };
-
-            try
-            {
-                dbContext.Bids.Add(bidEntity);
-                dbContext.SaveChanges();
-                return Ok(bidEntity);
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            var entity = bidAddDto.ToEntity();
+            var bid = await bidRepository.AddBidAsync(entity);
+            return Ok(bid.ToReadDto());
         }
 
         [HttpPut("{id:guid}")]
-        public IActionResult UpdateBid(Guid id, BidAddDto dto)
+        public async Task<IActionResult> UpdateBid([FromRoute] Guid id, [FromBody] BidUpdateDto bidUpdateDto)
         {
-            var bid = dbContext.Bids.Find(id);
+            var bid = await bidRepository.GetBidByIdAsync(id);
             if (bid == null)
             {
-                return NotFound();
+                return NotFound("Bid not found.");
             }
-
-            var auction = dbContext.Auctions.Find(dto.AuctionId);
-            if (auction == null)
-            {
-                return BadRequest("Auction Id is invalid");
-            }
-
-            var bidder = dbContext.Users.Find(dto.BidderId);
-            if (bidder == null)
-            {
-                return BadRequest("Bidder Id is invalid");
-            }
-
-            if (dto.Amount < auction.MinimumBid)
-            {
-                return BadRequest("Bid amount is less than minimum bid.");
-            }
-
-            bid.AuctionId = dto.AuctionId;
-            bid.BidderId = dto.BidderId;
-            bid.Amount = dto.Amount;
-            bid.Timestamp = DateTime.UtcNow;
-
-            try
-            {
-                dbContext.SaveChanges();
-                return Ok(bid);
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            bid.UpdateEntity(bidUpdateDto);
+            var updatedBid = await bidRepository.UpdateBidAsync(bid);
+            return Ok(updatedBid);
         }
 
         [HttpDelete("{id:guid}")]
-        public IActionResult DeleteBid(Guid id)
+        public async Task<IActionResult> DeleteBidAsync([FromRoute] Guid id)
         {
-            var bid = dbContext.Bids.Find(id);
+            var bid = await bidRepository.GetBidByIdAsync(id);
             if (bid == null)
             {
-                return NotFound();
+                return NotFound("Bid not found.");
             }
-
-            dbContext.Bids.Remove(bid);
-            try
-            {
-                dbContext.SaveChanges();
-                return NoContent();
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return NoContent();
         }
-
     }
 }

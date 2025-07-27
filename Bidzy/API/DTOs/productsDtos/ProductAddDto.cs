@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Bidzy.Domain.Enties;
 
-namespace Bidzy.API.Dto
+namespace Bidzy.API.DTOs.productsDtos
 {
     public class ProductAddDto
     {
