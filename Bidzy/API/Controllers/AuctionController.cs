@@ -1,11 +1,8 @@
-﻿using Bidzy.API.Dto;
+﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
-using Bidzy.Data;
 using Bidzy.Domain.Enties;
-using Bidzy.Domain.Enum;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.API.Controllers
 {
@@ -21,43 +18,56 @@ namespace Bidzy.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAuction()
+        public async Task<IActionResult> GetAllAuctions()
         {
             var auctions = await auctionRepository.GetAllAuctionsAsync();
-            return Ok(auctions);
+            return Ok(auctions.Select(x => x.ToReadDto()));
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetAuctionByIdAsync([FromRoute] Guid id)
+        {
+            var auctions = await auctionRepository.GetAuctionByIdAsync(id);
+            if (auctions == null)
+            {
+                return NotFound("Auction not found");
+            }
+            return Ok(auctions.ToReadDto());
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddAuction(AuctionAddDto dto)
+        public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
         {
-            var auctionEntity = await auctionRepository.AddAuctionAsync(dto);
-            if (auctionEntity == null)
-            {
-                return BadRequest("Product Id is invalid or database error occurred.");
-            }
-            return Ok(auctionEntity);
+            var entity = auctionAddDto.ToEntity();
+            var auction = await auctionRepository.AddAuctionAsync(entity);
+            return Ok(auction.ToReadDto());
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateAuction(Guid id, Auction dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAuction([FromRoute] Guid id, [FromBody] AuctionUpdateDto auctionUpdateDto)
         {
-            var result = await auctionRepository.UpdateAuctionAsync(id, dto);
-            if (!result)
+            var auction = await auctionRepository.GetAuctionByIdAsync(id);
+            if(auction == null)
             {
-                return BadRequest("Auction or Product Id is invalid or database error occurred.");
+                return NotFound("Auction not found");
             }
-            return Ok(dto);
+            auction.UpdateEntity(auctionUpdateDto);
+            var updatedAuction = await auctionRepository.UpdateAuctionAsync(auction);
+            return Ok(updatedAuction);
         }
 
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteAuction(Guid id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAuction([FromRoute] Guid id)
         {
-            var result = await auctionRepository.DeleteAuctionAsync(id);
-            if (!result)
+            var auction = await auctionRepository.DeleteAuctionAsync(id);
+            if(auction == null)
             {
-                return NotFound();
+                return NotFound("Auction not found");
             }
             return NoContent();
         }
+
+
+
     }
 }

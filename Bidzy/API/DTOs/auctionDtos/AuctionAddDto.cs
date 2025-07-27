@@ -1,6 +1,6 @@
 ﻿using Bidzy.Domain.Enties;
 
-namespace Bidzy.API.Dto
+namespace Bidzy.API.DTOs.auctionDtos
 {
     public class AuctionAddDto
     {

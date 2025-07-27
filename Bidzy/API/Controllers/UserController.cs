@@ -1,10 +1,7 @@
-﻿using Bidzy.API.Dto;
-using Bidzy.Data;
-using Bidzy.Domain.Enum;
-using Bidzy.Domain.Enties;
-using Microsoft.AspNetCore.Http;
+﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.userDtos;
+using Bidzy.Application.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.API.Controllers
 {
@@ -12,67 +9,61 @@ namespace Bidzy.API.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly IUserRepository userRepository;
 
-        public UserController(ApplicationDbContext dbContext)
+        public UserController(IUserRepository userRepository)
         {
-            this.dbContext = dbContext;
+            this.userRepository = userRepository;
         }
+
         [HttpGet]
-        public IActionResult GetAllUser()
+        public async Task<IActionResult> GetAllUsers()
         {
-            var users = dbContext.Users.ToList();
-            if (User == null)
+            var users = await userRepository.GetAllUsersAsync();
+            return Ok(users.Select(u => u.ToReadDto()));
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById([FromRoute] Guid id)
+        {
+            var user = await userRepository.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+            return Ok(user.ToReadDto());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddUser([FromBody] UserAddDto userAddDto)
+        {
+            var entity = userAddDto.ToEntity();
+            var user = await userRepository.AddUserAsync(entity);
+            return Ok(user.ToReadDto());
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] UserUpdateDto userUpdateDto)
+        {
+            var user = await userRepository.GetUserByIdAsync((Guid)id);
+            if (user == null)
             {
                 return NotFound();
             }
-            return Ok(users);
+            user.UpdateEntity(userUpdateDto);
+            var updatedUser = await userRepository.UpdateUserAsync(user);
+            return Ok(updatedUser);
         }
-        [HttpPost]
-        public IActionResult AddUser(UserAddDto addUserDto)
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
         {
-            // Validate role
-            if (!Enum.IsDefined(typeof(UserRole), addUserDto.Role))
-                return BadRequest("Invalid user role.");
-
-            // Normalize email
-            var normalizedEmail = addUserDto.Email.Trim().ToLower();
-
-            // Check for existing user
-            if (dbContext.Users.Any(u => u.Email.ToLower() == normalizedEmail))
-                return BadRequest("This email is already registered.");
-
-            // Create user entity
-            var userEntity = new User
+            var user = await userRepository.DeleteUserAsync(id);
+            if (user == null)
             {
-                FullName = addUserDto.FullName.Trim(),
-                Email = normalizedEmail,
-                Phone = addUserDto.Phone,
-                PasswordHash = addUserDto.PasswordHash, // Consider hashing here
-                Role = addUserDto.Role,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            try
-            {
-                dbContext.Users.Add(userEntity);
-                dbContext.SaveChanges();
-                return Ok(userEntity);
+                return NotFound();
             }
-            catch (DbUpdateException dbEx)
-            {
-                // Handle DB-specific errors (e.g., unique constraint violation)
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception ex)
-            {
-                // Log exception if needed
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return NoContent();
         }
-
-
-
-
     }
 }

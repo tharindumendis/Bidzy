@@ -1,6 +1,7 @@
 ﻿using Bidzy.Domain.Enum;
+using System.ComponentModel.DataAnnotations;
 
-namespace Bidzy.API.Dto
+namespace Bidzy.API.DTOs.userDtos
 {
     public class UserAddDto
     {
@@ -8,6 +9,6 @@ namespace Bidzy.API.Dto
         public string Email { get; set; }
         public string Phone { get; set; }
         public string PasswordHash { get; set; }
-        public UserRole Role { get; set; }
+        public string Role { get; set; }
     }
 }

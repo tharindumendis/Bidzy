@@ -1,5 +1,4 @@
-﻿using Bidzy.API.Dto;
-using Bidzy.Domain.Enties;
+﻿using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Repository.Interfaces
 {
@@ -7,8 +6,8 @@ namespace Bidzy.Application.Repository.Interfaces
     {
         Task<Auction?> GetAuctionByIdAsync(Guid id);
         Task<List<Auction>> GetAllAuctionsAsync();
-        Task<Auction?> AddAuctionAsync(AuctionAddDto dto);
-        Task<bool> UpdateAuctionAsync(Guid id, Auction dto);
-        Task<bool> DeleteAuctionAsync(Guid id);
+        Task<Auction?> AddAuctionAsync(Auction auction);
+        Task<Auction> UpdateAuctionAsync(Auction auction);
+        Task<Auction> DeleteAuctionAsync(Guid id);
     }
 }

@@ -22,18 +22,27 @@ namespace Bidzy.Domain.Enties
 
     public class User
     {
+        [Key]
         public Guid Id { get; set; }
+
+        [Required]
         public string FullName { get; set; }
+
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; }
+
         [Required]
         [PhoneNumber]
         public string Phone { get; set; }
+
+        [Required]
         public string PasswordHash { get; set; }
+
         [Required]
         [EnumDataType(typeof(UserRole))]
         public UserRole Role { get; set; } // Seller, Bidder, Admin
+
         public DateTime CreatedAt { get; set; }
     }
 }

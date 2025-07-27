@@ -1,9 +1,7 @@
-﻿using Bidzy.API.Dto;
-using Bidzy.Data;
-using Bidzy.Domain.Enties;
-using Microsoft.AspNetCore.Http;
+﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.productsDtos;
+using Bidzy.Application.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.API.Controllers
 {
@@ -11,128 +9,61 @@ namespace Bidzy.API.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly IProductRepository productRepository;
 
-        public ProductController(ApplicationDbContext dbContext)
+        public ProductController(IProductRepository productRepository)
         {
-            this.dbContext = dbContext;
+            this.productRepository = productRepository;
         }
+
         [HttpGet]
-        public IActionResult getAllProduct()
+        public async Task<IActionResult> GetAllProducts()
         {
-            var products = dbContext.Products
-                .Include(p => p.Seller) // Eagerly load the Seller navigation property
-                .ToList();
-
-            if (products == null)
-            {
-                return NotFound();
-            }
-            return Ok(products);
+            var products = await productRepository.GetAllProductsAsync();
+            return Ok(products.Select(p => p.ToReadDto()));
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductById([FromRoute] Guid id)
+        {
+            var product = await productRepository.GetProductsByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound("Product not found.");
+            }
+            return Ok(product.ToReadDto());
+        }
+
         [HttpPost]
-        public IActionResult AddProduct(ProductAddDto dto)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductAddDto productAddDto)
         {
-            User user = dbContext.Users.Find(dto.SellerId);
-            if (user == null) 
-            {
-                return BadRequest("Seller Id is invalid");
-            }
-            var productEntity = new Product
-            {
-                Title = dto.Title,
-                Description = dto.Description,
-                ImageUrl = dto.ImageUrl,
-                SellerId = dto.SellerId
-            };
-            try
-            {
-                dbContext.Products.Add(productEntity);
-                dbContext.SaveChanges();
-                return Ok(productEntity);
-            }
-            catch (DbUpdateException dbEx)
-            {
-                // Handle DB-specific errors (e.g., unique constraint violation)
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception ex)
-            {
-                // Log exception if needed
-                return StatusCode(500, "An unexpected error occurred.");
-            }
-        }
-        [HttpPut("{id:guid}")]
-        public IActionResult UpdateProduct(Guid id, ProductAddDto dto)
-        {
-            var product = dbContext.Products.Find(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            var user = dbContext.Users.Find(dto.SellerId);
-            if (user == null)
-            {
-                return BadRequest("Seller Id is invalid");
-            }
-
-            product.Title = dto.Title;
-            product.Description = dto.Description;
-            product.ImageUrl = dto.ImageUrl;
-            product.SellerId = dto.SellerId;
-
-            try
-            {
-                dbContext.SaveChanges();
-                return Ok(product);
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
-        }
-        [HttpGet("{id:guid}")]
-        public IActionResult GetProductById(Guid id)
-        {
-            var product = dbContext.Products
-                .Include(p => p.Seller)
-                .FirstOrDefault(p => p.Id == id);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return Ok(product);
+            var entity = productAddDto.ToEntity();
+            var product = await productRepository.AddProductsAsync(entity);
+            return Ok(product.ToReadDto());
         }
 
-        [HttpDelete("{id:guid}")]
-        public IActionResult DeleteProduct(Guid id)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct([FromRoute] Guid id, [FromBody] ProductsUpdateDto productUpdateDto)
         {
-            var product = dbContext.Products.Find(id);
+            var product = await productRepository.GetProductsByIdAsync(id);
             if (product == null)
             {
-                return NotFound();
+                return NotFound("Product not found.");
             }
+            product.UpdateEntity(productUpdateDto);
+            var updatedProduct = await productRepository.UpdateProductsAsync(product);
+            return Ok(updatedProduct);
+        }
 
-            dbContext.Products.Remove(product);
-            try
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct([FromRoute] Guid id)
+        {
+            var product = await productRepository.DeleteProductsAsync(id);
+            if (product == null)
             {
-                dbContext.SaveChanges();
-                return NoContent();
+                return NotFound("Product not found.");
             }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred.");
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            return NoContent();
         }
     }
 }
