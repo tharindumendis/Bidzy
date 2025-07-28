@@ -18,7 +18,7 @@ namespace Bidzy.API.Controllers
         [HttpPost("auction-start")]
         public IActionResult ScheduleAuctionStartEmail([FromQuery] string auctionId, [FromQuery] string email)
         {
-            _notificationSchedulerService.ScheduleAuctionStartEmail(auctionId, email, DateTime.Now);
+            //_notificationSchedulerService.ScheduleAuctionStartEmail(auctionId, email, DateTime.Now);
             return Ok("Scheduled auction start email.");
         }
     }

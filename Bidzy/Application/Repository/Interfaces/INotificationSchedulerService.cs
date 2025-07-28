@@ -1,9 +1,11 @@
-﻿namespace Bidzy.Application.Repository.Interfaces
+﻿using Bidzy.Domain.Enties;
+
+namespace Bidzy.Application.Repository.Interfaces
 {
     public interface INotificationSchedulerService
     {
-        void ScheduleAuctionStartEmail(string auctionId, string receiverEmail, DateTime startTime);
-        void ScheduleAuctionEndEmail(string auctionId, string receiverEmail, string winnerName, DateTime endTime);
+        void ScheduleAuctionStartEmail(Auction auction, List<string> emailAddresses, DateTime startTime);
+        void ScheduleAuctionEndEmail(Auction auction, Bid bid, DateTime endTime);
         void ScheduleRecurringSummaryEmail(string receiverEmail);
     }
 }

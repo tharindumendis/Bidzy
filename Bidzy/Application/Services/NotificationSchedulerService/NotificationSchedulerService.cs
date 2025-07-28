@@ -1,5 +1,6 @@
 ﻿using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Domain.Enties;
 using Hangfire;
 
 namespace Bidzy.Application.Services.NotificationSchedulerService
@@ -15,36 +16,37 @@ namespace Bidzy.Application.Services.NotificationSchedulerService
             _emailJobService = emailJobService;
         }
 
-        public void ScheduleAuctionStartEmail(string auctionId, string receiverEmail, DateTime startTime)
+        public void ScheduleAuctionStartEmail(Auction auction, List<string> emailAddresses, DateTime startTime)
         {
+            
             var delay = startTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)
             {
                 _jobScheduler.Schedule<IEmailJobService>(
-                service => service.SendAuctionStartedEmail(auctionId, receiverEmail),
+                service => service.SendAuctionStartedEmailsAsync(auction, emailAddresses),
                 delay);
             }
             else
             {
 
-                _emailJobService.SendAuctionStartedEmail(auctionId, receiverEmail);
+                _emailJobService.SendAuctionStartedEmailsAsync(auction, emailAddresses);
 
             }
         }
 
-        public void ScheduleAuctionEndEmail(string auctionId, string receiverEmail, string winnerName, DateTime endTime)
+        public void ScheduleAuctionEndEmail(Auction auction,Bid bid, DateTime endTime)
         {
             var delay = endTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)
             {
                 _jobScheduler.Schedule<IEmailJobService>(
-                service => service.SendAuctionEndedEmail(auctionId, receiverEmail, winnerName),
+                service => service.SendAuctionEndedEmails(auction,bid),
                 delay);
             }
             else
             {
 
-                _emailJobService.SendAuctionEndedEmail(auctionId, receiverEmail, winnerName);
+                _emailJobService.SendAuctionEndedEmails(auction, bid);
 
             }
         }

@@ -1,4 +1,5 @@
-﻿using Bidzy.API.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.SignalR;
@@ -42,7 +43,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 }
                 else
                 {
-                    StartAuctionAsync(saved.Id);
+                    StartAuctionAsync(saved.Id).Wait();
                 }
             }
 
@@ -55,7 +56,9 @@ namespace Bidzy.Application.Services.AuctionEngine
             auction.Status = AuctionStatus.Active;
             await _auctionRepo.UpdateAuctionAsync(auction);
             await _notifier.BroadcastAuctionStarted(auction);
-            await _emailJobService.SendAuctionStartedEmail(auction.Id.ToString(), auction.Product.Seller.Email);
+            // TODO featch faverite bidders and send mail
+            List<string> emailAddresses = null;
+            await _emailJobService.SendAuctionStartedEmailsAsync(auction, emailAddresses);
             // TODO send favorite bidder Emails
             var delay = auction.StartTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)
@@ -74,14 +77,15 @@ namespace Bidzy.Application.Services.AuctionEngine
             auction.WinnerId = DetermineWinner(auction);
             if(auction.WinnerId == null)
             {
-                CancelAuctionAsync(auctionId);
+                CancelAuctionAsync(auctionId).Wait();
                 return;
             }
             auction.Status = AuctionStatus.Ended;
             auction = await _auctionRepo.UpdateAuctionAsync(auction);
 
             await _notifier.BroadcastAuctionEnded(auction);
-            await _emailJobService.SendAuctionEndedEmail(auction.Id.ToString(), auction.Product.Seller.Email, auction.Winner.FullName);
+            // TODO : fetch winner Bid and set belove method
+            await _emailJobService.SendAuctionEndedEmails(auction, new Bid());
         }
 
         public async Task CancelAuctionAsync(Guid auctionId)
@@ -92,7 +96,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
             await _notifier.BroadcastAuctionCancelled(auction);
             //TODO: Notify bidders and sellers about cancellation
-            //await _emailJobService.SendAuctionCancelledEmail(auction.Id.ToString(), auction.Product.Seller.Email);
+            await _emailJobService.SendAuctionCancelledEmail(auction);
         }
 
         private Guid? DetermineWinner(Auction auction)
