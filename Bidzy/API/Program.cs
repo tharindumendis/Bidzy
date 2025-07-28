@@ -2,6 +2,8 @@ using Bidzy.API.Hubs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
+using Bidzy.Application.Services.AuctionEngine;
+using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Data;
 using Hangfire;
@@ -45,6 +47,7 @@ builder.Services.AddTransient<IEmailJobService, EmailJobService>();
 builder.Services.AddSingleton<IJobScheduler, JobScheduler>();
 builder.Services.AddTransient<INotificationSchedulerService, NotificationSchedulerService>();
 builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
+builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();

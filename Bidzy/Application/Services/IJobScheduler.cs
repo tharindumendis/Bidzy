@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Bidzy.Application.Repository.Interfaces
+namespace Bidzy.Application.Services
 {
     public interface IJobScheduler
     {

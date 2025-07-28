@@ -1,5 +1,4 @@
 ﻿using Bidzy.Application.Repository.Interfaces;
-using Bidzy.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

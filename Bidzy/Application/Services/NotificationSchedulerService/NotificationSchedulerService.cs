@@ -2,7 +2,7 @@
 using Bidzy.Application.Repository.Interfaces;
 using Hangfire;
 
-namespace Bidzy.Application.Services
+namespace Bidzy.Application.Services.NotificationSchedulerService
 {
     public class NotificationSchedulerService : INotificationSchedulerService
     {
@@ -15,7 +15,7 @@ namespace Bidzy.Application.Services
             _emailJobService = emailJobService;
         }
 
-        public void ScheduleAuctionStartEmail(String auctionId, string receiverEmail, DateTime startTime)
+        public void ScheduleAuctionStartEmail(string auctionId, string receiverEmail, DateTime startTime)
         {
             var delay = startTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)
@@ -32,11 +32,21 @@ namespace Bidzy.Application.Services
             }
         }
 
-        public void ScheduleAuctionEndEmail(String auctionId, string receiverEmail, string winnerName, TimeSpan delay)
+        public void ScheduleAuctionEndEmail(string auctionId, string receiverEmail, string winnerName, DateTime endTime)
         {
-            _jobScheduler.Schedule<IEmailJobService>(
+            var delay = endTime - DateTime.UtcNow;
+            if (delay.TotalSeconds > 0)
+            {
+                _jobScheduler.Schedule<IEmailJobService>(
                 service => service.SendAuctionEndedEmail(auctionId, receiverEmail, winnerName),
                 delay);
+            }
+            else
+            {
+
+                _emailJobService.SendAuctionEndedEmail(auctionId, receiverEmail, winnerName);
+
+            }
         }
 
         public void ScheduleRecurringSummaryEmail(string receiverEmail)
@@ -51,8 +61,6 @@ namespace Bidzy.Application.Services
                     Body = "Here's your daily auction summary."
                 }),
                 Cron.Daily());
-        }
-
-    
+       }
     }
 }

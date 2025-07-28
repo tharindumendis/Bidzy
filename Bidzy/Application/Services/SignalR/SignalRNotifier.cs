@@ -31,6 +31,10 @@ namespace Bidzy.Application.Services.SignalR
             await _hubContext.Clients.Group(bid.AuctionId.ToString())
                 .SendAsync("NewBidPlaced", bid.ToReadDto());
         }
-
+        // TODO
+        public Task BroadcastAuctionCancelled(Auction auction)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

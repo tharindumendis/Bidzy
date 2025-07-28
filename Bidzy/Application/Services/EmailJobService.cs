@@ -1,5 +1,4 @@
 ﻿using Bidzy.Application.DTOs;
-using Bidzy.Application.Repository.Interfaces;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;

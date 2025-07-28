@@ -1,7 +1,7 @@
 ﻿using Bidzy.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Bidzy.Application.Repository.Interfaces
+namespace Bidzy.Application.Services
 {
     public interface IEmailJobService
     {

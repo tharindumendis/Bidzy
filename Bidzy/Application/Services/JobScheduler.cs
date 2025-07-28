@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using Bidzy.Application.Repository.Interfaces;
 using Hangfire;
 
 namespace Bidzy.Application.Services
