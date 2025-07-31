@@ -47,7 +47,8 @@ namespace Bidzy.Application.Repository
         {
             dbContext.Auctions.Add(auction);
             await dbContext.SaveChangesAsync();
-            return auction;
+            var saved_auction = await GetAuctionByIdAsync(auction.Id);
+            return saved_auction;
         }
 
         public async Task<Auction> UpdateAuctionAsync(Auction auction)

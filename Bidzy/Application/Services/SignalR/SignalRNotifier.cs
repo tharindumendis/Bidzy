@@ -32,9 +32,10 @@ namespace Bidzy.Application.Services.SignalR
                 .SendAsync("NewBidPlaced", bid.ToReadDto());
         }
         // TODO
-        public Task BroadcastAuctionCancelled(Auction auction)
+        public async Task BroadcastAuctionCancelled(Auction auction)
         {
-            throw new NotImplementedException();
+            await _hubContext.Clients.Group(auction.Id.ToString())
+                .SendAsync("AuctionCancelled", auction.ToReadDto());
         }
     }
 }

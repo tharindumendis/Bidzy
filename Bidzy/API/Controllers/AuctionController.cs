@@ -1,6 +1,7 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace Bidzy.API.Controllers
     public class AuctionController : ControllerBase
     {
         private readonly IAuctionRepository auctionRepository;
+        private readonly IAuctionEngine _auctionEngine;
 
-        public AuctionController(IAuctionRepository auctionRepository)
+        public AuctionController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine)
         {
             this.auctionRepository = auctionRepository;
+            _auctionEngine = auctionEngine;
         }
 
         [HttpGet]
@@ -50,9 +53,8 @@ namespace Bidzy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
         {
-            var entity = auctionAddDto.ToEntity();
-            var auction = await auctionRepository.AddAuctionAsync(entity);
-            return Ok(auction.ToReadDto());
+            
+            return Ok(await _auctionEngine.CreateAuctionAsync(auctionAddDto));
         }
 
         [HttpPut("{id}")]
