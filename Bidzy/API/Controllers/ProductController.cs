@@ -1,7 +1,9 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.productsDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 
 namespace Bidzy.API.Controllers
 {
@@ -10,10 +12,12 @@ namespace Bidzy.API.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductRepository productRepository;
+        private readonly ITagRepository tagRepository;
 
-        public ProductController(IProductRepository productRepository)
+        public ProductController(IProductRepository productRepository, ITagRepository tagRepository )
         {
             this.productRepository = productRepository;
+            this.tagRepository = tagRepository;
         }
 
         [HttpGet]
@@ -37,9 +41,14 @@ namespace Bidzy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductAddDto productAddDto)
         {
-            var entity = productAddDto.ToEntity();
-            var product = await productRepository.AddProductsAsync(entity);
-            return Ok(product.ToReadDto());
+            var tags = productAddDto.Tags != null
+                ? await tagRepository.ResolveTagsAsync(productAddDto.Tags)
+                : new List<Tag>();
+            var product = productAddDto.ToEntity(tags);
+            var createdProduct = await productRepository.AddProductsAsync(product);
+
+            return Ok(createdProduct);
+            
         }
 
         [HttpPut("{id}")]
@@ -49,6 +58,15 @@ namespace Bidzy.API.Controllers
             if (product == null)
             {
                 return NotFound("Product not found.");
+            }
+            if (productUpdateDto.Tags != null)
+            {
+                var tags = await tagRepository.ResolveTagsAsync(productUpdateDto.Tags);
+                product.Tags.Clear();
+                foreach (var tag in tags)
+                {
+                    product.Tags.Add(tag);
+                }
             }
             product.UpdateEntity(productUpdateDto);
             var updatedProduct = await productRepository.UpdateProductsAsync(product);

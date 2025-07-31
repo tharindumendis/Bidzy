@@ -1,6 +1,7 @@
 ﻿using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Bidzy.Domain.Enties;
+using Bidzy.Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.Application.Repository
@@ -17,6 +18,16 @@ namespace Bidzy.Application.Repository
         public async Task<List<Auction>> GetAllAuctionsAsync()
         {
             return await dbContext.Auctions
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(b => b.Winner)
+                .ToListAsync();
+        }
+
+        public async Task<List<Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status)
+        {
+            return await dbContext.Auctions
+                .Where(x => x.Status == status)
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
                 .Include(b => b.Winner)

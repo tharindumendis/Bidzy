@@ -2,6 +2,7 @@
 using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Domain.Enties;
+using Bidzy.Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bidzy.API.Controllers
@@ -21,6 +22,17 @@ namespace Bidzy.API.Controllers
         public async Task<IActionResult> GetAllAuctions()
         {
             var auctions = await auctionRepository.GetAllAuctionsAsync();
+            return Ok(auctions.Select(x => x.ToReadDto()));
+        }
+
+        [HttpGet("status/{statusId}")]
+        public async Task<IActionResult> GetAllAuctionsByStatus([FromRoute] AuctionStatus statusId)
+        {
+            var auctions = await auctionRepository.GetAllAuctionsByStatusAsync(statusId);
+            if (auctions == null || !auctions.Any())
+            {
+                return NotFound("No auctions found with the specified status");
+            }
             return Ok(auctions.Select(x => x.ToReadDto()));
         }
 

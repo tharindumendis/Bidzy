@@ -20,6 +20,7 @@ builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<IBidRepository, BidRepository>();
+builder.Services.AddTransient<ITagRepository, TagRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
