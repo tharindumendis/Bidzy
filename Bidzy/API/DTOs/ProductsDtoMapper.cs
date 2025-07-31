@@ -14,11 +14,12 @@ namespace Bidzy.API.DTOs
                 Description = product.Description,
                 ImageUrl = product.ImageUrl,
                 SellerId = product.SellerId,
-                SellerName = product.Seller?.FullName ?? string.Empty
+                SellerName = product.Seller?.FullName ?? string.Empty,
+                Tags = product.Tags.Select(t => t.tagName).ToList()
             };
         }
 
-        public static Product ToEntity (this ProductAddDto productAddDto)
+        public static Product ToEntity (this ProductAddDto productAddDto, List<Tag> tags)
         {
             return new Product
             {
@@ -26,7 +27,8 @@ namespace Bidzy.API.DTOs
                 Title = productAddDto.Title,
                 Description = productAddDto.Description,
                 ImageUrl = productAddDto.ImageUrl,
-                SellerId = productAddDto.SellerId
+                SellerId = productAddDto.SellerId,
+                Tags = tags
             };
         }
 

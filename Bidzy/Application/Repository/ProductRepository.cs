@@ -18,6 +18,7 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Products
                 .Include(s => s.Seller)
+                .Include(t=> t.Tags)
                 .ToListAsync();
         }
 
@@ -25,6 +26,7 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Products
                 .Include(s => s.Seller)
+                .Include(t => t.Tags)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 

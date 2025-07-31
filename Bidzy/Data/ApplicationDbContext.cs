@@ -15,6 +15,7 @@ namespace Bidzy.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Tag> Tags { get; set; } 
 
 
 

@@ -14,5 +14,7 @@ namespace Bidzy.Domain.Enties
         public Guid SellerId { get; set; }
         public User Seller { get; set; }
 
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+
     }
 }

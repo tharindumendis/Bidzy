@@ -36,6 +36,17 @@ namespace Bidzy.API.Controllers
             return Ok(bid.ToReadDto());
         }
 
+        [HttpGet("auction/{auctionId}")]
+        public async Task<IActionResult> GetBiddersByAuctionId([FromRoute] Guid auctionId)
+        {
+            var bidder = await bidRepository.GetBiddersByAuctionIdAsync(auctionId);
+            if (bidder == null)
+            {
+                return NotFound("Bid not found");
+            }
+            return Ok(bidder.Select(b => b.ToReadDto()));
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateBid([FromBody] BidAddDto bidAddDto)
         {

@@ -30,6 +30,15 @@ namespace Bidzy.Application.Repository
                 .FirstOrDefaultAsync(x => x.Id == bidId);
         }
 
+        public async Task<List<Bid>> GetBiddersByAuctionIdAsync(Guid auctionId)
+        {
+            return await dbContext.Bids
+                .Where(b => b.AuctionId == auctionId)
+                .Include(a => a.Auction)
+                .Include(b => b.Bidder)
+                .ToListAsync();
+        }
+
         public async Task<Bid?> AddBidAsync(Bid bid)
         {
             dbContext.Bids.Add(bid);
