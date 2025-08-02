@@ -4,7 +4,6 @@ using Bidzy.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,11 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bidzy.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250716121834_InitialCreate")]
-    partial class InitialCreate
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +22,7 @@ namespace Bidzy.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Auction", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Auction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,19 +44,19 @@ namespace Bidzy.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("WinnerId")
+                    b.Property<Guid?>("WinningBidId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("WinnerId");
+                    b.HasIndex("WinningBidId");
 
                     b.ToTable("Auctions");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Bid", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Bid", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,7 +84,7 @@ namespace Bidzy.Migrations
                     b.ToTable("Bids");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Delivery", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Delivery", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -112,7 +109,7 @@ namespace Bidzy.Migrations
                     b.ToTable("Deliveries");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Notification", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Notification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,10 +132,10 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("notifications");
+                    b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Payment", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Payment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -165,10 +162,10 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("BidId");
 
-                    b.ToTable("payments");
+                    b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Product", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,10 +190,25 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("products");
+                    b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.User", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Tag", b =>
+                {
+                    b.Property<Guid>("tagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("tagName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("tagId");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("Bidzy.Domain.Enties.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -207,7 +219,7 @@ namespace Bidzy.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -217,41 +229,64 @@ namespace Bidzy.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Auction", b =>
+            modelBuilder.Entity("ProductTag", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.Product", "Product")
+                    b.Property<Guid>("ProductsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TagstagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ProductsId", "TagstagId");
+
+                    b.HasIndex("TagstagId");
+
+                    b.ToTable("ProductTag");
+                });
+
+            modelBuilder.Entity("Bidzy.Domain.Enties.Auction", b =>
+                {
+                    b.HasOne("Bidzy.Domain.Enties.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Bidzy.Modles.Enties.User", "Winner")
+                    b.HasOne("Bidzy.Domain.Enties.Bid", "WinningBid")
                         .WithMany()
-                        .HasForeignKey("WinnerId");
+                        .HasForeignKey("WinningBidId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Product");
 
-                    b.Navigation("Winner");
+                    b.Navigation("WinningBid");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Bid", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Bid", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.Auction", "Auction")
-                        .WithMany()
+                    b.HasOne("Bidzy.Domain.Enties.Auction", "Auction")
+                        .WithMany("Bids")
                         .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Bidzy.Modles.Enties.User", "Bidder")
-                        .WithMany()
+                    b.HasOne("Bidzy.Domain.Enties.User", "Bidder")
+                        .WithMany("Bids")
                         .HasForeignKey("BidderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -261,9 +296,9 @@ namespace Bidzy.Migrations
                     b.Navigation("Bidder");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Delivery", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Delivery", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.Auction", "Auction")
+                    b.HasOne("Bidzy.Domain.Enties.Auction", "Auction")
                         .WithMany()
                         .HasForeignKey("AuctionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -272,9 +307,9 @@ namespace Bidzy.Migrations
                     b.Navigation("Auction");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Notification", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Notification", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.User", "User")
+                    b.HasOne("Bidzy.Domain.Enties.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -283,9 +318,9 @@ namespace Bidzy.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Payment", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Payment", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.Bid", "Bid")
+                    b.HasOne("Bidzy.Domain.Enties.Bid", "Bid")
                         .WithMany()
                         .HasForeignKey("BidId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -294,15 +329,40 @@ namespace Bidzy.Migrations
                     b.Navigation("Bid");
                 });
 
-            modelBuilder.Entity("Bidzy.Modles.Enties.Product", b =>
+            modelBuilder.Entity("Bidzy.Domain.Enties.Product", b =>
                 {
-                    b.HasOne("Bidzy.Modles.Enties.User", "Seller")
+                    b.HasOne("Bidzy.Domain.Enties.User", "Seller")
                         .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("ProductTag", b =>
+                {
+                    b.HasOne("Bidzy.Domain.Enties.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bidzy.Domain.Enties.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagstagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bidzy.Domain.Enties.Auction", b =>
+                {
+                    b.Navigation("Bids");
+                });
+
+            modelBuilder.Entity("Bidzy.Domain.Enties.User", b =>
+                {
+                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }

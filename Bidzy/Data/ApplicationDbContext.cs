@@ -23,23 +23,32 @@ namespace Bidzy.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+
             modelBuilder.Entity<Bid>()
                 .HasOne(b => b.Bidder)
-                .WithMany()
+                .WithMany(u => u.Bids)
                 .HasForeignKey(b => b.BidderId)
                 .OnDelete(DeleteBehavior.Restrict);
+            // Prevents multiple cascade paths
 
             modelBuilder.Entity<Bid>()
                 .HasOne(b => b.Auction)
-                .WithMany()
+                .WithMany(a => a.Bids)
                 .HasForeignKey(b => b.AuctionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict); // ✅ Prevents cascade path conflict
+
 
             modelBuilder.Entity<Bid>()
                 .Property(b => b.Amount)
                 .HasPrecision(18, 4);
 
-            // 👇 Add precision configuration here
+            modelBuilder.Entity<Auction>()
+                .HasOne(a => a.WinningBid)
+                .WithMany()
+                .HasForeignKey(a => a.WinningBidId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Auction>()
                 .Property(a => a.MinimumBid)
                 .HasPrecision(18, 4);

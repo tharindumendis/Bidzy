@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Bidzy.Domain.Enum;
 
@@ -44,5 +45,8 @@ namespace Bidzy.Domain.Enties
         public UserRole Role { get; set; } // Seller, Bidder, Admin
 
         public DateTime CreatedAt { get; set; }
+
+        [JsonIgnore]
+        public ICollection<Bid> Bids { get; set; } = new List<Bid>();
     }
 }

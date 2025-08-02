@@ -20,7 +20,7 @@ namespace Bidzy.Application.Repository
             return await dbContext.Auctions
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
-                .Include(b => b.Winner)
+                //.Include(b => b.Winner)
                 .ToListAsync();
         }
 
@@ -30,7 +30,7 @@ namespace Bidzy.Application.Repository
                 .Where(x => x.Status == status)
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
-                .Include(b => b.Winner)
+                //.Include(b => b.Winner)
                 .ToListAsync();
         }
 
@@ -39,7 +39,7 @@ namespace Bidzy.Application.Repository
             return await dbContext.Auctions
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
-                .Include(b => b.Winner)
+                //.Include(b => b.Winner)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 

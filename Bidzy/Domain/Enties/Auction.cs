@@ -1,5 +1,6 @@
 ﻿using Bidzy.Domain.Enum;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Bidzy.Domain.Enties
 {
@@ -13,8 +14,12 @@ namespace Bidzy.Domain.Enties
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }
         public AuctionStatus Status { get; set; } // Scheduled, Active, Ended, Cancelled
-        public Guid? WinnerId { get; set; }
-        public User? Winner { get; set; }
+
+        public Guid? WinningBidId { get; set; }
+        public Bid? WinningBid { get; set; }
+
+        [JsonIgnore]
+        public ICollection<Bid> Bids { get; set; } = new List<Bid>();
 
     }
 }

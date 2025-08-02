@@ -19,8 +19,8 @@ namespace Bidzy.API.DTOs
                 EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
-                WinnerId = auction.WinnerId,
-                WinnerName = auction.Winner?.FullName
+                //WinnerId = auction.WinnerId,
+                //WinnerName = auction.Winner?.FullName
             };
         }
 
@@ -57,7 +57,7 @@ namespace Bidzy.API.DTOs
             }
             if (auctionUpdateDto.WinnerId.HasValue)
             {
-                auction.WinnerId = auctionUpdateDto.WinnerId;
+                //auction.WinnerId = auctionUpdateDto.WinnerId;
             }
         } 
     }

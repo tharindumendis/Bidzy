@@ -6,18 +6,31 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Bidzy.Migrations
 {
     /// <inheritdoc />
-    public partial class _1stmigration : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    tagId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    tagName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.tagId);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -28,7 +41,7 @@ namespace Bidzy.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "notifications",
+                name: "Notifications",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -39,9 +52,9 @@ namespace Bidzy.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_notifications", x => x.Id);
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_notifications_Users_UserId",
+                        name: "FK_Notifications_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -49,7 +62,7 @@ namespace Bidzy.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "products",
+                name: "Products",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -60,12 +73,36 @@ namespace Bidzy.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_products", x => x.Id);
+                    table.PrimaryKey("PK_Products", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_products_Users_SellerId",
+                        name: "FK_Products_Users_SellerId",
                         column: x => x.SellerId,
                         principalTable: "Users",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductTag",
+                columns: table => new
+                {
+                    ProductsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TagstagId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductTag", x => new { x.ProductsId, x.TagstagId });
+                    table.ForeignKey(
+                        name: "FK_ProductTag_Products_ProductsId",
+                        column: x => x.ProductsId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductTag_Tags_TagstagId",
+                        column: x => x.TagstagId,
+                        principalTable: "Tags",
+                        principalColumn: "tagId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -79,20 +116,15 @@ namespace Bidzy.Migrations
                     EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     MinimumBid = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    WinnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    WinningBidId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Auctions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Auctions_Users_WinnerId",
-                        column: x => x.WinnerId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Auctions_products_ProductId",
+                        name: "FK_Auctions_Products_ProductId",
                         column: x => x.ProductId,
-                        principalTable: "products",
+                        principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -115,7 +147,7 @@ namespace Bidzy.Migrations
                         column: x => x.AuctionId,
                         principalTable: "Auctions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Bids_Users_BidderId",
                         column: x => x.BidderId,
@@ -146,7 +178,7 @@ namespace Bidzy.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "payments",
+                name: "Payments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -158,9 +190,9 @@ namespace Bidzy.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_payments", x => x.Id);
+                    table.PrimaryKey("PK_Payments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_payments_Bids_BidId",
+                        name: "FK_Payments_Bids_BidId",
                         column: x => x.BidId,
                         principalTable: "Bids",
                         principalColumn: "Id",
@@ -173,9 +205,9 @@ namespace Bidzy.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Auctions_WinnerId",
+                name: "IX_Auctions_WinningBidId",
                 table: "Auctions",
-                column: "WinnerId");
+                column: "WinningBidId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Bids_AuctionId",
@@ -193,32 +225,61 @@ namespace Bidzy.Migrations
                 column: "AuctionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_notifications_UserId",
-                table: "notifications",
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_payments_BidId",
-                table: "payments",
+                name: "IX_Payments_BidId",
+                table: "Payments",
                 column: "BidId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_products_SellerId",
-                table: "products",
+                name: "IX_Products_SellerId",
+                table: "Products",
                 column: "SellerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductTag_TagstagId",
+                table: "ProductTag",
+                column: "TagstagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Auctions_Bids_WinningBidId",
+                table: "Auctions",
+                column: "WinningBidId",
+                principalTable: "Bids",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Auctions_Bids_WinningBidId",
+                table: "Auctions");
+
             migrationBuilder.DropTable(
                 name: "Deliveries");
 
             migrationBuilder.DropTable(
-                name: "notifications");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
-                name: "payments");
+                name: "Payments");
+
+            migrationBuilder.DropTable(
+                name: "ProductTag");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "Bids");
@@ -227,7 +288,7 @@ namespace Bidzy.Migrations
                 name: "Auctions");
 
             migrationBuilder.DropTable(
-                name: "products");
+                name: "Products");
 
             migrationBuilder.DropTable(
                 name: "Users");

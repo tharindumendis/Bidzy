@@ -10,5 +10,6 @@
         public decimal Amount { get; set; }
         public DateTime Timestamp { get; set; }
 
+
     }
 }
