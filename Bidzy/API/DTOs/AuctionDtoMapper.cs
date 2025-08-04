@@ -19,8 +19,10 @@ namespace Bidzy.API.DTOs
                 EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
-                //WinnerId = auction.WinnerId,
-                //WinnerName = auction.Winner?.FullName
+                WinningBidId = auction.WinningBidId,
+                WinningBid = auction.WinningBid != null
+                            ? $"{auction.WinningBid.Bidder?.FullName ?? "Unknown"} - {auction.WinningBid.Amount:C}"
+                            : "No winning bid"
             };
         }
 

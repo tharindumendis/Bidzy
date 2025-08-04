@@ -84,7 +84,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 CancelAuctionAsync(auctionId).Wait();
                 return;
             }
-            //auction.WinnerId = winBid.BidderId;
+            auction.WinningBidId = winBid.Id;
             auction.Status = AuctionStatus.Ended;
             auction = await _auctionRepo.UpdateAuctionAsync(auction);
 
