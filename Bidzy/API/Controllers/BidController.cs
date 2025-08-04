@@ -1,9 +1,7 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.bidDtos;
-using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.CompilerServices;
 
 namespace Bidzy.API.Controllers
 {

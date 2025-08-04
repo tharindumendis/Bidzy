@@ -48,5 +48,8 @@ namespace Bidzy.Domain.Enties
 
         [JsonIgnore]
         public ICollection<Bid> Bids { get; set; } = new List<Bid>();
+
+        [JsonIgnore]
+        public ICollection<UserAuctionFavorite> AuctionLikes { get; set; } = new List<UserAuctionFavorite>();
     }
 }

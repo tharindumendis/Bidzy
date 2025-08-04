@@ -16,6 +16,7 @@ namespace Bidzy.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Tag> Tags { get; set; } 
+        public DbSet<UserAuctionFavorite> UserAuctionFavorite { get; set; }
 
 
 
@@ -65,7 +66,20 @@ namespace Bidzy.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            modelBuilder.Entity<UserAuctionFavorite>()
+                .HasKey(ual => new { ual.userId, ual.auctionId });
 
+            modelBuilder.Entity<UserAuctionFavorite>()
+                .HasOne(ual => ual.user)
+                .WithMany(u => u.AuctionLikes)
+                .HasForeignKey(ual => ual.userId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserAuctionFavorite>()
+                .HasOne(ual => ual.auction)
+                .WithMany(a => a.LikedByUsers)
+                .HasForeignKey(ual => ual.auctionId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
 
