@@ -11,7 +11,7 @@
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }
         public string Status { get; set; }
-        public Guid? WinnerId { get; set; }
-        public string? WinnerName { get; set; }
+        public Guid? WinningBidId { get; set; }
+        public string? WinningBid { get; set; }
     }
 }

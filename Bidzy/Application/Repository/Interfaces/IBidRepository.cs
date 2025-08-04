@@ -6,6 +6,7 @@ namespace Bidzy.Application.Repository.Interfaces
     {
         Task<Bid?> GetBidByIdAsync(Guid bidId);
         Task<List<Bid>> GetBiddersByAuctionIdAsync(Guid auctionId);
+        Task<List<Bid>> GetBidsByUserIdAsync(Guid userId);
         Task<List<Bid>> GetAllBidsAsync();
         Task<Bid?> AddBidAsync(Bid bid);
         Task<Bid?> UpdateBidAsync(Bid bid);

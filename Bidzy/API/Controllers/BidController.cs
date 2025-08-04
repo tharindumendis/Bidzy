@@ -35,6 +35,16 @@ namespace Bidzy.API.Controllers
             }
             return Ok(bid.ToReadDto());
         }
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetBidsByUserId([FromRoute] Guid userId)
+        {
+            var bids = await bidRepository.GetBidsByUserIdAsync(userId);
+            if (bids == null || !bids.Any())
+            {
+                return NotFound("No bids found for this user.");
+            }
+            return Ok(bids.Select(b=>b.ToReadDto()));
+        }
 
         [HttpGet("auction/{auctionId}")]
         public async Task<IActionResult> GetBiddersByAuctionId([FromRoute] Guid auctionId)
