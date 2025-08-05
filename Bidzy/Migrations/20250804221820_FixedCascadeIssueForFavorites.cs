@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Bidzy.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class FixedCascadeIssueForFavorites : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -178,6 +178,30 @@ namespace Bidzy.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserAuctionFavorite",
+                columns: table => new
+                {
+                    userId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    auctionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    likedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserAuctionFavorite", x => new { x.userId, x.auctionId });
+                    table.ForeignKey(
+                        name: "FK_UserAuctionFavorite_Auctions_auctionId",
+                        column: x => x.auctionId,
+                        principalTable: "Auctions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserAuctionFavorite_Users_userId",
+                        column: x => x.userId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Payments",
                 columns: table => new
                 {
@@ -245,6 +269,11 @@ namespace Bidzy.Migrations
                 column: "TagstagId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserAuctionFavorite_auctionId",
+                table: "UserAuctionFavorite",
+                column: "auctionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email",
@@ -277,6 +306,9 @@ namespace Bidzy.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProductTag");
+
+            migrationBuilder.DropTable(
+                name: "UserAuctionFavorite");
 
             migrationBuilder.DropTable(
                 name: "Tags");

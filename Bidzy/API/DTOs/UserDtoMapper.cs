@@ -47,5 +47,17 @@ namespace Bidzy.API.DTOs
                 user.Role = role;
             }
         }
+
+        public static userProfile ToProfileDto (this User user)
+        {
+            return new userProfile
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                CreatedAt = user.CreatedAt
+            };
+        }
     }
 }

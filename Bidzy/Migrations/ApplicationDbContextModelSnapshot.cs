@@ -244,6 +244,24 @@ namespace Bidzy.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Bidzy.Domain.Enties.UserAuctionFavorite", b =>
+                {
+                    b.Property<Guid>("userId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("auctionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("likedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("userId", "auctionId");
+
+                    b.HasIndex("auctionId");
+
+                    b.ToTable("UserAuctionFavorite");
+                });
+
             modelBuilder.Entity("ProductTag", b =>
                 {
                     b.Property<Guid>("ProductsId")
@@ -340,6 +358,25 @@ namespace Bidzy.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("Bidzy.Domain.Enties.UserAuctionFavorite", b =>
+                {
+                    b.HasOne("Bidzy.Domain.Enties.Auction", "auction")
+                        .WithMany("LikedByUsers")
+                        .HasForeignKey("auctionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bidzy.Domain.Enties.User", "user")
+                        .WithMany("AuctionLikes")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("auction");
+
+                    b.Navigation("user");
+                });
+
             modelBuilder.Entity("ProductTag", b =>
                 {
                     b.HasOne("Bidzy.Domain.Enties.Product", null)
@@ -358,10 +395,14 @@ namespace Bidzy.Migrations
             modelBuilder.Entity("Bidzy.Domain.Enties.Auction", b =>
                 {
                     b.Navigation("Bids");
+
+                    b.Navigation("LikedByUsers");
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.User", b =>
                 {
+                    b.Navigation("AuctionLikes");
+
                     b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
