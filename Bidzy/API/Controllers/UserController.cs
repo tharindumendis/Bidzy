@@ -65,5 +65,16 @@ namespace Bidzy.API.Controllers
             }
             return NoContent();
         }
+
+        [HttpGet("{id}/profile")]
+        public async Task<IActionResult> GetUserProfile([FromRoute] Guid id)
+        {
+            var user = await userRepository.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+            return Ok(user.ToProfileDto());
+        }
     }
 }
