@@ -1,4 +1,5 @@
 using Bidzy.API.Hubs;
+using Bidzy.Application;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
@@ -8,6 +9,7 @@ using Bidzy.Application.Services.SignalR;
 using Bidzy.Data;
 using Hangfire;
 using HangfireBasicAuthenticationFilter;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +20,17 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Temp
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Dummy";
+    options.DefaultChallengeScheme = "Dummy";
+}).AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("Dummy", options => { });
+// End Temp
+
+
+
 // Configure Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // Configure Email Job Service
@@ -82,6 +95,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHangfireServer();
 
@@ -91,6 +106,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AuctionHub>("/auctionHub");
+app.MapHub<UserHub>("/userHub");
+
+
 
 
 app.Run();

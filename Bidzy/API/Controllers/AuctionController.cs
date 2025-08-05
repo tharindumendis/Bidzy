@@ -15,6 +15,7 @@ namespace Bidzy.API.Controllers
         private readonly IAuctionRepository auctionRepository;
         private readonly IAuctionEngine _auctionEngine;
 
+
         public AuctionController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine)
         {
             this.auctionRepository = auctionRepository;
