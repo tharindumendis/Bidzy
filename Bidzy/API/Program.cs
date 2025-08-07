@@ -58,6 +58,7 @@ builder.Services.AddCors(options =>
 // Configure Job Services
 builder.Services.AddTransient<IEmailJobService, EmailJobService>();
 builder.Services.AddSingleton<IJobScheduler, JobScheduler>();
+builder.Services.AddSingleton<ILiveAuctionCountService, LiveAuctionCountService>();
 builder.Services.AddTransient<INotificationSchedulerService, NotificationSchedulerService>();
 builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
@@ -69,6 +70,7 @@ builder.Services.AddTransient<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<IBidRepository, BidRepository>();
 builder.Services.AddTransient<ITagRepository, TagRepository>();
 builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavoriteRepository>();
+
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

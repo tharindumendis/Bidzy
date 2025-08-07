@@ -1,19 +1,28 @@
-﻿using Bidzy.Application.DTOs;
+﻿using Bidzy.API.DTOs.favoriteAuctionsDtos;
+using Bidzy.Application.DTOs;
+using Bidzy.Application.Repository;
+using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 namespace Bidzy.API.Hubs
 {
-    public class AuctionHub : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository) : Hub
     {
+        private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
+
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
             try {
                 if(payload.GroupIds == null) {  return; }
 
-                foreach (string item in payload.GroupIds)
+                foreach (string gId in payload.GroupIds)
                 {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, item);
+                    await Groups.AddToGroupAsync(Context.ConnectionId, gId);
+                    if (payload.UserId != null){
+                        await AddFavorite(gId, payload.UserId);
+                    }
                 }
             }
             catch
@@ -26,10 +35,13 @@ namespace Bidzy.API.Hubs
             Console.WriteLine("leaveAuction"+payload.UserId);
             if (payload.GroupIds == null) { return; }
   
-            foreach (string groupId in payload.GroupIds)
+            foreach (string gId in payload.GroupIds)
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId,groupId);
-                
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId,gId);
+                if (payload.UserId != null)
+                {
+                    await RemoveFavorite(gId, payload.UserId);
+                }
             }
         }
         public async Task SendBidUpdate(string auctionId, string message)
@@ -46,6 +58,46 @@ namespace Bidzy.API.Hubs
 
             await base.OnDisconnectedAsync(exception);
         }
-
+        private async Task AddFavorite (string auctionId, string userId)
+        {
+            if (Guid.TryParse(auctionId, out Guid aId))
+            {
+                if (Guid.TryParse(userId, out Guid uId))
+                {
+                    try
+                    {
+                        var favEntity = new UserAuctionFavorite
+                        {
+                            auctionId = aId,
+                            userId = uId
+                        };
+                        await _favoriteRepository.AddAsync(favEntity);
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+        private async Task RemoveFavorite(string auctionId, string userId)
+        {
+            if (Guid.TryParse(auctionId, out Guid aId))
+            {
+                if (Guid.TryParse(userId, out Guid uId))
+                {
+                    try
+                    {
+                        await _favoriteRepository.RemoveAsync(uId, aId);
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+            }
+            return;
+        }
     }
 }

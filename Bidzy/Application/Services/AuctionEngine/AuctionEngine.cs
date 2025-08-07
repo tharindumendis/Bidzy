@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
+using Bidzy.API.Hubs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Bidzy.Application.Services.AuctionEngine
 {
@@ -17,6 +19,9 @@ namespace Bidzy.Application.Services.AuctionEngine
         private readonly ISignalRNotifier _notifier;
         private readonly IJobScheduler _jobScheduler;
         private readonly IEmailJobService _emailJobService;
+        private readonly ILiveAuctionCountService _liveAuctionCountService;
+
+
 
         public AuctionEngine(
             IAuctionRepository auctionRepo,
@@ -24,7 +29,8 @@ namespace Bidzy.Application.Services.AuctionEngine
             IEmailJobService emailJobService,
             ISignalRNotifier notifier,
             IJobScheduler jobScheduler,
-            IBidRepository bidRepository)
+            IBidRepository bidRepository,
+            ILiveAuctionCountService liveAuctionCountService)
         {
             _auctionRepo = auctionRepo;
             _scheduler = scheduler;
@@ -32,6 +38,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             _jobScheduler = jobScheduler;
             _emailJobService = emailJobService;
             _bidRepository = bidRepository;
+            _liveAuctionCountService = liveAuctionCountService;
         }
         public async Task<AuctionReadDto> CreateAuctionAsync(AuctionAddDto dto)
         {
@@ -44,6 +51,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 if (delay.TotalSeconds > 0)
                 {
                     _jobScheduler.Schedule<IAuctionEngine>(Services => Services.StartAuctionAsync(saved.Id), delay);
+                    await _liveAuctionCountService.AddScheduledCount(1);
                 }
                 else
                 {
@@ -59,6 +67,8 @@ namespace Bidzy.Application.Services.AuctionEngine
             var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
             auction.Status = AuctionStatus.Active;
             await _auctionRepo.UpdateAuctionAsync(auction);
+            await _liveAuctionCountService.RemoveScheduledCount(1);
+            await _liveAuctionCountService.AddOngoingCount(1);
             await _notifier.BroadcastAuctionStarted(auction);
             // TODO featch faverite bidders and send mail
             List<string> emailAddresses = null;
@@ -87,7 +97,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             auction.WinningBidId = winBid.Id;
             auction.Status = AuctionStatus.Ended;
             auction = await _auctionRepo.UpdateAuctionAsync(auction);
-
+            await _liveAuctionCountService.RemoveOngoingCount(1);
             await _notifier.BroadcastAuctionEnded(auction);
             await _emailJobService.SendAuctionEndedEmails(auction, winBid);
         }
@@ -95,9 +105,22 @@ namespace Bidzy.Application.Services.AuctionEngine
         public async Task CancelAuctionAsync(Guid auctionId)
         {
             var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+
+            if(auction?.Status == AuctionStatus.Active)
+            {
+                await _liveAuctionCountService.RemoveOngoingCount(1);
+            }
+            else if (auction?.Status == AuctionStatus.Scheduled)
+            {
+                await _liveAuctionCountService.RemoveScheduledCount(1);
+            }
+
+
+
+
             auction.Status = AuctionStatus.Cancelled;
             await _auctionRepo.UpdateAuctionAsync(auction);
-
+           
             await _notifier.BroadcastAuctionCancelled(auction);
             //TODO: Notify bidders and sellers about cancellation
             await _emailJobService.SendAuctionCancelledEmail(auction);
