@@ -58,6 +58,7 @@ namespace Bidzy.API.Hubs
 
             await base.OnDisconnectedAsync(exception);
         }
+
         private async Task AddFavorite (string auctionId, string userId)
         {
             if (Guid.TryParse(auctionId, out Guid aId))

@@ -1,21 +1,20 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.userDtos;
+using Bidzy.Application;
 using Bidzy.Application.Repository.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController(IUserRepository userRepository, IAuthService authService) : ControllerBase
     {
-        private readonly IUserRepository userRepository;
+        private readonly IUserRepository userRepository = userRepository;
+        private readonly IAuthService authService = authService;
 
-        public UserController(IUserRepository userRepository)
-        {
-            this.userRepository = userRepository;
-        }
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -40,6 +39,12 @@ namespace Bidzy.API.Controllers
             var entity = userAddDto.ToEntity();
             var user = await userRepository.AddUserAsync(entity);
             return Ok(user.ToReadDto());
+        }
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginDto loginDto)
+        {
+            string token = authService.GenerateJwtToken(loginDto.Email);
+            return Ok(new { token });
         }
 
         [HttpPut("{id}")]

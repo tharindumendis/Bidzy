@@ -11,12 +11,10 @@ namespace Bidzy.API.Hubs
     public class UserHub : Hub
     {
         private readonly ILiveAuctionCountService _liveCountService;
-
         public UserHub(ILiveAuctionCountService liveCountService)
         {
             _liveCountService = liveCountService;
         }
-
         // Track active connections
         private static readonly ConcurrentDictionary<string, NotificationSubscribeDto> Connections = new();
 
@@ -29,6 +27,7 @@ namespace Bidzy.API.Hubs
 
             await Groups.AddToGroupAsync(Context.ConnectionId, payload.GroupId);
             await Groups.AddToGroupAsync(Context.ConnectionId, "LiveCount");
+            await _liveCountService.BroadcastLiveCountAsync();
             // Notify others in the group 
             // this is temp
             await Clients.Group(payload.GroupId).SendAsync("UserSubscribed", payload);
@@ -46,5 +45,4 @@ namespace Bidzy.API.Hubs
             await base.OnDisconnectedAsync(exception);
         }
     }
-
 }

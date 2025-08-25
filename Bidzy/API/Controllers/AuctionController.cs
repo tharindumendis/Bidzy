@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class AuctionController : ControllerBase
     {
         private readonly IAuctionRepository auctionRepository;
