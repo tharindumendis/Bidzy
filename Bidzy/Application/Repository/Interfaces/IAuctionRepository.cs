@@ -11,5 +11,6 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<Auction> UpdateAuctionAsync(Auction auction);
         Task<Auction> DeleteAuctionAsync(Guid id);
         Task<List<Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status);
+        Task<List<Auction>> GetAuctionsByUserIdAsync(Guid userId);
     }
 }

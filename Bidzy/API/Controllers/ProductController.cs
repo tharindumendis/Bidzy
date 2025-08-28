@@ -83,5 +83,15 @@ namespace Bidzy.API.Controllers
             }
             return NoContent();
         }
+        [HttpGet("user/{sellerId}")]
+        public async Task<IActionResult> GetProductsByUserId([FromRoute] Guid sellerId)
+        {
+            var products = await productRepository.GetProductsByUserIdAsync(sellerId);
+            if (products == null || !products.Any())
+            {
+                return NotFound("No products found for the specified user.");
+            }
+            return Ok(products.Select(p => p.ToReadDto()));
+        }
     }
 }

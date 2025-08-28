@@ -9,10 +9,11 @@ namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IUserRepository userRepository, IAuthService authService) : ControllerBase
+    public class UserController(IUserRepository userRepository, IAuthService authService, ISearchhistoryRepository searchhistoryRepository) : ControllerBase
     {
         private readonly IUserRepository userRepository = userRepository;
         private readonly IAuthService authService = authService;
+        private readonly ISearchhistoryRepository searchhistoryRepository = searchhistoryRepository;
 
         [Authorize]
         [HttpGet]
@@ -80,6 +81,13 @@ namespace Bidzy.API.Controllers
                 return NotFound("User not found.");
             }
             return Ok(user.ToProfileDto());
+        }
+
+        [HttpDelete ("clear/{userId}")]
+        public async Task<IActionResult> ClearSearchHistoryAsync(Guid userId)
+        {
+            await searchhistoryRepository.ClearSearchHistoryAsync(userId);
+            return NoContent();
         }
     }
 }

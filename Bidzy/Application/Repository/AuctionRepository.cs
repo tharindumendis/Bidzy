@@ -72,5 +72,14 @@ namespace Bidzy.Application.Repository
             return auction;
         }
 
+        public async Task<List<Auction>> GetAuctionsByUserIdAsync(Guid userId)
+        {
+            return await dbContext.Auctions
+                .Where ( b=> b.Bids.Any(b => b.BidderId == userId) || b.Product.SellerId == userId)
+                .Include(a => a.Product)
+                .Include(a => a.Bids)
+                .ToListAsync();
+        }
+
     }
 }

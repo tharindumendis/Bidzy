@@ -51,5 +51,10 @@ namespace Bidzy.Domain.Enties
 
         [JsonIgnore]
         public ICollection<UserAuctionFavorite> AuctionLikes { get; set; } = new List<UserAuctionFavorite>();
+
+        public ICollection<AuctionParticipation> AuctionParticipations { get; set; } = new List<AuctionParticipation>();
+        public ICollection<SearchHistory> SearchHistories { get; set; } = new List<SearchHistory>();
+        public ICollection<ViewHistory> ViewHistories { get; set; } = new List<ViewHistory>();
+
     }
 }

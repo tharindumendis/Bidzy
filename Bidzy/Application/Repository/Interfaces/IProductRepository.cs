@@ -9,5 +9,6 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<Product?> AddProductsAsync(Product product);
         Task<Product?> UpdateProductsAsync(Product product);
         Task<Product?> DeleteProductsAsync(Guid id);
+        Task<List<Product>> GetProductsByUserIdAsync(Guid sellerId);
     }
 }
