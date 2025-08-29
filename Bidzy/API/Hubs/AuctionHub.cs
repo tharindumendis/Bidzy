@@ -1,19 +1,24 @@
-﻿using Bidzy.API.DTOs.favoriteAuctionsDtos;
+﻿using System.Security.Claims;
+using Bidzy.API.DTOs.favoriteAuctionsDtos;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Domain.Enties;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 namespace Bidzy.API.Hubs
 {
+    [Authorize]
     public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
+            
+
             try {
                 if(payload.GroupIds == null) {  return; }
 
@@ -29,6 +34,12 @@ namespace Bidzy.API.Hubs
             {
                 return;
             }
+        }
+        public override async Task OnConnectedAsync()
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine($"User connected: {userId}");
+            await base.OnConnectedAsync();
         }
         public async Task LeaveAuctionGroup(HubSubscribeData payload)
         {

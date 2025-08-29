@@ -1,4 +1,5 @@
-﻿using Bidzy.Application.Repository.Interfaces;
+﻿using Bidzy.API.Hubs;
+using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Hangfire;
@@ -14,6 +15,7 @@ namespace Bidzy.API.Controllers
         private readonly INotificationSchedulerService _notificationSchedulerService;
         private readonly ISignalRNotifier _signalRNotifier;
         private readonly IAuctionRepository _auctionRepository;
+        
 
         public TestJobController(INotificationSchedulerService notificationSchedulerService, ISignalRNotifier signalRNotifier, IAuctionRepository auctionRepository)
         {

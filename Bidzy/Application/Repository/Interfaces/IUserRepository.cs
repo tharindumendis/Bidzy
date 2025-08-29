@@ -1,4 +1,5 @@
-﻿using Bidzy.Domain.Enties;
+﻿using System.ComponentModel.DataAnnotations;
+using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Repository.Interfaces
 {
@@ -6,6 +7,7 @@ namespace Bidzy.Application.Repository.Interfaces
     {
         Task<List<User>> GetAllUsersAsync();
         Task<User?> GetUserByIdAsync(Guid id);
+        Task<User?> GetUserByEmailAsync([EmailAddress]String email);
         Task<User?> AddUserAsync(User user);
         Task<User?> UpdateUserAsync(User user);
         Task<User?> DeleteUserAsync(Guid id);

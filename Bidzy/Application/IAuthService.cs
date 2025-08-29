@@ -4,7 +4,7 @@ namespace Bidzy.Application
 {
     public interface IAuthService
     {
-        string GenerateJwtToken(string userId);
+        string GenerateJwtToken(Guid userId, string email, string role);
         ClaimsPrincipal ValidateToken(string token);
     }
 }

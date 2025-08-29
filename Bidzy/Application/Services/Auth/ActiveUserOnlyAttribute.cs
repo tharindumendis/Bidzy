@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
-namespace Bidzy.Application.Services
+namespace Bidzy.Application.Services.Auth
 {
     public class ActiveUserOnlyAttribute : AuthorizeAttribute, IAuthorizationFilter
     {

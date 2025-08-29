@@ -4,6 +4,7 @@ using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bidzy.API.Controllers
@@ -21,6 +22,7 @@ namespace Bidzy.API.Controllers
             _auctionEngine = auctionEngine;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllAuctions()
         {

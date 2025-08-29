@@ -5,6 +5,7 @@ using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.AuctionEngine;
+using Bidzy.Application.Services.Auth;
 using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Data;
@@ -78,6 +79,23 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = "yourIssuer",
         ValidAudience = "yourAudience",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("bidzyUltraSecureKey_2025!@#LongEnoughToPass"))
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for SignalR hub
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/auctionHub"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddAuthorization();

@@ -44,5 +44,6 @@ namespace Bidzy.API.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
+        
     }
 }

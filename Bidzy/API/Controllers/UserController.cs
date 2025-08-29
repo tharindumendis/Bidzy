@@ -33,19 +33,6 @@ namespace Bidzy.API.Controllers
             return Ok(user.ToReadDto());
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddUser([FromBody] UserAddDto userAddDto)
-        {
-            var entity = userAddDto.ToEntity();
-            var user = await userRepository.AddUserAsync(entity);
-            return Ok(user.ToReadDto());
-        }
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDto loginDto)
-        {
-            string token = authService.GenerateJwtToken(loginDto.Email);
-            return Ok(new { token });
-        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] UserUpdateDto userUpdateDto)
