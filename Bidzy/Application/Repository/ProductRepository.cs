@@ -55,5 +55,14 @@ namespace Bidzy.Application.Repository
             await dbContext.SaveChangesAsync();
             return product;
         }
+
+        public async Task<List<Product>> GetProductsByUserIdAsync(Guid sellerId)
+        {
+            return await dbContext.Products
+                .Where(x => x.SellerId == sellerId)
+                .Include(s => s.Seller)
+                .Include(t => t.Tags)
+                .ToListAsync();
+        }
     }
 }

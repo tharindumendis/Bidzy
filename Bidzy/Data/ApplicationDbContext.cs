@@ -1,9 +1,10 @@
 ﻿using Bidzy.Domain.Enties;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.Data
 {
-    public class ApplicationDbContext :DbContext
+    public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
@@ -17,6 +18,9 @@ namespace Bidzy.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Tag> Tags { get; set; } 
         public DbSet<UserAuctionFavorite> UserAuctionFavorite { get; set; }
+        public DbSet<AuctionParticipation> AuctionParticipations { get; set; }
+        public DbSet<SearchHistory> SearchHistories { get; set; }
+        public DbSet<ViewHistory> ViewHistories { get; set; }
 
 
 
@@ -79,6 +83,39 @@ namespace Bidzy.Data
                 .HasOne(ual => ual.auction)
                 .WithMany(a => a.LikedByUsers)
                 .HasForeignKey(ual => ual.auctionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AuctionParticipation>()
+                .HasKey(ap => new { ap.userId, ap.auctionId });
+
+            modelBuilder.Entity<AuctionParticipation>()
+                .HasOne(ap => ap.User)
+                .WithMany(a => a.AuctionParticipations)
+                .HasForeignKey(ap => ap.userId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<AuctionParticipation>()
+                .HasOne(ap => ap.Auction)
+                .WithMany( a => a.participations)
+                .HasForeignKey(ap=> ap.auctionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SearchHistory>()
+                .HasOne(sh => sh.User)
+                .WithMany(u => u.SearchHistories)
+                .HasForeignKey(sh => sh.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ViewHistory>()
+                .HasOne(vh => vh.User)
+                .WithMany(u => u.ViewHistories)
+                .HasForeignKey(vh => vh.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ViewHistory>()
+                .HasOne(vh => vh.Auction)
+                .WithMany(a => a.ViewHistories)
+                .HasForeignKey(vh => vh.AuctionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }

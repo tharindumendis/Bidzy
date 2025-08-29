@@ -145,6 +145,7 @@ builder.Services.AddTransient<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<IBidRepository, BidRepository>();
 builder.Services.AddTransient<ITagRepository, TagRepository>();
 builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavoriteRepository>();
+builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

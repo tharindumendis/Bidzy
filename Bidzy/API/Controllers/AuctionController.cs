@@ -6,6 +6,7 @@ using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit.Cryptography;
 
 namespace Bidzy.API.Controllers
 {
@@ -14,12 +15,14 @@ namespace Bidzy.API.Controllers
     {
         private readonly IAuctionRepository auctionRepository;
         private readonly IAuctionEngine _auctionEngine;
+        private readonly ISearchhistoryRepository searchhistoryRepository;
 
 
-        public AuctionController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine)
+        public AuctionController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine, ISearchhistoryRepository searchhistoryRepository)
         {
             this.auctionRepository = auctionRepository;
             _auctionEngine = auctionEngine;
+            this.searchhistoryRepository = searchhistoryRepository;
         }
 
         [Authorize]
@@ -83,7 +86,21 @@ namespace Bidzy.API.Controllers
             return NoContent();
         }
 
+        [HttpGet ("search")]
+        public async Task<IActionResult> getSearchedAuctions([FromQuery] string query)
+        {
+            var auctions = await auctionRepository.GetAllAuctionsAsync();
+            var filteredAuctions = auctions.Where(q =>
+                q.Product.Title.Contains(query, StringComparison.OrdinalIgnoreCase));
+            searchhistoryRepository.SaveSearchAsync(query, Guid.Parse("f0029d2c-1863-4cfe-8ebc-adf7549b9ab7"));
+            return Ok(filteredAuctions.Select(x => x.ToReadDto()));
+        }
 
-
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetAuctionsByUserId([FromRoute] Guid userId)
+        {
+            var auctions  = await auctionRepository.GetAuctionsByUserIdAsync(userId);
+            return Ok(auctions.Select(x=> x.ToReadDto()));
+        }
     }
 }
