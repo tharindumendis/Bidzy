@@ -7,7 +7,6 @@ namespace Bidzy.API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize]
     public class ImageController : ControllerBase
     {
         private readonly string _baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");

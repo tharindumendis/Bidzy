@@ -16,8 +16,8 @@ namespace Bidzy.API.DTOs
                 SellerId = auction.Product.SellerId,
                 SellerName = auction.Product.Seller?.FullName,
                 ImageUrl = auction.Product.ImageUrl,
-                StartTime = auction.StartTime,
-                EndTime = auction.EndTime,
+                StartTime = auction.StartTime.ToUniversalTime(),
+                EndTime = auction.EndTime.ToUniversalTime(),
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
                 WinningBidId = auction.WinningBidId,
@@ -33,8 +33,8 @@ namespace Bidzy.API.DTOs
             {
                 Id = Guid.NewGuid(),
                 ProductId = auctionAddDto.ProductId,
-                StartTime = auctionAddDto.StartTime,
-                EndTime = auctionAddDto.EndTime,
+                StartTime = auctionAddDto.StartTime.ToUniversalTime(),
+                EndTime = auctionAddDto.EndTime.ToUniversalTime(),
                 MinimumBid = auctionAddDto.MinimumBid,
                 Status = Domain.Enum.AuctionStatus.Scheduled
             };

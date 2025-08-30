@@ -10,7 +10,6 @@ namespace Bidzy.Domain.Enties
         public Guid ProductId { get; set; }
         [Required]
         public Product Product { get; set; }
-        public string ImageUrl { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }

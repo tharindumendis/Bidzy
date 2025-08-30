@@ -58,13 +58,14 @@ namespace Bidzy.API.Controllers
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Use userId to fetch user data from DB
-            var findUser = await userRepository.GetUserByIdAsync(Guid.Parse(userId));
-            if(findUser == null)
+
+            var user = await userRepository.GetUserByIdWithFavAsync(Guid.Parse(userId));
+            if (user == null)
             {
-                return Unauthorized("Invalid Token.");
+                return NotFound("User not found.");
             }
-            return Ok(findUser.ToReadDto());
+            return Ok(user.ToProfileDto());
+
         }
     }
 

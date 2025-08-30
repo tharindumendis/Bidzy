@@ -6,6 +6,8 @@
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
+        public string Role { get; set; }
+        public List<string> FavoriteAuctions { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
     }
 }

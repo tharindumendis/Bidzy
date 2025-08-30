@@ -56,6 +56,8 @@ namespace Bidzy.API.DTOs
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
+                Role = user.Role.ToString(),
+                FavoriteAuctions = user.AuctionLikes.Select(al => al.auctionId.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
             };
         }

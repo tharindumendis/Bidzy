@@ -21,6 +21,14 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Users.FindAsync(id);
         }
+        public async Task<User?> GetUserByIdWithFavAsync(Guid id)
+        {
+            return await dbContext.Users.Where(x => x.Id == id)
+                .Include(u => u.AuctionLikes)
+                .ThenInclude(f => f.auction)
+                .ThenInclude(a => a.Product)
+                .FirstOrDefaultAsync();
+        }
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
