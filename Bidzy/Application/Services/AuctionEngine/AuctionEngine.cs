@@ -20,6 +20,7 @@ namespace Bidzy.Application.Services.AuctionEngine
         private readonly IJobScheduler _jobScheduler;
         private readonly IEmailJobService _emailJobService;
         private readonly ILiveAuctionCountService _liveAuctionCountService;
+        private readonly INotificationRepository _notificationRepository;
 
 
 
@@ -30,7 +31,8 @@ namespace Bidzy.Application.Services.AuctionEngine
             ISignalRNotifier notifier,
             IJobScheduler jobScheduler,
             IBidRepository bidRepository,
-            ILiveAuctionCountService liveAuctionCountService)
+            ILiveAuctionCountService liveAuctionCountService,
+            INotificationRepository notificationRepository)
         {
             _auctionRepo = auctionRepo;
             _scheduler = scheduler;
@@ -39,6 +41,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             _emailJobService = emailJobService;
             _bidRepository = bidRepository;
             _liveAuctionCountService = liveAuctionCountService;
+            _notificationRepository = notificationRepository;
         }
         public async Task<AuctionReadDto> CreateAuctionAsync(AuctionAddDto dto)
         {
@@ -70,6 +73,15 @@ namespace Bidzy.Application.Services.AuctionEngine
             await _liveAuctionCountService.RemoveScheduledCount(1);
             await _liveAuctionCountService.AddOngoingCount(1);
             await _notifier.BroadcastAuctionStarted(auction);
+            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = auction.Product.SellerId,
+                Message = $"Your auction '{auction.Product.Title}' has started.",
+                Type = NotificationType.Auction,
+                SentAt = DateTime.UtcNow,
+                IsSeen = false
+            });
             // TODO featch faverite bidders and send mail
             List<string> emailAddresses = null;
             await _emailJobService.SendAuctionStartedEmailsAsync(auction, emailAddresses);
@@ -101,6 +113,24 @@ namespace Bidzy.Application.Services.AuctionEngine
             await _liveAuctionCountService.RemoveOngoingCount(1);
             await _notifier.BroadcastAuctionEnded(auction);
             await _emailJobService.SendAuctionEndedEmails(auction, winBid);
+            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = auction.Product.SellerId,
+                Message = $"Your auction '{auction.Product.Title}' has ended. Winning bid: {winBid.Amount:C} by User {winBid.BidderId}.",
+                Type = NotificationType.Auction,
+                SentAt = DateTime.UtcNow,
+                IsSeen = false
+            });
+            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = winBid.BidderId,
+                Message = $"Congratulations! You won the auction '{auction.Product.Title}' with a bid of {winBid.Amount:C}.",
+                Type = NotificationType.Bid,
+                SentAt = DateTime.UtcNow,
+                IsSeen = false
+            });
         }
 
         public async Task CancelAuctionAsync(Guid auctionId)
@@ -125,6 +155,16 @@ namespace Bidzy.Application.Services.AuctionEngine
             await _notifier.BroadcastAuctionCancelled(auction);
             //TODO: Notify bidders and sellers about cancellation
             await _emailJobService.SendAuctionCancelledEmail(auction);
+
+            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = auction.Product.SellerId,
+                Message = $"Your auction '{auction.Product.Title}' has been cancelled.",
+                Type = NotificationType.Auction,
+                SentAt = DateTime.UtcNow,
+                IsSeen = false
+            });
         }
         private async Task<Bid?> DetermineWinner(Auction auction)
         {
