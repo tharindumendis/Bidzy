@@ -8,13 +8,10 @@ using Newtonsoft.Json;
 
 namespace Bidzy.API.Hubs
 {
-    public class UserHub : Hub
+    public class UserHub(ILiveAuctionCountService liveCountService) : Hub
     {
-        private readonly ILiveAuctionCountService _liveCountService;
-        public UserHub(ILiveAuctionCountService liveCountService)
-        {
-            _liveCountService = liveCountService;
-        }
+        private readonly ILiveAuctionCountService _liveCountService = liveCountService;
+
         // Track active connections
         private static readonly ConcurrentDictionary<string, NotificationSubscribeDto> Connections = new();
 
@@ -25,7 +22,8 @@ namespace Bidzy.API.Hubs
             // Add user to group (e.g., auction ID)
             await _liveCountService.AddConnection(Context.ConnectionId, payload);
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, payload.GroupId);
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, payload.UserId);
             await Groups.AddToGroupAsync(Context.ConnectionId, "LiveCount");
             await _liveCountService.BroadcastLiveCountAsync();
             // Notify others in the group 

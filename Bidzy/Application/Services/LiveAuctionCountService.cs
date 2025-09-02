@@ -5,9 +5,10 @@ using Bidzy.Application.DTOs;
 using Bidzy.Application.Services;
 using Microsoft.AspNetCore.SignalR;
 
-public class LiveAuctionCountService : ILiveAuctionCountService
+public class LiveAuctionCountService(IHubContext<AuctionHub> hubContext, IHubContext<UserHub> userHubContext) : ILiveAuctionCountService
 {
-    private readonly IHubContext<UserHub> _hubContext;
+    private readonly IHubContext<AuctionHub> _hubContext = hubContext;
+    private readonly IHubContext<UserHub> _userHubContext = userHubContext;
     private readonly ConcurrentDictionary<string, NotificationSubscribeDto> _connections = new();
     private readonly LiveCountDto _liveCount = new()
     {
@@ -15,11 +16,6 @@ public class LiveAuctionCountService : ILiveAuctionCountService
         OngoingAuctionCount = 0,
         ScheduledAuctionCount = 0
     };
-
-    public LiveAuctionCountService(IHubContext<UserHub> hubContext)
-    {
-        _hubContext = hubContext;
-    }
 
     public async Task AddConnection(string connectionId, NotificationSubscribeDto payload)
     {
@@ -72,5 +68,8 @@ public class LiveAuctionCountService : ILiveAuctionCountService
     public async Task BroadcastLiveCountAsync()
     {
         await _hubContext.Clients.Group("LiveCount").SendAsync("LiveCount", _liveCount);
+        await _userHubContext.Clients.Group("LiveCount").SendAsync("LiveCount", _liveCount);
+
     }
+    
 }

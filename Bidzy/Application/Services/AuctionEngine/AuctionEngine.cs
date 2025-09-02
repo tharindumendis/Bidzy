@@ -88,6 +88,7 @@ namespace Bidzy.Application.Services.AuctionEngine
         public async Task EndAuctionAsync(Guid auctionId)
         {
             var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+            
             Bid winBid = await DetermineWinner(auction);
             if(winBid == null)
             {

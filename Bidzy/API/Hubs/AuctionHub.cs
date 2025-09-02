@@ -1,8 +1,10 @@
-﻿using System.Security.Claims;
+﻿using System.Collections.Concurrent;
+using System.Security.Claims;
 using Bidzy.API.DTOs.favoriteAuctionsDtos;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services;
 using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -11,9 +13,10 @@ using Newtonsoft.Json;
 namespace Bidzy.API.Hubs
 {
     [Authorize]
-    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository) : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, ILiveAuctionCountService liveCountService) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
+        private readonly ILiveAuctionCountService _liveCountService = liveCountService;
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -63,12 +66,67 @@ namespace Bidzy.API.Hubs
         {
             await Clients.Group(auctionId).SendAsync("ReceiveAuctionUpdate", message);
         }
+
+
+
+        // Notifications
+
+        private static readonly ConcurrentDictionary<string, NotificationSubscribeDto> Connections = new();
+
+        public async Task SubscribeToNotifications(NotificationSubscribeDto payload)
+        {
+            Connections[Context.ConnectionId] = payload;
+
+            // Add user to group (e.g., auction ID)
+            await _liveCountService.AddConnection(Context.ConnectionId, payload);
+
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, payload.UserId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, "LiveCount");
+            await _liveCountService.BroadcastLiveCountAsync();
+            // Notify others in the group 
+            // this is temp
+            await Clients.Group(payload.GroupId).SendAsync("UserSubscribed", payload);
+
+        }
+
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            if (Connections.TryRemove(Context.ConnectionId, out var user))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.GroupId);
+                await _liveCountService.RemoveConnection(Context.ConnectionId);
+                // this is temp for dev
+                await Clients.Group(user.GroupId).SendAsync("UserUnsubscribed", user);
+            }
             Console.WriteLine($"Conn {Context.ConnectionId} disconnected. Reason: {exception?.Message}");
 
             await base.OnDisconnectedAsync(exception);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private async Task AddFavorite (string auctionId, string userId)
         {
