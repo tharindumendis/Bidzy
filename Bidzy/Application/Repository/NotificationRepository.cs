@@ -18,7 +18,7 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Notifications
                 .Where ( u => u.UserId == userId)
-                .OrderByDescending ( u => u.SentAt )
+                .OrderByDescending ( u => u.Timestamp )
                 .ToListAsync ();
         }
 
@@ -26,7 +26,7 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Notifications
                 .Where( u => u.UserId == userId && !u.IsSeen)
-                .OrderByDescending( u => u.SentAt )
+                .OrderByDescending( u => u.Timestamp )
                 .ToListAsync ();
         }
 

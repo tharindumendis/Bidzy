@@ -4,10 +4,10 @@ using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.API.Hubs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.NotificationEngine;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Bidzy.Application.Services.AuctionEngine
 {
@@ -16,32 +16,24 @@ namespace Bidzy.Application.Services.AuctionEngine
         private readonly IAuctionRepository _auctionRepo;
         private readonly IBidRepository _bidRepository;
         private readonly INotificationSchedulerService _scheduler;
-        private readonly ISignalRNotifier _notifier;
         private readonly IJobScheduler _jobScheduler;
-        private readonly IEmailJobService _emailJobService;
         private readonly ILiveAuctionCountService _liveAuctionCountService;
-        private readonly INotificationRepository _notificationRepository;
-
-
+        private readonly INotificationService _notificationService;
 
         public AuctionEngine(
             IAuctionRepository auctionRepo,
             INotificationSchedulerService scheduler,
-            IEmailJobService emailJobService,
-            ISignalRNotifier notifier,
+            INotificationService notificationService,
             IJobScheduler jobScheduler,
             IBidRepository bidRepository,
-            ILiveAuctionCountService liveAuctionCountService,
-            INotificationRepository notificationRepository)
+            ILiveAuctionCountService liveAuctionCountService)
         {
             _auctionRepo = auctionRepo;
             _scheduler = scheduler;
-            _notifier = notifier;
             _jobScheduler = jobScheduler;
-            _emailJobService = emailJobService;
+            _notificationService = notificationService;
             _bidRepository = bidRepository;
             _liveAuctionCountService = liveAuctionCountService;
-            _notificationRepository = notificationRepository;
         }
         public async Task<AuctionReadDto> CreateAuctionAsync(AuctionAddDto dto)
         {
@@ -72,20 +64,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             await _auctionRepo.UpdateAuctionAsync(auction);
             await _liveAuctionCountService.RemoveScheduledCount(1);
             await _liveAuctionCountService.AddOngoingCount(1);
-            await _notifier.BroadcastAuctionStarted(auction);
-            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = auction.Product.SellerId,
-                Message = $"Your auction '{auction.Product.Title}' has started.",
-                Type = NotificationType.AUCTIONSTART,
-                SentAt = DateTime.UtcNow,
-                IsSeen = false
-            });
-            // TODO featch faverite bidders and send mail
-            List<string> emailAddresses = null;
-            await _emailJobService.SendAuctionStartedEmailsAsync(auction, emailAddresses);
-            // TODO send favorite bidder Emails
+            await _notificationService.NotifyAuctionStartedAsync(auction);
             var delay = auction.EndTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)
             {
@@ -111,26 +90,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             auction.Status = AuctionStatus.Ended;
             auction = await _auctionRepo.UpdateAuctionAsync(auction);
             await _liveAuctionCountService.RemoveOngoingCount(1);
-            await _notifier.BroadcastAuctionEnded(auction);
-            await _emailJobService.SendAuctionEndedEmails(auction, winBid);
-            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = auction.Product.SellerId,
-                Message = $"Your auction '{auction.Product.Title}' has ended. Winning bid: {winBid.Amount:C} by User {winBid.BidderId}.",
-                Type = NotificationType.AUCTIONEND,
-                SentAt = DateTime.UtcNow,
-                IsSeen = false
-            });
-            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = winBid.BidderId,
-                Message = $"Congratulations! You won the auction '{auction.Product.Title}' with a bid of {winBid.Amount:C}.",
-                Type = NotificationType.WINBID,
-                SentAt = DateTime.UtcNow,
-                IsSeen = false
-            });
+            await _notificationService.NotifyAuctionEndedAsync(auction, winBid);
         }
 
         public async Task CancelAuctionAsync(Guid auctionId)
@@ -151,20 +111,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
             auction.Status = AuctionStatus.Cancelled;
             await _auctionRepo.UpdateAuctionAsync(auction);
-           
-            await _notifier.BroadcastAuctionCancelled(auction);
-            //TODO: Notify bidders and sellers about cancellation
-            await _emailJobService.SendAuctionCancelledEmail(auction);
-
-            await _notificationRepository.AddNotificationAsync(new Domain.Enties.Notification
-            {
-                Id = Guid.NewGuid(),
-                UserId = auction.Product.SellerId,
-                Message = $"Your auction '{auction.Product.Title}' has been cancelled.",
-                Type = NotificationType.AUCTIONCANCLLED,
-                SentAt = DateTime.UtcNow,
-                IsSeen = false
-            });
+            await _notificationService.NotifyAuctionCancelledAsync(auction);
         }
         private async Task<Bid?> DetermineWinner(Auction auction)
         {
