@@ -52,5 +52,13 @@ namespace Bidzy.Application.Repository
                 .ThenInclude(x => x.Product)
                 .FirstOrDefaultAsync(x => x.userId == userId && x.auctionId == auctionId);
         }
+
+        public async Task<IEnumerable<UserAuctionFavorite>> GetFavoritesByAuctionAsync(Guid auctionId)
+        {
+            return await dbContext.UserAuctionFavorite
+                .Where(x => x.auctionId == auctionId)
+                .Include(x => x.user)
+                .ToListAsync();
+        }
     }
 }

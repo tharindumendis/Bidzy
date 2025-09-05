@@ -1,11 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Bidzy.API.DTOs;
+﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
-using Bidzy.API.Hubs;
-using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.NotificationEngine;
-using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 
@@ -59,7 +55,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
         public async Task StartAuctionAsync(Guid auctionId)
         {
-            var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+            var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
             auction.Status = AuctionStatus.Active;
             await _auctionRepo.UpdateAuctionAsync(auction);
             await _liveAuctionCountService.RemoveScheduledCount(1);
@@ -78,7 +74,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
         public async Task EndAuctionAsync(Guid auctionId)
         {
-            var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+            var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
             
             Bid winBid = await DetermineWinner(auction);
             if(winBid == null)
@@ -95,7 +91,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
         public async Task CancelAuctionAsync(Guid auctionId)
         {
-            var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+            var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
 
             if(auction?.Status == AuctionStatus.Active)
             {

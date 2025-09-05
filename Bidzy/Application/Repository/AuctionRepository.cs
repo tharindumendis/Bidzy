@@ -14,7 +14,7 @@ namespace Bidzy.Application.Repository
         {
             this.dbContext = dbContext;
         }
-        
+
         public async Task<List<Auction>> GetAllAuctionsAsync()
         {
             return await dbContext.Auctions
@@ -75,11 +75,25 @@ namespace Bidzy.Application.Repository
         public async Task<List<Auction>> GetAuctionsByUserIdAsync(Guid userId)
         {
             return await dbContext.Auctions
-                .Where ( b=> b.Bids.Any(b => b.BidderId == userId) || b.Product.SellerId == userId)
+                .Where(b => b.Bids.Any(b => b.BidderId == userId) || b.Product.SellerId == userId)
                 .Include(a => a.Product)
                 .Include(a => a.Bids)
                 .ToListAsync();
         }
 
+        public async Task<Auction> GetAuctionDetailsByAuctionIdAsync(Guid auctionId)
+        {
+            var auction = await dbContext.Auctions
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .Include(b => b.Bids)
+                    .ThenInclude(a => a.Bidder)
+                .Include(u => u.LikedByUsers)
+                    .ThenInclude(u => u.user)
+                .FirstOrDefaultAsync(x => x.Id == auctionId);
+            return auction;
+        }
     }
 }
