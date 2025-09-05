@@ -58,7 +58,8 @@ namespace Bidzy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
         {
-            
+            DateTime rowStartTime = auctionAddDto.StartTime;
+            DateTime rowEndTime = auctionAddDto.EndTime;
             return Ok(await _auctionEngine.CreateAuctionAsync(auctionAddDto));
         }
 

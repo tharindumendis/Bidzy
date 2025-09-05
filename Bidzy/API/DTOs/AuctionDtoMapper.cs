@@ -8,6 +8,10 @@ namespace Bidzy.API.DTOs
     {
         public static AuctionReadDto ToReadDto(this Auction auction)
         {
+            DateTime rowStartTime = auction.StartTime;
+            DateTime UTCStartTime = auction.StartTime.ToUniversalTime();
+            DateTime rowEndTime = auction.EndTime;
+            DateTime UTCEndTime = auction.EndTime.ToUniversalTime();
             return new AuctionReadDto
             {
                 Id = auction.Id,
@@ -16,8 +20,8 @@ namespace Bidzy.API.DTOs
                 SellerId = auction.Product.SellerId,
                 SellerName = auction.Product.Seller?.FullName,
                 ImageUrl = auction.Product.ImageUrl,
-                StartTime = auction.StartTime.ToUniversalTime(),
-                EndTime = auction.EndTime.ToUniversalTime(),
+                StartTime = auction.StartTime,
+                EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
                 WinningBidId = auction.WinningBidId,
