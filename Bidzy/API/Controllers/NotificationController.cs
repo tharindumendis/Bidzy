@@ -55,10 +55,12 @@ namespace Bidzy.API.Controllers
         }
 
         [Authorize]
-        [HttpPut("mark-all-as-seen/{userId}")]
-        public async Task<IActionResult> MarkAllAsSeen([FromRoute] Guid userId)
+        [HttpPut("mark-all-as-seen")]
+        public async Task<IActionResult> MarkAllAsSeen()
         {
-            await notificationRepository.MarkAllAsSeenByUserIdAsync(userId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            await notificationRepository.MarkAllAsSeenByUserIdAsync(Guid.Parse(userId));
             return NoContent();
         }
 

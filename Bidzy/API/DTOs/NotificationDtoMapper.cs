@@ -14,7 +14,7 @@ namespace Bidzy.API.DTOs
                 UserId = entity.UserId,
                 Message = entity.Message,
                 Type = entity.Type.ToString(),
-                SentAt = entity.SentAt,
+                Timestamp = entity.Timestamp,
                 IsSeen = entity.IsSeen,
             };
         }
@@ -27,7 +27,7 @@ namespace Bidzy.API.DTOs
                 UserId = dto.UserId,
                 Message = dto.Message,
                 Type = Enum.Parse<NotificationType>(dto.Type, true),
-                SentAt = DateTime.UtcNow,
+                link = dto.Link,
                 IsSeen = false,
             };
         }

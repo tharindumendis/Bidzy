@@ -8,7 +8,7 @@ namespace Bidzy.API.DTOs.NotificationDtos
         public Guid UserId { get; set; }
         public string Message { get; set; }
         public string Type { get; set; }
-        public DateTime SentAt {  get; set; }
+        public DateTime Timestamp {  get; set; }
         public bool IsSeen { get; set; }
     }
 }

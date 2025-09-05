@@ -2,6 +2,6 @@
 {
     public enum NotificationType
     {
-        Auction, Bid , User , System
+        AUCTIONSTART, AUCTIONEND, AUCTIONCANCLLED, PLACEBID, WINBID, NEWBID, USER, SYSTEM
     }
 }

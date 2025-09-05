@@ -78,7 +78,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 Id = Guid.NewGuid(),
                 UserId = auction.Product.SellerId,
                 Message = $"Your auction '{auction.Product.Title}' has started.",
-                Type = NotificationType.Auction,
+                Type = NotificationType.AUCTIONSTART,
                 SentAt = DateTime.UtcNow,
                 IsSeen = false
             });
@@ -118,7 +118,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 Id = Guid.NewGuid(),
                 UserId = auction.Product.SellerId,
                 Message = $"Your auction '{auction.Product.Title}' has ended. Winning bid: {winBid.Amount:C} by User {winBid.BidderId}.",
-                Type = NotificationType.Auction,
+                Type = NotificationType.AUCTIONEND,
                 SentAt = DateTime.UtcNow,
                 IsSeen = false
             });
@@ -127,7 +127,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 Id = Guid.NewGuid(),
                 UserId = winBid.BidderId,
                 Message = $"Congratulations! You won the auction '{auction.Product.Title}' with a bid of {winBid.Amount:C}.",
-                Type = NotificationType.Bid,
+                Type = NotificationType.WINBID,
                 SentAt = DateTime.UtcNow,
                 IsSeen = false
             });
@@ -161,7 +161,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 Id = Guid.NewGuid(),
                 UserId = auction.Product.SellerId,
                 Message = $"Your auction '{auction.Product.Title}' has been cancelled.",
-                Type = NotificationType.Auction,
+                Type = NotificationType.AUCTIONCANCLLED,
                 SentAt = DateTime.UtcNow,
                 IsSeen = false
             });
