@@ -1,7 +1,9 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.bidDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Bidzy.API.Controllers
 {
@@ -33,10 +35,13 @@ namespace Bidzy.API.Controllers
             }
             return Ok(bid.ToReadDto());
         }
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetBidsByUserId([FromRoute] Guid userId)
+
+        [Authorize]
+        [HttpGet("user")]
+        public async Task<IActionResult> GetBidsByUserId()
         {
-            var bids = await bidRepository.GetBidsByUserIdAsync(userId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var bids = await bidRepository.GetBidsByUserIdAsync(Guid.Parse(userId));
             if (bids == null || !bids.Any())
             {
                 return NotFound("No bids found for this user.");

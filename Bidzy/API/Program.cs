@@ -7,6 +7,7 @@ using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Application.Services.Auth;
+using Bidzy.Application.Services.NotificationEngine;
 using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Data;
@@ -143,6 +144,7 @@ builder.Services.AddTransient<INotificationSchedulerService, NotificationSchedul
 builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();

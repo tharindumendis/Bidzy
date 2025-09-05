@@ -17,7 +17,7 @@ namespace Bidzy.Domain.Enties
         [Required]
         public NotificationType Type { get; set; }
 
-        public DateTime? SentAt { get; set; }
+        public DateTime? SeenAt { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         public bool IsSeen { get; set; } = false;
