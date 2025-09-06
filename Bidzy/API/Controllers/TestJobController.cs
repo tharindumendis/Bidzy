@@ -36,8 +36,11 @@ namespace Bidzy.API.Controllers
             Console.WriteLine(id);
               if (Guid.TryParse(id, out Guid auctionId))
             {
-                Auction auc = await _auctionRepository.GetAuctionByIdAsync(auctionId);
-                _signalRNotifier.BroadcastAuctionStarted(auc);
+                var auc = await _auctionRepository.GetAuctionByIdAsync(auctionId);
+                if (auc != null)
+                {
+                    await _signalRNotifier.BroadcastAuctionStarted(auc);
+                }
             }
 
             return Ok(null);

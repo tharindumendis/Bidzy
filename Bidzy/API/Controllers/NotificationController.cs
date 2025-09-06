@@ -59,7 +59,6 @@ namespace Bidzy.API.Controllers
         public async Task<IActionResult> MarkAllAsSeen()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             await notificationRepository.MarkAllAsSeenByUserIdAsync(Guid.Parse(userId));
             return NoContent();
         }

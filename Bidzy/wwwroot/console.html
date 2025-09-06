@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bidzy • Endpoint Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { createIcons } from "https://cdn.jsdelivr.net/npm/lucide@0.468.0/+esm";
+    window.lucideReady = () => createIcons({ attrs: { class: 'inline w-4 h-4 align-[-2px]' } });
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: color-mix(in oklab, #059669 35%, transparent); border-radius: 999px; }
+    .shadow-soft{ box-shadow: 0 10px 30px -12px rgb(0 0 0 / .18), 0 6px 16px -12px rgb(0 0 0 / .12); }
+    .status-pill{ border-radius:999px; padding:.15rem .5rem; font-size:.75rem; font-weight:600; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .table-grid{ display:grid; grid-template-columns: repeat(var(--cols,1), minmax(0,1fr)); }
+    .cell{ padding:.5rem .625rem; border-bottom:1px solid #e5e7eb; font-size:12px; }
+    .cell.h{ font-weight:700; background:#f8fafc; position:sticky; top:0; z-index:1; }
+    .tab-btn.current{ background:#0f172a; color:#fff; }
+    /* Request tabs */
+    .rtab{ border-radius: .5rem; padding: .35rem .6rem; font-size:.8rem; border:1px solid #e5e7eb; background:#fff; color:#0f172a; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .rtab:hover{ background:#f8fafc; }
+    .rtab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
+    .rtab .close{ margin-left:.4rem; opacity:.7; }
+    .rtab.active .close{ opacity: .9; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+    <div class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="size-9 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-cyan-500 shadow-soft"></div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-semibold tracking-tight">Bidzy Endpoint Console</h1>
+            <p class="text-[11px] text-slate-500 leading-4">Human-first, fast, accessible request runner.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Swagger dropdown: choose between this Endpoint Console and Swagger UI -->
+          <div class="relative">
+            <button id="btn-docs" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" aria-haspopup="menu" aria-expanded="false" title="Choose documentation view">
+              Swagger ▾
+            </button>
+            <div id="menu-docs" class="absolute right-0 z-50 mt-1 hidden min-w-56 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-soft" role="menu" aria-label="Docs menu">
+              <button data-screen="console" class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50" role="menuitem" title="Interactive endpoint console (this page)">
+                Endpoint Console <span class="text-xs text-emerald-700">default</span>
+              </button>
+              <button data-screen="swagger" class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50" role="menuitem" title="Built‑in Swagger UI">
+                Swagger UI <span class="text-xs text-slate-500">/swagger</span>
+              </button>
+            </div>
+          </div>
+          <button id="btn-payments" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" title="Payments dashboard">Payments</button>
+          <a href="/test/job" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" title="Hangfire dashboard (dev only)">Hangfire</a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- Display area: screens -->
+  <div id="screen-console" class="block">
+  <section class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8 py-4">
+    <div class="grid grid-cols-1 gap-3 lg:grid-cols-[360px,1fr]">
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">Environment</h2>
+          <button id="btn-reset-env" class="text-xs text-slate-500 hover:underline">Reset</button>
+        </div>
+        <div class="mt-3 grid gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="env-select">Select</label>
+            <div class="mt-1 flex items-center gap-2">
+              <select id="env-select" class="h-10 w-48 rounded-lg border border-slate-300 bg-white px-2 text-sm" title="Local: uses this browser origin. Dev: remote dev environment."><option title="Runs on this machine">Local</option><option title="Remote development environment">Dev</option></select>
+              <span id="env-indicator" class="status-pill bg-emerald-50 text-emerald-700">OK</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="base-url">Base URL</label>
+            <input id="base-url" placeholder="http://localhost:5030" class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-save-env" class="h-10 rounded-lg bg-slate-900 px-3 text-sm font-semibold text-white hover:bg-slate-800">Save</button>
+            <button id="btn-ping" class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">Ping</button>
+          </div>
+          <p id="env-msg" class="text-xs text-slate-500"></p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">Authorization</h2>
+          <span id="auth-status" class="status-pill bg-orange-50 text-orange-700">No token</span>
+        </div>
+        <div class="mt-3 grid gap-3 md:grid-cols-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="auth-email">Email</label>
+            <input id="auth-email" value="user@example.com" class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="auth-pass">Password</label>
+            <input id="auth-pass" type="password" value="P@ssw0rd!" class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+          </div>
+          <div class="col-span-full flex flex-wrap gap-2">
+            <button id="btn-login" class="h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700">Login</button>
+            <button id="btn-profile" class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">Get Profile</button>
+            <button id="btn-clear-token" class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">Clear Token</button>
+            <button id="btn-copy-token" class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50" data-copy="#jwt">Copy JWT</button>
+          </div>
+          <div class="col-span-full">
+            <label class="block text-xs font-medium text-slate-600" for="jwt">JWT</label>
+            <textarea id="jwt" class="mono mt-1 h-24 w-full resize-none rounded-lg border border-slate-300 bg-white p-2 text-xs" placeholder="(will appear after login)"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- Swagger screen -->
+  <div id="screen-swagger" class="hidden">
+    <section class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8 py-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+        <div class="mb-2 flex items-center justify-between">
+          <h2 class="text-sm font-semibold">Swagger UI</h2>
+          <a id="swagger-open" href="/swagger" target="_blank" rel="noopener" class="text-xs text-emerald-700 hover:underline" title="Open in new tab">Open in new tab</a>
+        </div>
+        <iframe id="swagger-frame" src="/swagger/index.html" title="Swagger UI" class="h-[78vh] w-full rounded-lg border border-slate-200"></iframe>
+      </div>
+    </section>
+  </div>
+
+  <!-- Payments dashboard screen -->
+  <div id="screen-payments" class="hidden">
+    <section class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8 py-4">
+      <div class="grid grid-cols-1 gap-4">
+        <!-- Payments table -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-pay-recent" class="h-9 rounded-lg bg-slate-900 px-3 text-sm font-semibold text-white">Load Recent</button>
+            <input id="pay-user-id" placeholder="UserId" class="h-9 w-56 rounded-lg border border-slate-300 bg-white px-2 text-sm" />
+            <select id="pay-role" class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm"><option value="buyer">buyer</option><option value="seller">seller</option></select>
+            <button id="btn-pay-user" class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">By User</button>
+            <input id="pay-bid-id" placeholder="BidId" class="h-9 w-56 rounded-lg border border-slate-300 bg-white px-2 text-sm" />
+            <button id="btn-pay-bid" class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">By Bid</button>
+            <input id="pay-id" placeholder="PaymentId" class="h-9 w-56 rounded-lg border border-slate-300 bg-white px-2 text-sm" />
+            <button id="btn-pay-id" class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">By Id</button>
+            <input id="pay-filter" placeholder="Filter (text or field:value)" class="ml-auto h-9 w-64 rounded-lg border border-slate-300 bg-white px-2 text-sm" />
+          </div>
+          <div id="pay-table" class="mt-3 rounded-lg border border-slate-200"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="screen-console-aux" class="block">
+  <section class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8 pb-6">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[340px,1fr]">
+      <aside class="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <input id="search" placeholder="Search endpoints" class="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm" />
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-slate-400">🔎</div>
+          </div>
+          <button id="btn-expand-all" class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-50">Expand</button>
+        </div>
+        <div id="endpoint-tree" class="thin-scroll mt-3 max-h-[60vh] overflow-auto pr-1"></div>
+      </aside>
+
+      <div class="grid grid-rows-[auto,1fr] gap-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <!-- Request Tabs -->
+          <div class="mb-3 flex items-center gap-2 overflow-x-auto thin-scroll" id="req-tabs">
+            <!-- filled by JS -->
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="method" class="h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm font-semibold"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+            <input id="path" placeholder="/api/auction" class="h-10 min-w-[260px] flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+            <button id="btn-send" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Send</button>
+            <button id="btn-cancel" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+            <button id="btn-copy-curl" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" data-copy="#curl-area">Copy cURL</button>
+            <button id="btn-new-tab" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50">New Tab</button>
+          </div>
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold">Headers</h3>
+            <div class="flex items-center gap-2 text-xs">
+                  <select id="headers-preset" class="h-8 rounded border border-slate-300 bg-white px-1"><option value="">Add common…</option><option value='{"Content-Type":"application/json"}'>Content-Type: application/json</option><option value='{"Authorization":"Bearer ${JWT}"}'>Authorization: Bearer &lt;jwt&gt;</option><option value='{"Accept":"application/json"}'>Accept: application/json</option></select>
+                  <button id="add-header" class="rounded bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">+ Add</button>
+                </div>
+              </div>
+              <div id="headers" class="mt-2 grid gap-2"></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold">Query</h3>
+                <div class="flex items-center gap-2 text-xs">
+                  <select id="queries-preset" class="h-8 rounded border border-slate-300 bg-white px-1"><option value="">Add common…</option><option value='{"page":"1"}'>page</option><option value='{"pageSize":"20"}'>pageSize</option><option value='{"sort":"createdAt:desc"}'>sort</option></select>
+                  <button id="add-query" class="rounded bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">+ Add</button>
+                </div>
+              </div>
+              <div id="queries" class="mt-2 grid gap-2"></div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold">Body</h3>
+              <div class="flex items-center gap-2 text-xs">
+                <label class="inline-flex items-center gap-1"><input type="radio" name="bodytype" value="json" checked/><span>JSON</span></label>
+                <label class="inline-flex items-center gap-1"><input type="radio" name="bodytype" value="form"/><span>Form</span></label>
+                <label class="inline-flex items-center gap-1"><input type="radio" name="bodytype" value="none"/><span>None</span></label>
+                <select id="body-preset" class="h-8 rounded border border-slate-300 bg-white px-1"><option value="">Templates…</option><option value='{"email":"user@example.com","password":"P@ssw0rd!"}'>Auth.Login</option><option value='{"SellerId":"","Title":"Sample Product","Description":"Nice item","Tags":["tag1","tag2"]}'>Product.Create</option></select>
+              </div>
+            </div>
+            <textarea id="body-json" class="mono mt-2 h-40 w-full resize-y rounded-lg border border-slate-300 bg-white p-2 text-sm" placeholder='{"key":"value"}'></textarea>
+            <div id="body-form" class="mt-2 hidden">
+              <div class="grid gap-2">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600">File</label>
+                  <input id="form-file" type="file" class="mt-1 block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:hover:bg-slate-50" />
+                </div>
+                <div id="form-rows" class="grid gap-2"></div>
+                <button id="add-form" class="mt-2 text-xs font-semibold text-emerald-700 hover:underline">+ Add field</button>
+              </div>
+            </div>
+          </div>
+          <textarea id="curl-area" class="hidden"></textarea>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-soft">
+          <div class="flex items-center justify-between border-b border-slate-200 px-4 py-2">
+            <div class="flex items-center gap-2 text-sm"><span id="resp-status" class="status-pill bg-slate-100 text-slate-700">—</span><span id="resp-time" class="text-slate-500">0 ms</span><span class="text-slate-300">•</span><span id="resp-size" class="text-slate-500">0 B</span></div>
+            <div class="flex items-center gap-2"><button id="btn-copy-resp" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-slate-50" data-copy="#resp-pretty">Copy</button><button id="btn-dl-csv" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">Download CSV</button><button id="btn-clear" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">Clear</button></div>
+          </div>
+          <div class="grid grid-cols-1 gap-0 md:grid-cols-2">
+            <!-- JSON mode: left json, right headers (pre) -->
+            <div class="thin-scroll max-h-[48vh] overflow-auto p-4" id="pane-json"><pre id="resp-pretty" class="mono whitespace-pre-wrap break-words text-[12px]"></pre></div>
+            <div class="thin-scroll max-h-[48vh] overflow-auto border-t border-slate-200 p-4 md:border-l md:border-t-0" id="pane-extra"><h4 class="text-xs font-semibold text-slate-600">Headers</h4><pre id="resp-headers" class="mono mt-2 whitespace-pre-wrap break-words text-[12px]"></pre></div>
+
+            <!-- TABLE mode: two panes, left data table, right headers table -->
+            <div class="thin-scroll max-h-[60vh] overflow-auto p-0 hidden col-span-1 md:col-span-2" id="pane-table">
+              <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="p-4">
+                  <div class="mb-2 flex items-center gap-2">
+                    <input id="table-filter" placeholder="Filter rows (text or field:value)" class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+                    <button id="table-filter-clear" class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold hover:bg-slate-50">Clear</button>
+                  </div>
+                  <div id="table-wrap" class="rounded-lg border border-slate-200"></div>
+                </div>
+                <div class="border-t border-slate-200 p-4 md:border-l md:border-t-0">
+                  <div class="mb-2 flex items-center gap-2">
+                    <h4 class="text-xs font-semibold text-slate-600">Headers</h4>
+                    <input id="headers-filter" placeholder="Filter headers (key/value)" class="ml-auto h-8 w-56 rounded-lg border border-slate-300 bg-white px-2 text-xs" />
+                  </div>
+                  <div id="headers-table-wrap" class="rounded-lg border border-slate-200"></div>
+                </div>
+              </div>
+            </div>
+            <!-- RAW mode: full width raw body -->
+            <div class="thin-scroll max-h-[60vh] overflow-auto p-4 hidden col-span-1 md:col-span-2" id="pane-raw"><pre id="resp-raw" class="mono whitespace-pre-wrap break-words text-[12px]"></pre></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+  <div id="toast" role="status" aria-live="polite" class="pointer-events-none fixed inset-x-0 top-20 z-50 mx-auto hidden w-fit rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg"></div>
+  <script>
+    const state = {
+      demo: true,
+      controller: null,
+      env: 'Local',
+      baseUrl: 'http://localhost:5030',
+      jwt: '',
+      tabs: [],
+      activeTab: null,
+      endpoints: [
+        { group: 'Auth', items: [
+          { method:'POST', path:'/api/auth/login', sample: { email:'user@example.com', password:'P@ssw0rd!' } },
+          { method:'GET', path:'/api/auth/profile' },
+          { method:'POST', path:'/api/auth', name:'Create User', sample: { FullName:'Test User', Email:'user@example.com', Phone:'+15555550123', PasswordHash:'P@ssw0rd!', Role:'Bidder' } },
+        ]},
+        { group: 'Users', items: [
+          { method:'GET', path:'/api/user' },
+          { method:'GET', path:'/api/user/{id}', params:{id:'GUID'} },
+          { method:'PUT', path:'/api/user/{id}', params:{id:'GUID'}, sample:{ FullName:'Updated Name', Phone:'+1555', Role:'Seller' } },
+          { method:'DELETE', path:'/api/user/{id}', params:{id:'GUID'} },
+          { method:'GET', path:'/api/user/{id}/profile', params:{id:'GUID'} },
+          { method:'DELETE', path:'/api/user/clear/{userId}', params:{userId:'GUID'} },
+        ]},
+        { group: 'Products', items: [
+          { method:'GET', path:'/api/product' },
+          { method:'GET', path:'/api/product/{id}', params:{id:'GUID'} },
+          { method:'POST', path:'/api/product', sample:{ SellerId:'', Title:'Sample Product', Description:'Nice item', Tags:['tag1','tag2'] } },
+          { method:'PUT', path:'/api/product/{id}', params:{id:'GUID'}, sample:{ Title:'Updated', Description:'...' } },
+          { method:'DELETE', path:'/api/product/{id}', params:{id:'GUID'} },
+          { method:'GET', path:'/api/product/user/{sellerId}', params:{sellerId:'GUID'} },
+        ]},
+        { group: 'Auctions', items: [
+          { method:'GET', path:'/api/auction' },
+          { method:'GET', path:'/api/auction/{id}', params:{id:'GUID'} },
+          { method:'GET', path:'/api/auction/status/{status}', params:{status:'Active'} },
+          { method:'GET', path:'/api/auction/search', query:{ query:'phone' } },
+          { method:'GET', path:'/api/auction/user/{userId}', params:{userId:'GUID'} },
+          { method:'POST', path:'/api/auction', sample:{ ProductId:'', StartTime:new Date(Date.now()-1000).toISOString(), EndTime:new Date(Date.now()+300000).toISOString(), MinimumBid:10 } },
+          { method:'PUT', path:'/api/auction/{id}', params:{id:'GUID'}, sample:{ Status:'Cancelled' } },
+          { method:'DELETE', path:'/api/auction/{id}', params:{id:'GUID'} },
+        ]},
+        { group: 'Bids', items: [
+          { method:'GET', path:'/api/bid' },
+          { method:'GET', path:'/api/bid/{id}', params:{id:'GUID'} },
+          { method:'GET', path:'/api/bid/user/{userId}', params:{userId:'GUID'} },
+          { method:'GET', path:'/api/bid/auction/{auctionId}', params:{auctionId:'GUID'} },
+          { method:'POST', path:'/api/bid', sample:{ AuctionId:'', BidderId:'', Amount:11 } },
+          { method:'PUT', path:'/api/bid/{id}', params:{id:'GUID'}, sample:{ Amount:12 } },
+          { method:'DELETE', path:'/api/bid/{id}', params:{id:'GUID'} },
+        ]},
+        { group: 'Favorites', items: [
+          { method:'POST', path:'/api/userauctionfavorite', query:{ userId:'GUID' }, sample:{ auctionId:'GUID' } },
+          { method:'DELETE', path:'/api/userauctionfavorite', query:{ userId:'GUID', auctionId:'GUID' } },
+          { method:'GET', path:'/api/userauctionfavorite/user/{userId}', params:{userId:'GUID'} },
+        ]},
+        { group: 'Notifications', items: [
+          { method:'GET', path:'/api/notification' },
+          { method:'PUT', path:'/api/notification/mark-as-seen/{notificationId}', params:{notificationId:'GUID'} },
+          { method:'PUT', path:'/api/notification/mark-all-as-seen' },
+          { method:'POST', path:'/api/notification', sample:{ UserId:'', Message:'Hello', Type:'SYSTEM', Link:'' } },
+          { method:'DELETE', path:'/api/notification/{notificationId}', params:{notificationId:'GUID'} },
+        ]},
+        { group: 'Images', items: [
+          { method:'POST', path:'/image/upload', query:{ type:'product', entityId:'GUID' }, form:true },
+          { method:'GET', path:'/image/{type}/{entityId}', params:{type:'product', entityId:'GUID'} },
+        ]},
+        { group: 'Payments', items: [
+          { method:'POST', path:'/api/payment/checkout-session', sample:{ AuctionId:'', SuccessUrl:'http://localhost:5030/console.html#success', CancelUrl:'http://localhost:5030/console.html#cancel' } },
+        ]},
+        { group: 'Dev/Test', items: [
+          { method:'POST', path:'/api/testjob/auction-start', query:{ auctionId:'GUID', email:'test@example.com' } },
+          { method:'GET', path:'/api/testjob', query:{ id:'GUID' } },
+        ]},
+      ],
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const toast = (msg, tone='ok') => { const el = $('toast'); el.textContent = msg; el.classList.remove('hidden'); el.style.background = tone==='ok' ? 'oklch(35% 0.06 155 / .98)' : tone==='warn' ? 'oklch(70% 0.11 70 / .98)' : 'oklch(50% 0.12 25 / .98)'; clearTimeout(window.__tTo); window.__tTo = setTimeout(()=> el.classList.add('hidden'), 2200); };
+    const normalize = (u) => (u||'').replace(/\/+$/, '');
+    const pretty = (obj) => { try { return JSON.stringify(obj, null, 2); } catch { return String(obj); } };
+    const setStatus = (code) => { const pill = $('resp-status'); if(!code){ pill.textContent='—'; pill.className='status-pill bg-slate-100 text-slate-700'; return; } const c=Number(code); const tone = c>=200&&c<300? ['bg-emerald-50','text-emerald-700'] : c>=400? ['bg-red-50','text-red-700'] : ['bg-amber-50','text-amber-700']; pill.className=`status-pill ${tone[0]} ${tone[1]}`; pill.textContent=c; };
+
+    function addKV(containerId, k='', v=''){ const wrap=document.createElement('div'); wrap.className='grid grid-cols-[1fr,1fr,auto] gap-2'; wrap.innerHTML = `<input placeholder="Key" value="${k}" class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm" /><input placeholder="Value" value="${v}" class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm" /><button class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold hover:bg-slate-50">Remove</button>`; wrap.lastElementChild.addEventListener('click', ()=> wrap.remove()); $(containerId).appendChild(wrap); }
+    function clearKV(id){ $(id).innerHTML=''; }
+    function collectKV(containerId){ const obj={}; Array.from($(containerId).children).forEach(row=>{ const [k,v]=row.querySelectorAll('input'); const key=(k.value||'').trim(); if(!key) return; obj[key]=v.value||''; }); return obj; }
+    function buildQuery(obj){ const pairs=Object.entries(obj).filter(([k,v])=>k && (v!==''&&v!=null)).map(([k,v])=> `${encodeURIComponent(k)}=${encodeURIComponent(v)}`); return pairs.length?('?'+pairs.join('&')):''; }
+    function toggleBody(kind){ const json=$('body-json'); const form=$('body-form'); if(kind==='json'){ json.classList.remove('hidden'); form.classList.add('hidden'); } if(kind==='form'){ json.classList.add('hidden'); form.classList.remove('hidden'); } if(kind==='none'){ json.classList.add('hidden'); form.classList.add('hidden'); } const radio=document.querySelector(`input[name="bodytype"][value="${kind}"]`); if(radio) radio.checked=true; }
+
+    function buildTree(){ const tree = $('endpoint-tree'); tree.innerHTML=''; state.endpoints.forEach((grp)=>{ const sec=document.createElement('div'); sec.className='mb-2 rounded-xl border border-slate-200'; const head=document.createElement('button'); head.className='flex w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-left text-sm font-semibold'; head.innerHTML=`<span>${grp.group}</span><span>▾</span>`; const list=document.createElement('div'); list.className='px-2 py-2'; grp.items.forEach((ep)=>{ const btn=document.createElement('button'); btn.className='mb-1 flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 text-left text-sm hover:bg-slate-50'; const mTone = ep.method==='GET'?'text-emerald-700 bg-emerald-50': ep.method==='POST'?'text-blue-700 bg-blue-50': ep.method==='PUT'?'text-amber-700 bg-amber-50':'text-rose-700 bg-rose-50'; btn.innerHTML = `<span class="status-pill ${mTone}">${ep.method}</span><span class="mono text-[12px]">${ep.path}</span>`; btn.addEventListener('click', ()=> openTabFromEndpoint(ep)); list.appendChild(btn); }); head.addEventListener('click', ()=> list.classList.toggle('hidden')); sec.append(head, list); tree.append(sec); }); window.lucideReady && window.lucideReady(); }
+    function loadEndpoint(ep){ openTabFromEndpoint(ep); }
+
+    // Request tab system
+    function renderTabs(){ const bar=$('req-tabs'); if(!bar) return; bar.innerHTML=''; (state.tabs||[]).forEach((t, i)=>{ const b=document.createElement('button'); b.className='rtab'+(t.id===state.activeTab?' active':''); b.title=t.path; b.textContent = t.name || `Tab ${i+1}`; const x=document.createElement('span'); x.textContent='×'; x.className='close'; x.addEventListener('click', (e)=>{ e.stopPropagation(); closeTab(t.id); }); b.appendChild(x); b.addEventListener('click', ()=>{ saveActive(); state.activeTab=t.id; applyTab(t); renderTabs(); }); bar.appendChild(b); }); const add=document.createElement('button'); add.className='rtab'; add.textContent='+ New'; add.addEventListener('click', ()=> newTab()); bar.appendChild(add); }
+    function newTab(name='Untitled', init={}){ const id='t'+Math.random().toString(36).slice(2,8); const tab=Object.assign({ id, name, method:'GET', path:'/api/auction', headers:{'Content-Type':'application/json'}, queries:{}, bodyType:'none', bodyJson:'' }, init); state.tabs = state.tabs||[]; state.tabs.push(tab); state.activeTab=id; renderTabs(); applyTab(tab); persistTabs(); return tab; }
+    function openTabFromEndpoint(ep){ const init={ name:`${ep.method} ${ep.path}`, method: ep.method, path:ep.path, headers:{'Content-Type':'application/json'}, queries: ep.query||{}, bodyType: ep.form? 'form' : (ep.method==='GET'?'none':'json'), bodyJson: ep.sample? JSON.stringify(ep.sample,null,2): '' }; newTab(init.name, init); toast('Opened in new tab'); }
+    function getActive(){ return (state.tabs||[]).find(t=> t.id===state.activeTab); }
+    function saveActive(){ const t=getActive(); if(!t) return; t.method=$('method').value; t.path=$('path').value.trim(); t.headers=collectKV('headers'); t.queries=collectKV('queries'); const bt=document.querySelector('input[name="bodytype"]:checked')?.value; t.bodyType=bt||'none'; if(t.bodyType==='json'){ t.bodyJson=$('body-json').value; } persistTabs(); }
+    function applyTab(t){ $('method').value=t.method; $('path').value=t.path; clearKV('headers'); Object.entries(t.headers||{}).forEach(([k,v])=> addKV('headers',k,v)); clearKV('queries'); Object.entries(t.queries||{}).forEach(([k,v])=> addKV('queries',k,v)); toggleBody(t.bodyType||'none'); if(t.bodyType==='json'){ $('body-json').value=t.bodyJson||''; } else { $('body-json').value=''; } }
+    function closeTab(id){ const idx=(state.tabs||[]).findIndex(t=>t.id===id); if(idx<0) return; state.tabs.splice(idx,1); if(state.activeTab===id){ state.activeTab = state.tabs[idx]?.id || state.tabs[idx-1]?.id || null; const next=getActive(); if(next) applyTab(next); } renderTabs(); persistTabs(); }
+    function persistTabs(){ try{ localStorage.setItem('bidzy.tabs', JSON.stringify({ tabs: state.tabs||[], active: state.activeTab||null })); }catch{} }
+    function restoreTabs(){ try{ const raw=localStorage.getItem('bidzy.tabs'); if(!raw) return false; const obj=JSON.parse(raw); if(obj?.tabs?.length){ state.tabs=obj.tabs; state.activeTab=obj.active||obj.tabs[0].id; renderTabs(); const t=getActive(); if(t) applyTab(t); return true; } }catch{} return false; }
+
+    $('headers-preset').addEventListener('change', (e)=>{ if(!e.target.value) return; try{ const obj=JSON.parse(e.target.value.replace('${JWT}', state.jwt||'')); Object.entries(obj).forEach(([k,v])=> addKV('headers',k,v)); }catch{} e.target.value=''; });
+    $('queries-preset').addEventListener('change', (e)=>{ if(!e.target.value) return; try{ const obj=JSON.parse(e.target.value); Object.entries(obj).forEach(([k,v])=> addKV('queries',k,v)); }catch{} e.target.value=''; });
+    $('body-preset').addEventListener('change', (e)=>{ if(!e.target.value) return; $('body-json').value = e.target.value; e.target.value=''; });
+    document.addEventListener('change', (e)=>{ if(e.target.name==='bodytype') toggleBody(e.target.value); });
+    $('add-header').addEventListener('click', ()=> addKV('headers'));
+    $('add-query').addEventListener('click', ()=> addKV('queries'));
+    $('add-form').addEventListener('click', ()=> addKV('form-rows'));
+
+    function saveEnv(notify=true){ const base=$('base-url').value.trim()||state.baseUrl; state.baseUrl=base; $('base-url').value=base; localStorage.setItem('bidzy.env', JSON.stringify({ env: state.env, baseUrl: state.baseUrl })); if(notify) toast('Environment saved'); }
+    function loadEnv(){ const saved=localStorage.getItem('bidzy.env'); if(saved){ try{ const cfg=JSON.parse(saved); if(cfg.env) state.env=cfg.env; if(cfg.baseUrl) state.baseUrl=cfg.baseUrl; }catch{} } else { state.baseUrl = window.location.origin; } $('env-select').value=state.env; $('base-url').value=state.baseUrl; }
+    $('env-select').addEventListener('change', (e)=>{ state.env=e.target.value; saveEnv(false); });
+    $('btn-save-env').addEventListener('click', ()=> saveEnv(true));
+    $('btn-reset-env').addEventListener('click', ()=>{ localStorage.removeItem('bidzy.env'); loadEnv(); toast('Environment reset'); });
+    $('btn-login').addEventListener('click', async ()=>{
+      try {
+        const email=$('auth-email').value.trim(); const password=$('auth-pass').value.trim();
+        const meta = await doFetch('POST','/api/auth/login', { 'Content-Type': 'application/json' }, { email, password });
+        const token = meta?.__meta?.body?.token;
+        if(token){ state.jwt=token; $('jwt').value=state.jwt; $('auth-status').className='status-pill bg-emerald-50 text-emerald-700'; $('auth-status').textContent='Token set'; toast('Logged in'); }
+        else { throw new Error('No token'); }
+      } catch{ toast('Login failed','err'); }
+    });
+    $('btn-profile').addEventListener('click', async ()=>{
+      try { const meta=await doFetch('GET','/api/auth/profile'); showResponse(meta.__meta, 0); }
+      catch{ toast('Profile failed','err'); }
+    });
+    $('btn-clear-token').addEventListener('click', ()=>{ state.jwt=''; $('jwt').value=''; $('auth-status').className='status-pill bg-orange-50 text-orange-700'; $('auth-status').textContent='No token'; toast('Token cleared','warn'); });
+    $('btn-copy-token').addEventListener('click', async ()=>{ const t=$('jwt').value.trim(); if(!t) return toast('No token','warn'); await navigator.clipboard.writeText(t); toast('JWT copied'); });
+    $('btn-send').addEventListener('click', sendRequest);
+    $('btn-cancel').addEventListener('click', ()=>{ if(state.controller){ state.controller.abort(); toast('Request cancelled','warn'); }});
+
+    async function sendRequest(){ saveActive?.(); const method=$('method').value; const path=$('path').value.trim(); const url=normalize(state.baseUrl)+path; const headers=collectKV('headers'); const queries=collectKV('queries'); const finalUrl=url+buildQuery(queries); let body=undefined; const bodyType=document.querySelector('input[name="bodytype"]:checked')?.value; if(bodyType==='json'){ const raw=$('body-json').value.trim(); body = raw || undefined; if(body && !headers['Content-Type']) headers['Content-Type']='application/json'; } else if(bodyType==='form'){ const form=new FormData(); const fileEl=document.getElementById('form-file'); if(fileEl && fileEl.files && fileEl.files[0]){ form.append('file', fileEl.files[0]); } const kv=collectKV('form-rows'); Object.entries(kv).forEach(([k,v])=> form.append(k,v)); body=form; delete headers['Content-Type']; } const t0=performance.now(); try { const data=await doFetch(method, finalUrl, headers, body, true); const dt=Math.max(0, Math.round(performance.now()-t0)); showResponse(data.__meta, dt); } catch(err){ const dt=Math.max(0, Math.round(performance.now()-t0)); setStatus(err.status||0); $('resp-time').textContent=dt+' ms'; $('resp-size').textContent='—'; const txt=pretty(err.body||err)||String(err); $('resp-pretty').textContent=txt; $('resp-raw').textContent=txt; $('resp-headers').textContent=''; showTab('json'); } }
+    async function doFetch(method, urlOrPath, hdrs=null, body=null, absolute=false){ const url = absolute ? urlOrPath : normalize(state.baseUrl)+urlOrPath; const headers = Object.assign({}, hdrs||{}); if(state.jwt && !headers['Authorization']) headers['Authorization'] = `Bearer ${state.jwt}`; state.controller = new AbortController(); const init={ method, headers, signal: state.controller.signal }; if(body){ init.body= body instanceof FormData ? body : (typeof body==='string'? body : JSON.stringify(body)); } const res = await fetch(url, init); const txt=await res.text(); const json=(()=>{ try{return JSON.parse(txt);}catch{return null;} })(); const headersObj=Object.fromEntries(res.headers.entries()); if(!res.ok) throw { status: res.status, body: json||txt }; return { __meta:{ status: res.status, body: json||txt, headers: headersObj } }; }
+    function showResponse(meta, dt){
+      setStatus(meta.status);
+      $('resp-time').textContent=dt+' ms';
+      const body=meta.body;
+      const rawPretty=typeof body==='string'? body : pretty(body);
+      $('resp-pretty').textContent=rawPretty;
+      $('resp-raw').textContent= typeof body==='string'? body : JSON.stringify(body);
+      $('resp-headers').textContent= pretty(meta.headers||{});
+      $('resp-size').textContent = new Blob([typeof body==='string'? body : JSON.stringify(body)]).size + ' B';
+
+      const tbl = normalizeToTable(body);
+      if(tbl && tbl.rows.length){
+        state.lastTable = tbl;
+        state.lastHeaders = meta.headers||{};
+        renderTable(tbl.cols, tbl.rows);
+        renderHeadersTable(state.lastHeaders);
+        showTab('table');
+      } else {
+        showTab('json');
+      }
+    }
+
+    function isPlainObject(v){ return v && typeof v==='object' && !Array.isArray(v); }
+    function flattenObject(obj, prefix='', out={}){
+      Object.entries(obj||{}).forEach(([k,v])=>{
+        const key = prefix? `${prefix}.${k}` : k;
+        if (isPlainObject(v)) flattenObject(v, key, out);
+        else if (Array.isArray(v)) out[key] = JSON.stringify(v);
+        else out[key] = v;
+      });
+      return out;
+    }
+    function normalizeToTable(data){
+      // Prefer common array containers
+      if (isPlainObject(data)){
+        const pick=['items','data','results','list','rows'];
+        const key = pick.find(k=> Array.isArray(data[k]));
+        if (key) data = data[key];
+      }
+      // Array response
+      if (Array.isArray(data)){
+        if (data.length===0) return { cols:[], rows:[] };
+        if (isPlainObject(data[0])){
+          const rows = data.map(r=> flattenObject(r));
+          const cols = Array.from(rows.reduce((s,r)=>{ Object.keys(r).forEach(k=> s.add(k)); return s; }, new Set()));
+          return { cols, rows };
+        } else {
+          // primitives → single column
+          const rows = data.map(v=> ({ value: v }));
+          return { cols:['value'], rows };
+        }
+      }
+      // Object response → key/value table of flattened object
+      if (isPlainObject(data)){
+        const flat = flattenObject(data);
+        const rows = Object.entries(flat).map(([k,v])=> ({ key: k, value: v }));
+        return { cols:['key','value'], rows };
+      }
+      // Primitive/string fallback
+      if (data!=null){ return { cols:['value'], rows:[{ value: data }] }; }
+      return { cols:[], rows:[] };
+    }
+
+    function renderTable(cols, rows){
+      const wrap=$('table-wrap');
+      wrap.innerHTML='';
+      if(!rows || !rows.length){ wrap.textContent='No tabular data'; return; }
+      const table=document.createElement('table'); table.className='w-full text-sm';
+      const thead=document.createElement('thead'); const trh=document.createElement('tr');
+      cols.forEach(c=>{ const th=document.createElement('th'); th.textContent=c; th.className='text-left sticky top-0 bg-slate-50 border-b border-slate-200 px-2 py-1'; trh.appendChild(th); });
+      thead.appendChild(trh); table.appendChild(thead);
+      const tbody=document.createElement('tbody');
+      rows.forEach(r=>{ const tr=document.createElement('tr'); cols.forEach(c=>{
+        const td=document.createElement('td'); const val=(r?.[c]!==undefined && r?.[c]!==null) ? r[c] : '';
+        const text= typeof val==='object'? JSON.stringify(val) : String(val);
+        td.textContent = text; td.className='border-b border-slate-200 px-2 py-1 hover:bg-emerald-50 cursor-pointer'; td.title='Click to copy';
+        td.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(text); toast('Cell copied'); }catch{} });
+        tr.appendChild(td);
+      }); tbody.appendChild(tr); });
+      table.appendChild(tbody); wrap.appendChild(table);
+      wrap.dataset.csv = toCSV(cols, rows);
+    }
+
+    function renderHeadersTable(headers){
+      const wrap = document.getElementById('headers-table-wrap');
+      if(!wrap) return; wrap.innerHTML='';
+      const entries = Object.entries(headers||{});
+      if(!entries.length){ wrap.textContent='No headers'; return; }
+      // Filter headers
+      const q = (document.getElementById('headers-filter')?.value||'').trim().toLowerCase();
+      const filtered = q? entries.filter(([k,v])=> (k+''+v).toLowerCase().includes(q)) : entries;
+      if(!filtered.length){ wrap.textContent='No headers match filter'; return; }
+      const table=document.createElement('table'); table.className='w-full text-sm';
+      const thead=document.createElement('thead'); const trh=document.createElement('tr');
+      ['Header','Value'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; th.className='text-left sticky top-0 bg-slate-50 border-b border-slate-200 px-2 py-1'; trh.appendChild(th); });
+      thead.appendChild(trh); table.appendChild(thead);
+      const tbody=document.createElement('tbody');
+      filtered.forEach(([k,v])=>{ const tr=document.createElement('tr');
+        const tdK=document.createElement('td'); tdK.textContent=k; tdK.className='border-b border-slate-200 px-2 py-1 hover:bg-emerald-50 cursor-pointer'; tdK.title='Click to copy'; tdK.addEventListener('click', async()=>{ try{ await navigator.clipboard.writeText(k); toast('Header name copied'); }catch{} });
+        const tdV=document.createElement('td'); const text= typeof v==='object'? JSON.stringify(v) : String(v); tdV.textContent=text; tdV.className='border-b border-slate-200 px-2 py-1 hover:bg-emerald-50 cursor-pointer'; tdV.title='Click to copy'; tdV.addEventListener('click', async()=>{ try{ await navigator.clipboard.writeText(text); toast('Header value copied'); }catch{} });
+        tr.append(tdK, tdV); tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); wrap.appendChild(table);
+    }
+    function toCSV(cols, rows){ const esc=(s)=> '"'+ String(s).replace(/"/g,'""') + '"'; const head=cols.map(esc).join(','); const body=rows.map(r=> cols.map(c=> esc(r?.[c] ?? '')).join(',')).join('\n'); return head+'\n'+body; }
+    function showTab(name){
+      document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('current', b.dataset.tab===name));
+      // JSON mode shows left json + right headers(pre)
+      $('pane-json').classList.toggle('hidden', name!=='json');
+      $('pane-extra').classList.toggle('hidden', name!=='json');
+      // Table mode shows combined table pane (left data, right headers table)
+      $('pane-table').classList.toggle('hidden', name!=='table');
+      // Raw mode shows raw full-width
+      $('pane-raw').classList.toggle('hidden', name!=='raw');
+    }
+
+    // Filtering logic for table
+    function parseQuery(q){
+      // supports: term, field:value (space separated)
+      return (q||'').trim().split(/\s+/).filter(Boolean).map(t=>{
+        const i=t.indexOf(':');
+        if(i>0) return { k:t.slice(0,i).toLowerCase(), v:t.slice(i+1).toLowerCase(), type:'kv' };
+        return { v:t.toLowerCase(), type:'any' };
+      });
+    }
+    function rowMatches(cols, row, tokens){
+      if(!tokens.length) return true;
+      return tokens.every(tok=>{
+        if(tok.type==='kv'){
+          const val = row[tok.k] ?? row[tok.k.replace(/\[(\d+)\]/,'$1')];
+          const text = (val==null? '' : (typeof val==='object'? JSON.stringify(val) : String(val))).toLowerCase();
+          return text.includes(tok.v);
+        } else {
+          // search any column
+          return cols.some(c=>{
+            const val=row[c]; const text=(val==null? '' : (typeof val==='object'? JSON.stringify(val) : String(val))).toLowerCase();
+            return text.includes(tok.v);
+          });
+        }
+      });
+    }
+    function applyTableFilter(){
+      const base = state.lastTable || { cols:[], rows:[] };
+      const q = (document.getElementById('table-filter')?.value||'');
+      const tokens = parseQuery(q);
+      const filtered = tokens.length? base.rows.filter(r=> rowMatches(base.cols, r, tokens)) : base.rows;
+      renderTable(base.cols, filtered);
+    }
+
+    document.addEventListener('input', (e)=>{
+      if(e.target && e.target.id==='table-filter') applyTableFilter();
+      if(e.target && e.target.id==='headers-filter') renderHeadersTable(state.lastHeaders||{});
+    });
+    document.addEventListener('click', (e)=>{
+      if(e.target && e.target.id==='table-filter-clear'){ const i=document.getElementById('table-filter'); if(i){ i.value=''; applyTableFilter(); } }
+    });
+    document.addEventListener('click', (e)=>{ const t=e.target.closest('.tab-btn'); if(!t) return; showTab(t.dataset.tab); });
+    $('btn-copy-curl').addEventListener('click', ()=>{ saveActive?.(); const t=(typeof getActive==='function')? getActive() : null; const method=t?.method||$('method').value; const path=t?.path||$('path').value.trim(); const url=normalize(state.baseUrl)+path+buildQuery(t?.queries||collectKV('queries')); const headers=t?.headers||collectKV('headers'); let cmd=`curl -X ${method} '${url}'`; Object.entries(headers).forEach(([k,v])=> cmd+=` -H '${k}: ${v}'`); const bt=(t?.bodyType||document.querySelector('input[name=\"bodytype\"]:checked')?.value)||'none'; if(bt==='json'){ const raw=(t?.bodyJson||$('body-json').value||'').trim(); if(raw) cmd+=` -d '${raw.replace(/'/g, "'\\''")}'`; } $('curl-area').value=cmd; navigator.clipboard.writeText(cmd).then(()=> toast('cURL copied')); });
+    document.getElementById('btn-new-tab')?.addEventListener('click', ()=> newTab());
+    $('btn-clear').addEventListener('click', ()=>{ setStatus(0); $('resp-time').textContent='0 ms'; $('resp-size').textContent='0 B'; $('resp-pretty').textContent=''; $('resp-raw').textContent=''; $('resp-headers').textContent=''; $('table-wrap').innerHTML=''; $('table-wrap').dataset.csv=''; showTab('json'); });
+    $('btn-dl-csv').addEventListener('click', ()=>{ const csv=$('table-wrap').dataset.csv||''; if(!csv){ toast('No table to export','warn'); return; } const blob=new Blob([csv], { type:'text/csv;charset=utf-8;' }); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='response.csv'; a.click(); URL.revokeObjectURL(a.href); });
+    $('btn-ping').addEventListener('click', async ()=>{ try{ const t0=performance.now(); await doFetch('GET','/swagger/index.html'); const dt=Math.round(performance.now()-t0); $('env-msg').textContent=`Ping OK in ${dt} ms`; toast('Ping OK'); }catch{ $('env-msg').textContent='Ping failed'; toast('Ping failed','err'); } });
+    // demo mode removed
+    $('search').addEventListener('input', (e)=>{ const q=e.target.value.toLowerCase(); document.querySelectorAll('#endpoint-tree button').forEach(btn=>{ const t=btn.textContent.toLowerCase(); btn.classList.toggle('hidden', !t.includes(q)); }); });
+    $('btn-expand-all').addEventListener('click', ()=>{ document.querySelectorAll('#endpoint-tree > div > div').forEach(list=> list.classList.remove('hidden')); });
+    // Screen switching (docs dropdown)
+    function selectScreen(name){
+      const map = { console: 'screen-console', swagger: 'screen-swagger', payments: 'screen-payments' };
+      Object.entries(map).forEach(([k,id])=>{
+        document.getElementById(id)?.classList.toggle('hidden', k!==name);
+        document.getElementById(id)?.classList.toggle('block', k===name);
+      });
+      // Also toggle any auxiliary console sections
+      const extras = ['screen-console-aux'];
+      extras.forEach((id)=>{
+        const el = document.getElementById(id);
+        if(el){
+          el.classList.toggle('hidden', name!== 'console');
+          el.classList.toggle('block', name=== 'console');
+        }
+      });
+      localStorage.setItem('bidzy.screen', name);
+    }
+    (function docsMenu(){
+      const btn=$('btn-docs'); const menu=$('menu-docs');
+      function toggle(v){ menu.classList.toggle('hidden', !v? menu.classList.contains('hidden'): !v); btn.setAttribute('aria-expanded', String(!menu.classList.contains('hidden'))); }
+      btn.addEventListener('click', ()=> toggle(true));
+      document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target!==btn) menu.classList.add('hidden'); });
+      menu.querySelectorAll('[data-screen]')?.forEach(it=> it.addEventListener('click', ()=>{ selectScreen(it.dataset.screen); menu.classList.add('hidden'); }));
+      document.getElementById('btn-payments')?.addEventListener('click', ()=> selectScreen('payments'));
+    })();
+
+    function bootstrap(){
+      // screen restore
+      const scr = localStorage.getItem('bidzy.screen') || 'console';
+      selectScreen(scr);
+      // console init
+      loadEnv(); buildTree(); if(!(restoreTabs&&restoreTabs())){ newTab('GET /api/auction', { method:'GET', path:'/api/auction', bodyType:'none' }); }
+      window.lucideReady && window.lucideReady();
+    }
+    // Payments screen logic
+    const P_COLS = ['id','bidId','totalAmount','commission','currency','amountCaptured','processorFee','netAmount','paymentIntentId','chargeId','receiptUrl','status','paidAt','deliveryStatus'];
+    const bidCache = new Map();
+    const deliveryCache = new Map();
+    function stripeLink(kind, id){
+      if(!id) return null;
+      const dash = 'https://dashboard.stripe.com';
+      const env = location.hostname.includes('localhost') || location.hostname.includes('127.0.0.1') ? '/test' : '';
+      if(kind==='charge') return `${dash}${env}/payments/${id}`;
+      if(kind==='pi') return `${dash}${env}/payments?pi=${encodeURIComponent(id)}`;
+      return null;
+    }
+    function renderPaymentsTable(rows){
+      const wrap = document.getElementById('pay-table');
+      wrap.innerHTML='';
+      if(!rows || !rows.length){ wrap.textContent='No payments'; return; }
+      const table=document.createElement('table'); table.className='w-full text-sm';
+      const thead=document.createElement('thead'); const trh=document.createElement('tr');
+      P_COLS.forEach(c=>{ const th=document.createElement('th'); th.textContent=c; th.className='text-left sticky top-0 bg-slate-50 border-b border-slate-200 px-2 py-1'; trh.appendChild(th); });
+      { const th=document.createElement('th'); th.textContent='actions'; th.className='text-left sticky top-0 bg-slate-50 border-b border-slate-200 px-2 py-1'; trh.appendChild(th); }
+      thead.appendChild(trh); table.appendChild(thead);
+      const tbody=document.createElement('tbody');
+      rows.forEach(r=>{
+        const tr=document.createElement('tr');
+        P_COLS.forEach(c=>{
+          const td=document.createElement('td'); const v=r?.[c]??''; const text= typeof v==='object'? JSON.stringify(v): String(v);
+          if(c==='receiptUrl' && v){
+            const a=document.createElement('a'); a.href=v; a.target='_blank'; a.rel='noopener'; a.textContent=v; a.className='text-emerald-700 hover:underline'; td.appendChild(a);
+          } else if(c==='paymentIntentId' && r?.paymentIntentId){
+            const link = stripeLink('pi', r.paymentIntentId);
+            if(link){ const a=document.createElement('a'); a.href=link; a.target='_blank'; a.rel='noopener'; a.textContent=r.paymentIntentId; a.className='text-emerald-700 hover:underline'; td.appendChild(a); }
+            else { td.textContent=text; }
+          } else if(c==='chargeId' && r?.chargeId){
+            const link = stripeLink('charge', r.chargeId);
+            if(link){ const a=document.createElement('a'); a.href=link; a.target='_blank'; a.rel='noopener'; a.textContent=r.chargeId; a.className='text-emerald-700 hover:underline'; td.appendChild(a); }
+            else { td.textContent=text; }
+          } else {
+            td.textContent=text;
+          }
+          td.className='border-b border-slate-200 px-2 py-1 hover:bg-emerald-50 cursor-pointer';
+          td.title='Click to copy';
+          td.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(text); toast('Copied'); }catch{} });
+          tr.appendChild(td);
+        });
+        // actions cell
+        const tda=document.createElement('td'); tda.className='border-b border-slate-200 px-2 py-1';
+        const btn=document.createElement('button'); btn.textContent='Details'; btn.className='rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50';
+        btn.addEventListener('click', (ev)=>{ ev.stopPropagation(); openPaymentModal(r); });
+        tda.appendChild(btn); tr.appendChild(tda);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); wrap.appendChild(table);
+    }
+    async function loadJson(url){ const res = await fetch(normalize(state.baseUrl)+url, { headers: state.jwt? { Authorization: `Bearer ${state.jwt}` } : {} }); const txt=await res.text(); try{ return JSON.parse(txt); }catch{ return []; } }
+    async function fetchBid(bidId){ if(!bidId) return null; if(bidCache.has(bidId)) return bidCache.get(bidId); const b = await loadJson(`/api/bid/${bidId}`); bidCache.set(bidId,b); return b; }
+    async function fetchDeliveryByAuction(auctionId){ if(!auctionId) return null; if(deliveryCache.has(auctionId)) return deliveryCache.get(auctionId); const d = await loadJson(`/api/delivery/auction/${auctionId}`); deliveryCache.set(auctionId,d); return d; }
+    async function enrichPaymentsWithDelivery(rows){
+      if(!Array.isArray(rows)) return rows;
+      const enriched = await Promise.all(rows.map(async r=>{
+        try{
+          const bid = await fetchBid(r.bidId);
+          const aucId = bid?.auctionId;
+          const del = await fetchDeliveryByAuction(aucId);
+          return { ...r, deliveryStatus: del?.status ?? '—', _delivery: del, _bid: bid };
+        }catch{ return { ...r, deliveryStatus: '—' }; }
+      }));
+      return enriched;
+    }
+    async function loadRecent(){ const rows = await loadJson('/api/payment/recent'); renderPaymentsTable(filterPayments(await enrichPaymentsWithDelivery(rows))); }
+    async function loadByUser(){ const uid=document.getElementById('pay-user-id').value.trim(); const role=document.getElementById('pay-role').value; if(!uid) return toast('Enter userId','warn'); const rows=await loadJson(`/api/payment/user/${uid}?role=${encodeURIComponent(role)}`); renderPaymentsTable(filterPayments(await enrichPaymentsWithDelivery(rows))); }
+    async function loadByBid(){ const bid=document.getElementById('pay-bid-id').value.trim(); if(!bid) return toast('Enter bidId','warn'); const row=await loadJson(`/api/payment/bid/${bid}`); const arr = row? [row]:[]; renderPaymentsTable(await enrichPaymentsWithDelivery(arr)); }
+    async function loadById(){ const id=document.getElementById('pay-id').value.trim(); if(!id) return toast('Enter paymentId','warn'); const row=await loadJson(`/api/payment/${id}`); const arr = row? [row]:[]; renderPaymentsTable(await enrichPaymentsWithDelivery(arr)); }
+    function filterPayments(rows){ const q=(document.getElementById('pay-filter').value||'').trim().toLowerCase(); if(!q) return rows; const tokens=q.split(/\s+/).filter(Boolean).map(t=>{ const i=t.indexOf(':'); return i>0? {k:t.slice(0,i),v:t.slice(i+1)}:{v:t}; }); return rows.filter(r=> tokens.every(tok=>{ if(tok.k){ const val=r[tok.k]; const text=(val==null? '': String(val)).toLowerCase(); return text.includes(tok.v); } else { return P_COLS.some(c=> ((r[c]==null?'':String(r[c])).toLowerCase().includes(tok.v))); } })); }
+    // Payment drill-in modal
+    function openPaymentModal(row){
+      const overlay = document.getElementById('modal-overlay');
+      const body = document.getElementById('modal-body');
+      body.innerHTML='';
+      const title = document.getElementById('modal-title');
+      title.textContent = `Payment ${row.id}`;
+      const section = document.createElement('div');
+      section.className='grid gap-2 text-sm';
+      const add = (k,v,link)=>{
+        const div=document.createElement('div');
+        const label=document.createElement('div'); label.className='text-xs text-slate-500'; label.textContent=k;
+        const val=document.createElement('div');
+        if(link){ const a=document.createElement('a'); a.href=link; a.target='_blank'; a.rel='noopener'; a.textContent=v; a.className='text-emerald-700 hover:underline'; val.appendChild(a); }
+        else { val.className='mono'; val.textContent=String(v??''); }
+        div.appendChild(label); div.appendChild(val);
+        section.appendChild(div);
+      };
+      add('Total', row.totalAmount);
+      add('Commission', row.commission);
+      add('Currency', row.currency);
+      add('PaymentIntentId', row.paymentIntentId, stripeLink('pi', row.paymentIntentId));
+      add('ChargeId', row.chargeId, stripeLink('charge', row.chargeId));
+      if(row.receiptUrl) add('Receipt', row.receiptUrl, row.receiptUrl);
+      add('Status', row.status);
+      add('PaidAt', row.paidAt);
+      if(row._bid){ add('AuctionId', row._bid.auctionId); }
+      if(row._delivery){ add('Delivery Status', row._delivery.status); if(row._delivery.shippedAt) add('Shipped At', row._delivery.shippedAt); if(row._delivery.confirmedAt) add('Confirmed At', row._delivery.confirmedAt); }
+      // Actions
+      const actions=document.createElement('div');
+      actions.className='mt-3 flex flex-wrap gap-2';
+      const auctionId=row? row._bid?.auctionId : null;
+      function button(label, handler, variant='primary'){
+        const b=document.createElement('button');
+        b.textContent=label;
+        b.className= variant==='danger'
+          ? 'rounded bg-rose-600 text-white px-3 py-1.5 text-xs hover:bg-rose-700'
+          : 'rounded bg-slate-900 text-white px-3 py-1.5 text-xs hover:bg-slate-800';
+        b.addEventListener('click', async (e)=>{ e.stopPropagation(); await handler(); });
+        return b;
+      }
+      async function callDelivery(action){
+        if(!auctionId){ toast('Missing auctionId','warn'); return; }
+        const base=normalize(state.baseUrl);
+        const url = action==='ship'
+          ? `/api/delivery/mark-shipped?auctionId=${auctionId}`
+          : `/api/delivery/confirm?auctionId=${auctionId}`;
+        const method = action==='ship' ? 'POST' : 'PUT';
+        const res = await fetch(base+url, { method, headers: state.jwt? { Authorization: `Bearer ${state.jwt}` } : {} });
+        if(!res.ok){ const t=await res.text(); toast(`Action failed: ${res.status}`, 'warn'); return; }
+        const data = await res.json().catch(()=>null);
+        if(data){
+          deliveryCache.set(auctionId, data);
+          row._delivery = data;
+          row.deliveryStatus = data.status ?? row.deliveryStatus;
+        }
+        // Re-render modal with updated info
+        openPaymentModal(row);
+        toast('Updated');
+      }
+      if(auctionId){
+        actions.appendChild(button('Mark Shipped', ()=>callDelivery('ship')));
+        actions.appendChild(button('Confirm Delivery', ()=>callDelivery('confirm')));
+      }
+      section.appendChild(actions);
+      const pre=document.createElement('pre'); pre.className='mono bg-slate-50 p-2 rounded text-xs overflow-auto max-h-60'; pre.textContent=JSON.stringify(row,null,2);
+      body.appendChild(section); body.appendChild(document.createElement('hr')); body.appendChild(pre);
+      overlay.classList.remove('hidden');
+    }
+    function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
+    document.addEventListener('click', (e)=>{ if(e.target && e.target.id==='modal-close') closeModal(); if(e.target && e.target.id==='modal-overlay') closeModal(); });
+    document.addEventListener('click', (e)=>{
+      if(e.target && e.target.id==='btn-pay-recent') loadRecent();
+      if(e.target && e.target.id==='btn-pay-user') loadByUser();
+      if(e.target && e.target.id==='btn-pay-bid') loadByBid();
+      if(e.target && e.target.id==='btn-pay-id') loadById();
+    });
+    document.addEventListener('input', (e)=>{ if(e.target && e.target.id==='pay-filter'){ loadRecent(); } });
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  </script>
+  <!-- Modal overlay -->
+  <div id="modal-overlay" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full rounded-xl bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-200 p-3">
+        <h3 id="modal-title" class="text-sm font-semibold"></h3>
+        <button id="modal-close" class="rounded border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-50">Close</button>
+      </div>
+      <div id="modal-body" class="p-4"></div>
+    </div>
+  </div>
+</body>
+</html>

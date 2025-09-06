@@ -21,6 +21,7 @@ namespace Bidzy.Data
         public DbSet<AuctionParticipation> AuctionParticipations { get; set; }
         public DbSet<SearchHistory> SearchHistories { get; set; }
         public DbSet<ViewHistory> ViewHistories { get; set; }
+        public DbSet<WebhookEventLog> WebhookEventLogs { get; set; }
 
 
 
@@ -65,6 +66,28 @@ namespace Bidzy.Data
             modelBuilder.Entity<Payment>()
                 .Property(p => p.TotalAmount)
                 .HasPrecision(18, 4);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.AmountCaptured)
+                .HasPrecision(18, 4);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.ProcessorFee)
+                .HasPrecision(18, 4);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.NetAmount)
+                .HasPrecision(18, 4);
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.PaymentIntentId)
+                .IsUnique()
+                .HasFilter("[PaymentIntentId] IS NOT NULL");
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.ChargeId)
+                .IsUnique()
+                .HasFilter("[ChargeId] IS NOT NULL");
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)

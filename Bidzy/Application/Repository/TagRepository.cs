@@ -13,7 +13,7 @@ namespace Bidzy.Application.Repository
             this.dbContext = dbContext;
         }
 
-        public async Task<List<Tag>> ResolveTagsAsync(List<string> tagNames)
+        public Task<List<Tag>> ResolveTagsAsync(List<string> tagNames)
         {
             var tagList = new List<Tag>();
 
@@ -34,7 +34,7 @@ namespace Bidzy.Application.Repository
                     dbContext.Tags.Add(newTag);
                 }
             }
-            return tagList;
+            return Task.FromResult(tagList);
         }
     }
 }
