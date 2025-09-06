@@ -22,7 +22,7 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -145,6 +145,7 @@ builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();
@@ -155,6 +156,10 @@ builder.Services.AddTransient<ITagRepository, TagRepository>();
 builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavoriteRepository>();
 builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>();
 builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
+
+
+
+
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

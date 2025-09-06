@@ -13,5 +13,10 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<List<Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status);
         Task<List<Auction>> GetAuctionsByUserIdAsync(Guid userId);
         Task<Auction> GetAuctionDetailsByAuctionIdAsync(Guid auctionId);
+        Task<int> ActiveAuctionCountAsync();
+        Task<int> ScheduledAuctionCountAsync();
+        Task<int> CancelledAuctionCountAsync();
+        Task<int> EndedAuctionCountAsync();
+
     }
 }

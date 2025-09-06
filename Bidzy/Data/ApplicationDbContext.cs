@@ -21,6 +21,7 @@ namespace Bidzy.Data
         public DbSet<AuctionParticipation> AuctionParticipations { get; set; }
         public DbSet<SearchHistory> SearchHistories { get; set; }
         public DbSet<ViewHistory> ViewHistories { get; set; }
+        public DbSet<Otp> Otps { get; set; }
 
 
 

@@ -95,5 +95,38 @@ namespace Bidzy.Application.Repository
                 .FirstOrDefaultAsync(x => x.Id == auctionId);
             return auction;
         }
+
+        public async Task<int> ActiveAuctionCountAsync()
+        {
+            int count = await dbContext.Auctions
+                .Where(a => a.Status == AuctionStatus.Active)
+                .CountAsync();
+
+            return count;
+        }
+        public async Task<int> ScheduledAuctionCountAsync()
+        {
+            int count = await dbContext.Auctions
+                .Where(a => a.Status == AuctionStatus.Scheduled)
+                .CountAsync();
+
+            return count;
+        }
+        public async Task<int> EndedAuctionCountAsync()
+        {
+            int count = await dbContext.Auctions
+                .Where(a => a.Status == AuctionStatus.Ended)
+                .CountAsync();
+
+            return count;
+        }
+        public async Task<int> CancelledAuctionCountAsync()
+        {
+            int count = await dbContext.Auctions
+                .Where(a => a.Status == AuctionStatus.Cancelled)
+                .CountAsync();
+
+            return count;
+        }
     }
 }
