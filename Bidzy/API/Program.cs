@@ -8,6 +8,9 @@ using Bidzy.Application.Services;
 using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Application.Services.Auth;
 using Bidzy.Application.Services.NotificationEngine;
+using Bidzy.Application.Services.Payments;
+using Bidzy.Application.Settings;
+using Stripe;
 using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Data;
@@ -110,6 +113,8 @@ builder.Services.AddAuthorization();
 
 // Configure Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Stripe settings
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 // Configure Email Job Service
 builder.Services.AddScoped<IEmailJobService, EmailJobService>();
 // Configure SignalR for real-time notifications
@@ -145,9 +150,13 @@ builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddHangfireServer();
 builder.Services.AddTransient<IAuctionRepository, AuctionRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IProductRepository, ProductRepository>();
@@ -156,6 +165,7 @@ builder.Services.AddTransient<ITagRepository, TagRepository>();
 builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavoriteRepository>();
 builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>();
 builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
+builder.Services.AddTransient<IPaymentRepository, PaymentRepository>();
 
 
 
@@ -190,9 +200,10 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHangfireServer();
+
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 

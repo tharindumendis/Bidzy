@@ -91,7 +91,8 @@ namespace Bidzy.Application.Services.AuctionEngine
 
         public async Task CancelAuctionAsync(Guid auctionId)
         {
-            var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
+
+            var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
 
             if(auction?.Status == AuctionStatus.Active)
             {

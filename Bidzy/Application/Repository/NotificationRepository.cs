@@ -39,7 +39,7 @@ namespace Bidzy.Application.Repository
         public async Task MarkAsSeenAsync(Guid notificationId, Guid userId)
         {
             var notification = await dbContext.Notifications.FindAsync (notificationId);
-            if (notificationId != null && notification.UserId == userId)
+            if (notification != null && notification.UserId == userId)
             {
 
                 notification.IsSeen = true;
