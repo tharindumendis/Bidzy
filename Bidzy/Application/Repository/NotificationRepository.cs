@@ -69,5 +69,18 @@ namespace Bidzy.Application.Repository
                 await dbContext.SaveChangesAsync ();
             }
         }
+        // remove seen notifications older than a certain date
+        public async Task DeleteOutdatedSeenNotificationsAsync(DateTime threshold)
+        {
+            var outdatedNotifications = await dbContext.Notifications
+                .Where(n => n.Timestamp < threshold)
+                .Where(n => n.IsSeen) // Only delete seen notifications
+                .ToListAsync();
+            if (outdatedNotifications.Count != 0)
+            {
+                dbContext.Notifications.RemoveRange(outdatedNotifications);
+                await dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

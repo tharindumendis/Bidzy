@@ -25,7 +25,7 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -150,7 +150,10 @@ builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddHangfireServer();
@@ -163,6 +166,10 @@ builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavorit
 builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>();
 builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
 builder.Services.AddTransient<IPaymentRepository, PaymentRepository>();
+
+
+
+
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

@@ -15,19 +15,22 @@ namespace Bidzy.API.DTOs
                 Email = user.Email,
                 Phone = user.Phone,
                 Role = user.Role.ToString(),
+                ImageUrl = user.imageUrl,
                 CreatedAt = user.CreatedAt
             };
         }
 
         public static User ToEntity(this UserAddDto userAddDto)
         {
+            Guid newId = Guid.NewGuid();
             return new User
             {
-                Id = Guid.NewGuid(),
+                Id = newId,
                 FullName = userAddDto.FullName,
                 Email = userAddDto.Email,
-                Phone = userAddDto.Phone,
-                PasswordHash = userAddDto.PasswordHash,
+                Phone = userAddDto.PhoneNumber,
+                PasswordHash = userAddDto.Password,
+                imageUrl = "/Image/profile/"+newId.ToString(),
                 Role = Enum.TryParse<UserRole>(userAddDto.Role, out var role) ? role : UserRole.Bidder, // Default to Bidder if parsing fails
             };
         }
@@ -57,6 +60,7 @@ namespace Bidzy.API.DTOs
                 Email = user.Email,
                 Phone = user.Phone,
                 Role = user.Role.ToString(),
+                ImageUrl = user.imageUrl,
                 FavoriteAuctions = user.AuctionLikes.Select(al => al.auctionId.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
             };

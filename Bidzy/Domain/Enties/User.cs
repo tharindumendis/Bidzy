@@ -39,6 +39,7 @@ namespace Bidzy.Domain.Enties
 
         [Required]
         public string PasswordHash { get; set; }
+        public string imageUrl { get; set; } 
 
         [Required]
         [EnumDataType(typeof(UserRole))]

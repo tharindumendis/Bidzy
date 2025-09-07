@@ -4,6 +4,7 @@ using Bidzy.Domain.Enties;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
+using MimeKit.Text;
 using Org.BouncyCastle.Tls;
 
 namespace Bidzy.Application.Services
@@ -26,7 +27,7 @@ namespace Bidzy.Application.Services
                 email.To.Add(MailboxAddress.Parse(dto.ReceiverEmail));
                 email.Subject = dto.Subject;
 
-                email.Body = new TextPart("plain")
+                email.Body = new TextPart(TextFormat.Html)
                 {
                     Text = dto.Body
                 };
@@ -53,24 +54,54 @@ namespace Bidzy.Application.Services
             {
                 ReceiverEmail = receiverEmail,
                 Subject = $"Auction #{auctionId} has started!",
-                Body = $@"Hello,
+                Body = $@"
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2 style=""color: #007BFF;"">Hello,</h2>
+                        <p>Great news! Your auction <strong>#{auctionId}</strong> has just gone live on <strong>BIDZY</strong>.</p>
 
-                        Great news! Your auction #{auctionId} has just gone live on BIDZY.
+                        <h3 style=""margin-top: 20px;"">📌 Auction Details:</h3>
+                        <ul>
+                          <li><strong>Auction ID:</strong> {auctionId}</li>
+                          <li><strong>Start Time:</strong> {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                          <li><strong>Status:</strong> Live and accepting bids</li>
+                        </ul>
 
-                        📌 Auction Details:
-                        - Auction ID: {auctionId}
-                        - Start Time: {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC
-                        - Status: Live and accepting bids
+                        <p>You can monitor bids, update your listing, or respond to buyer inquiries directly from your seller dashboard.</p>
 
-                        You can monitor bids, update your listing, or respond to buyer inquiries directly from your seller dashboard.
+                        <p>
+                          🔗 <a href=""https://bidzy.com/seller/auction/{auctionId}"" style=""color: #007BFF;"">View Your Auction</a>
+                        </p>
 
-                        🔗 [View Your Auction](https://bidzy.com/seller/auction/{auctionId})
+                        <p>Thank you for choosing <strong>BIDZY</strong>. We wish you a successful auction!</p>
 
-                        Thank you for choosing BIDZY. We wish you a successful auction!
-
-                        Warm regards,  
-                        The BIDZY Team"
+                        <br/>
+                        <p>Warm regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
             };
+            return SendEmailAsync(dto);
+        }
+        public Task SendOTP(string OTP, [EmailAddress] string receiverEmail)
+        {
+            var dto = new EmailDto
+            {
+                ReceiverEmail = receiverEmail,
+                Subject = "Your Bidzy OTP Code",
+                Body = $@"
+                        <html>
+                            <body style=""font-family: Arial, sans-serif; color: #333;"">
+                                <h2>Welcome to Bidzy!</h2>
+                                <p>To complete your registration, please use the following One-Time Password (OTP):</p>
+                                <div style=""font-size: 24px; font-weight: bold; margin: 20px 0; color: #007BFF;"">{OTP}</div>
+                                <p>This code is valid for the next 10 minutes. Please do not share it with anyone.</p>
+                                <br/>
+                                <p>If you didn’t request this, you can safely ignore this email.</p>
+                                <p>Thanks,<br/>The Bidzy Team</p>
+                            </body>
+                        </html>"
+            };
+
             return SendEmailAsync(dto);
         }
 
@@ -87,14 +118,19 @@ namespace Bidzy.Application.Services
                         {
                             ReceiverEmail = email,
                             Subject = $"Auction #{auction.Id} has started!",
-                            Body = $@"Hello,
+                            Body = $@"
+                                <html>
+                                  <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                                    <h2 style=""color: #007BFF;"">Hello,</h2>
+                                    <p>Auction <strong>#{auction.Id}</strong> is now live. Place your bids before it ends!</p>
 
-                                Auction #{auction.Id} is now live. Place your bids before it ends!
+                                    <p>
+                                      👉 <a href=""https://bidzy.com/auction/{auction.Id}"" style=""color: #007BFF; font-weight: bold;"">View Auction</a>
+                                    </p>
 
-                                👉 [View Auction](https://bidzy.com/auction/{auction.Id})
-
-                                Happy bidding,
-                                The BIDZY Team"
+                                    <p>Happy bidding,<br/>The BIDZY Team</p>
+                                  </body>
+                                </html>"
                         };
                         return SendEmailAsync(dto);
                     });
@@ -112,40 +148,56 @@ namespace Bidzy.Application.Services
                 Subject = $"Auction #{auction.Id} has ended",
                 // TODO URL Link 
                 Body = $@"
-                        Hello {winBid.Bidder.FullName},
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2 style=""color: #28a745;"">🎉 Congratulations, {winBid.Bidder.FullName}!</h2>
+                        <p>You’ve won <strong>Auction #{auction.Id}</strong> on <strong>BIDZY</strong>.</p>
 
-                        🎉 Congratulations! You’ve won Auction #{auction.Id} on BIDZY.
+                        <h3 style=""margin-top: 20px;"">🛍️ Auction Summary:</h3>
+                        <ul>
+                          <li><strong>Item:</strong> {auction.Product.Title}</li>
+                          <li><strong>Final Bid:</strong> {winBid.Amount:c}</li>
+                          <li><strong>Seller:</strong> {auction.Product.Seller.FullName}</li>
+                        </ul>
 
-                        **Item**: {auction.Product.Title}  
-                        **Final Bid**: {winBid.Amount:c}  
-                        **Seller**: {auction.Product.Seller.FullName}
+                        <p>We’re thrilled to have you as the winning bidder. Please proceed to finalize your purchase and coordinate with the seller for delivery or pickup.</p>
 
-                        We’re thrilled to have you as the winning bidder. Please proceed to finalize your purchase and coordinate with the seller for delivery or pickup.
+                        <p>
+                          🔗 <a href=""https://bidzy.com/auction/{auction.Id}"" style=""color: #007BFF; font-weight: bold;"">View Auction Details</a>
+                        </p>
 
-                        You can view the auction details and next steps here: [View Auction](https://bidzy.com/auction/{auction.Id})
+                        <p>If you have any questions or need help, our support team is here for you.</p>
 
-                        If you have any questions or need help, our support team is here for you.
+                        <br/>
+                        <p>Happy bidding,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
 
-                        Happy bidding,  
-                        The BIDZY Team
-                        "
 
             };
             SendEmailAsync(dto).Wait();
             dto.ReceiverEmail = auction.Product.Seller.Email;
             dto.Body = $@"
-                        Hello {auction.Product.Seller.FullName},
-                        We’re writing to inform you that your auction (Auction #{auction.Id}, - {auction.Product.Title}) has successfully concluded.
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2>Hello {auction.Product.Seller.FullName},</h2>
+                        <p>We’re writing to inform you that your auction 
+                          <strong>#{auction.Id}</strong> – <em>{auction.Product.Title}</em> 
+                          has successfully concluded.</p>
 
-                        🎉 **Winning Bidder**: {winBid.Bidder.FullName}
+                        <h3 style=""margin-top: 20px;"">🎉 Winning Bidder:</h3>
+                        <p><strong>{winBid.Bidder.FullName}</strong></p>
 
-                        Thank you for listing your item on BIDZY and being part of our auction community. We appreciate your participation and hope the process was smooth and rewarding.
+                        <p>Thank you for listing your item on <strong>BIDZY</strong> and being part of our auction community. 
+                        We appreciate your participation and hope the process was smooth and rewarding.</p>
 
-                        If you have any questions or need assistance with next steps, feel free to reach out to our support team.
+                        <p>If you have any questions or need assistance with next steps, feel free to reach out to our support team.</p>
 
-                        Best regards,  
-                        The BIDZY Team
-                        ";
+                        <br/>
+                        <p>Best regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>";
+
             return SendEmailAsync(dto);
         }
 
@@ -157,22 +209,29 @@ namespace Bidzy.Application.Services
                 Subject = $"Auction #{auction.Id} has started!",
                 // TODO create url
                 Body = $@"
-                        Hello {auction.Product.Seller.FullName},
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2>Hello {auction.Product.Seller.FullName},</h2>
+                        <p>We regret to inform you that <strong>Auction #{auction.Id}</strong> has been closed without a winning bidder.</p>
 
-                        We regret to inform you that Auction #{auction.Id} has been closed without a winning bidder.
+                        <h3 style=""margin-top: 20px;"">📦 Auction Summary:</h3>
+                        <ul>
+                          <li><strong>Item:</strong> {auction.Product.Title}</li>
+                          <li><strong>Reason:</strong> No qualifying bids were placed during the auction period.</li>
+                        </ul>
 
-                        **Item**: {auction.Product.Title}  
-                        **Reason**: No qualifying bids were placed during the auction period.
+                        <p>We understand this may be disappointing. You’re welcome to relist the item or adjust the auction settings to improve visibility and engagement.</p>
 
-                        We understand this may be disappointing. You’re welcome to relist the item or adjust the auction settings to improve visibility and engagement.
+                        <p>
+                          👉 <a href=""https://bidzy.com/auction/relist/{auction.Id}"" style=""color: #007BFF; font-weight: bold;"">Relist Your Item</a>
+                        </p>
 
-                        👉 [Relist Your Item](https://bidzy.com/auction/relist/{auction.Id})
+                        <p>If you need help optimizing your listing or have any questions, our support team is here to assist you.</p>
 
-                        If you need help optimizing your listing or have any questions, our support team is here to assist you.
-
-                        Thank you for using BIDZY,  
-                        The BIDZY Team
-                        "
+                        <br/>
+                        <p>Thank you for using <strong>BIDZY</strong>,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
 
             };
             return SendEmailAsync(dto);

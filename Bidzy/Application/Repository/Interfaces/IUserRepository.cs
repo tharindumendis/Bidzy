@@ -12,5 +12,6 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<User?> AddUserAsync(User user);
         Task<User?> UpdateUserAsync(User user);
         Task<User?> DeleteUserAsync(Guid id);
+        Task<bool> IsExistByUserEmailAsync(string email);    
     }
 }

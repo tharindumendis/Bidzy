@@ -33,6 +33,10 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
+        public async Task<bool> IsExistByUserEmailAsync(string email)
+        {
+            return await dbContext.Users.AnyAsync(u => u.Email == email);
+        }
 
         public async Task<User?> AddUserAsync(User user)
         {
