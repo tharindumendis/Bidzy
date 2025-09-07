@@ -2,6 +2,7 @@
 using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application;
+using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.Auth;
@@ -88,18 +89,19 @@ namespace Bidzy.API.Controllers
         public async Task<IActionResult> CheckExitEmail([FromBody] ExitEmailDto emailDto)
         {
             bool isExists = await userRepository.IsExistByUserEmailAsync(emailDto.Email);
-            if (!isExists)
-            {
-                var otp = new Random().Next(100000, 999999).ToString();
-                _cache.StoreOtp(emailDto.Email,otp);
-                await emailJobService.SendOTP(otp, emailDto.Email);
-
-            }
+            
             return Ok(new { exists = isExists });
         }
         [HttpPost("otp")]
         public async Task<IActionResult> CheckOtp([FromBody] ExitEmailDto dto)
         {
+            if(dto.Action == "send")
+            {
+                var otp = new Random().Next(100000, 999999).ToString();
+                _cache.StoreOtp(dto.Email, otp);
+                await emailJobService.SendOTP(otp, dto.Email);
+
+            }
 
             if (dto.OTP != null && _cache.ValidateOtp(dto.Email, dto.OTP))
             {
