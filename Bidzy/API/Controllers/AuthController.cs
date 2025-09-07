@@ -100,7 +100,7 @@ namespace Bidzy.API.Controllers
                 var otp = new Random().Next(100000, 999999).ToString();
                 _cache.StoreOtp(dto.Email, otp);
                 await emailJobService.SendOTP(otp, dto.Email);
-
+                return Ok (new { success = true });
             }
 
             if (dto.OTP != null && _cache.ValidateOtp(dto.Email, dto.OTP))
@@ -110,12 +110,10 @@ namespace Bidzy.API.Controllers
             }
             return BadRequest(new { success = false });
         }
-  
     }
     public class Cache(IMemoryCache cache)
     {
         private readonly IMemoryCache _cache = cache;
-
         public void StoreOtp(string email, string otp)
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()
@@ -123,7 +121,6 @@ namespace Bidzy.API.Controllers
 
             _cache.Set(email, otp, cacheEntryOptions);
         }
-
         public bool ValidateOtp(string email, string inputOtp)
         {
             if (_cache.TryGetValue(email, out string storedOtp))
@@ -139,7 +136,6 @@ namespace Bidzy.API.Controllers
 
             _cache.Set(email, "valid", cacheEntryOptions);
         }
-
         public bool ValidateValidateEmail(string email)
         {
             if (_cache.TryGetValue(email, out string value))
@@ -149,5 +145,4 @@ namespace Bidzy.API.Controllers
             return false;
         }
     }
-
 }

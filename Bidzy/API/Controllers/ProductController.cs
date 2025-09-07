@@ -1,7 +1,10 @@
-﻿using Bidzy.API.DTOs;
+﻿using System.Security.Claims;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.productsDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services;
 using Bidzy.Domain.Enties;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 
@@ -9,16 +12,14 @@ namespace Bidzy.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductController(IImageService imageService, IProductRepository productRepository, ITagRepository tagRepository) : ControllerBase
     {
-        private readonly IProductRepository productRepository;
-        private readonly ITagRepository tagRepository;
+        private readonly IProductRepository productRepository = productRepository;
+        private readonly ITagRepository tagRepository = tagRepository;
+        private readonly IImageService imageService = imageService;
 
-        public ProductController(IProductRepository productRepository, ITagRepository tagRepository )
-        {
-            this.productRepository = productRepository;
-            this.tagRepository = tagRepository;
-        }
+
+        
 
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
@@ -37,14 +38,16 @@ namespace Bidzy.API.Controllers
             }
             return Ok(product.ToReadDto());
         }
-
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductAddDto productAddDto)
+        public async Task<IActionResult> CreateProduct([FromForm] ProductAddDto productAddDto)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var tags = productAddDto.Tags != null
                 ? await tagRepository.ResolveTagsAsync(productAddDto.Tags)
                 : new List<Tag>();
-            var product = productAddDto.ToEntity(tags);
+            var product = productAddDto.ToEntity(tags, Guid.Parse(userId));
+            await imageService.UploadImage(productAddDto.file, "product", product.Id.ToString());
             var createdProduct = await productRepository.AddProductsAsync(product);
 
             return Ok(createdProduct);

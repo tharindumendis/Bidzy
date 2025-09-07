@@ -19,15 +19,16 @@ namespace Bidzy.API.DTOs
             };
         }
 
-        public static Product ToEntity (this ProductAddDto productAddDto, List<Tag> tags)
+        public static Product ToEntity (this ProductAddDto productAddDto, List<Tag> tags,Guid sellerId)
         {
+            Guid productId = Guid.NewGuid();
             return new Product
             {
-                Id = Guid.NewGuid(),
+                Id = productId,
                 Title = productAddDto.Title,
                 Description = productAddDto.Description,
-                ImageUrl = productAddDto.ImageUrl,
-                SellerId = productAddDto.SellerId,
+                ImageUrl = "/Image/product/"+ productId.ToString(),
+                SellerId = sellerId,
                 Tags = tags
             };
         }
