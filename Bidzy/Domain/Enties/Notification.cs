@@ -12,7 +12,7 @@ namespace Bidzy.Domain.Enties
         public User User { get; set; }
 
         public string Message { get; set; }
-        public string? link { get; set; }
+        public string? Link { get; set; }
 
         [Required]
         public NotificationType Type { get; set; }

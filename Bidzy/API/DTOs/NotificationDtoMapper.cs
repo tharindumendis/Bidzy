@@ -27,7 +27,7 @@ namespace Bidzy.API.DTOs
                 UserId = dto.UserId,
                 Message = dto.Message,
                 Type = Enum.Parse<NotificationType>(dto.Type, true),
-                link = dto.Link,
+                Link = dto.Link,
                 IsSeen = false,
             };
         }
