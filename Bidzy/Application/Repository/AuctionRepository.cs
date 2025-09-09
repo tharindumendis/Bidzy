@@ -128,5 +128,23 @@ namespace Bidzy.Application.Repository
 
             return count;
         }
+
+        public async Task<List<Auction>> GetAllShopAuctionDetailsAsync(Guid id)
+        {
+            return await dbContext.Auctions
+                .Where(a => a.Product.SellerId == id)
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(a => a.Product)
+                    .ThenInclude(t => t.Tags)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .Include(b => b.Bids)
+                    .ThenInclude(a => a.Bidder)
+                .Include(u => u.LikedByUsers)
+                .Include(u => u.ViewHistories)
+                .Include(u => u.participations)
+                .ToListAsync();
+        }
     }
 }

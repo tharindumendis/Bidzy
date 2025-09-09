@@ -8,7 +8,7 @@ namespace Bidzy.Domain.Enties
         public required Auction Auction { get; set; }
         public Guid userId { get; set; }
         public Guid auctionId { get; set; }
-        public ParticipationStatus participationStatus { get; set; }
+        public ParticipationStatus Status { get; set; }
 
     }
 }

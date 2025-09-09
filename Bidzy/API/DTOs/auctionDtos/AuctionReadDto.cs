@@ -13,6 +13,7 @@
         public decimal MinimumBid { get; set; }
         public string Status { get; set; }
         public Guid? WinningBidId { get; set; }
+        public decimal? WinAmount { get; set; }
         public string? WinningBid { get; set; }
     }
 }

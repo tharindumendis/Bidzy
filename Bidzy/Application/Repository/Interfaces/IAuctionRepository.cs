@@ -17,6 +17,6 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<int> ScheduledAuctionCountAsync();
         Task<int> CancelledAuctionCountAsync();
         Task<int> EndedAuctionCountAsync();
-
+        Task<List<Auction>> GetAllShopAuctionDetailsAsync(Guid id);
     }
 }

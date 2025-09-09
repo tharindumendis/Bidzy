@@ -143,6 +143,10 @@ namespace Bidzy.Data
                 .HasForeignKey(vh => vh.AuctionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Auction>()
+                .Property(a => a.WinAmount)
+                .HasPrecision(18, 2);
+
         }
 
     }
