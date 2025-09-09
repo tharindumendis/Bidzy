@@ -35,6 +35,11 @@ namespace Bidzy.Application.Repository
             await dbContext.Notifications.AddAsync(notification);
             await dbContext.SaveChangesAsync ();
         }
+        public async Task AddNotificationsAsync(List<Notification> notifications)
+        {
+            await dbContext.Notifications.AddRangeAsync (notifications);
+            await dbContext.SaveChangesAsync();
+        }
 
         public async Task MarkAsSeenAsync(Guid notificationId, Guid userId)
         {

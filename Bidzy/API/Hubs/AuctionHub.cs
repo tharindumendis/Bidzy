@@ -82,11 +82,20 @@ namespace Bidzy.API.Hubs
 
 
             await Groups.AddToGroupAsync(Context.ConnectionId, payload.UserId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, "LiveCount");
+            await Groups.AddToGroupAsync(Context.ConnectionId, "App");
             await _liveCountService.BroadcastLiveCountAsync();
             // Notify others in the group 
             // this is temp
-            await Clients.Group(payload.GroupId).SendAsync("UserSubscribed", payload);
+            Notification newNotification = new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                Message = $"User {payload.UserId} connected to group {payload.GroupId}",
+                Type = Domain.Enum.NotificationType.SYSTEM,
+                IsSeen = false,
+                Timestamp = DateTime.UtcNow
+            };
+            await Clients.Group("App").SendAsync("UserSubscribed", newNotification);
 
         }
 
@@ -97,7 +106,16 @@ namespace Bidzy.API.Hubs
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.GroupId);
                 await _liveCountService.RemoveConnection(Context.ConnectionId);
                 // this is temp for dev
-                await Clients.Group(user.GroupId).SendAsync("UserUnsubscribed", user);
+                Notification newNotification = new()
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = Guid.NewGuid(),
+                    Message = $"User {user.UserId} connected to group {user.GroupId}",
+                    Type = Domain.Enum.NotificationType.SYSTEM,
+                    IsSeen = false,
+                    Timestamp = DateTime.UtcNow
+                };
+                await Clients.Group("App").SendAsync("UserUnsubscribed", newNotification);
             }
             Console.WriteLine($"Conn {Context.ConnectionId} disconnected. Reason: {exception?.Message}");
 

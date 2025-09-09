@@ -11,7 +11,6 @@ namespace Bidzy.API.DTOs
             return new NotificationDto
             {
                 Id = entity.Id,
-                UserId = entity.UserId,
                 Message = entity.Message,
                 Type = entity.Type.ToString(),
                 Timestamp = entity.Timestamp,

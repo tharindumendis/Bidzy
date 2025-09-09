@@ -2,6 +2,7 @@
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
+using Bidzy.Domain.Enum;
 using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +42,18 @@ namespace Bidzy.API.Controllers
                 {
                     await _signalRNotifier.BroadcastAuctionStarted(auc);
                 }
+                Notification notification = new Notification
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = auctionId,
+                    Message = $"The auction for  you favorited has been cancelled. Asynchronous methods enable EF ",
+                    Type = NotificationType.AUCTIONSTART,
+                    Link = "234-23432432-42323324",
+                    IsSeen = false
+                };
+                await _signalRNotifier.SendNotificationToUser(notification);
             }
+
 
             return Ok(null);
         }

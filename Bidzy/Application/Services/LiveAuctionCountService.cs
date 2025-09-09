@@ -67,8 +67,8 @@ public class LiveAuctionCountService(IHubContext<AuctionHub> hubContext, IHubCon
 
     public async Task BroadcastLiveCountAsync()
     {
-        await _hubContext.Clients.Group("LiveCount").SendAsync("LiveCount", _liveCount);
-        await _userHubContext.Clients.Group("LiveCount").SendAsync("LiveCount", _liveCount);
+        await _hubContext.Clients.Group("App").SendAsync("LiveCount", _liveCount);
+        await _userHubContext.Clients.Group("App").SendAsync("LiveCount", _liveCount);
 
     }
     
