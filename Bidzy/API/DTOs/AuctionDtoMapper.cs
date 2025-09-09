@@ -1,4 +1,5 @@
 ﻿using Bidzy.API.DTOs.auctionDtos;
+using Bidzy.API.DTOs.bidDtos;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 
@@ -25,8 +26,9 @@ namespace Bidzy.API.DTOs
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
                 WinningBidId = auction.WinningBidId,
+                WinAmount = auction.WinningBid != null ? auction.WinningBid.Amount : null,
                 WinningBid = auction.WinningBid != null
-                            ? $"{auction.WinningBid.Bidder?.FullName ?? "Unknown"} - {auction.WinningBid.Amount:C}"
+                            ? $"{auction.WinningBid.Bidder?.FullName ?? "Unknown"}"
                             : "No winning bid"
             };
         }
@@ -66,6 +68,27 @@ namespace Bidzy.API.DTOs
             {
                 //auction.WinnerId = auctionUpdateDto.WinnerId;
             }
-        } 
+        }
+
+        public static ShopAuctionDto ToshopAuctionDto(this Auction auction )
+        {
+            return new ShopAuctionDto
+            {
+                Id = auction.Id,
+                ProductId = auction.ProductId,
+                ProductTitle = auction.Product.Title,
+                tags = auction.Product.Tags.Select(t => t.tagName).ToArray(),
+                ImageUrl = auction.Product.ImageUrl,
+                StartTime = auction.StartTime,
+                EndTime = auction.EndTime,
+                MinimumBid = auction.MinimumBid,
+                Status = auction.Status.ToString(),
+                WinBid = auction.WinningBid?.ToReadDto(),
+                Bids = auction.Bids.Select(b => b.ToReadDto()).ToList() ?? new List<BidReadDto>(),
+                ViewCount = auction.ViewHistories?.Count ?? 0,
+                LikeCount = auction.LikedByUsers?.Count ?? 0,
+                ParticipationCount = auction.participations?.Count ?? 0
+            };
+        }
     }
 }

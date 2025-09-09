@@ -1,4 +1,5 @@
 ﻿using Bidzy.Domain.Enum;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -16,6 +17,9 @@ namespace Bidzy.Domain.Enties
         public AuctionStatus Status { get; set; } // Scheduled, Active, Ended, Cancelled
 
         public Guid? WinningBidId { get; set; }
+
+        [Precision(18, 2)]
+        public decimal WinAmount { get; set; }
         public Bid? WinningBid { get; set; }
 
         [JsonIgnore]

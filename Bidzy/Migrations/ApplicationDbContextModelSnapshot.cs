@@ -44,6 +44,10 @@ namespace Bidzy.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("WinAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<Guid?>("WinningBidId")
                         .HasColumnType("uniqueidentifier");
 
@@ -136,6 +140,9 @@ namespace Bidzy.Migrations
                     b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Link")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -151,9 +158,6 @@ namespace Bidzy.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("link")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
