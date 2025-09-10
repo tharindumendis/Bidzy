@@ -44,7 +44,7 @@ namespace Bidzy.API.Controllers
                 }
                 Notification notification = new Notification
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("f974b7cb-a12e-4b67-ae12-d3c079efa594"),
                     UserId = auctionId,
                     Message = $"The auction for  you favorited has been cancelled. Asynchronous methods enable EF ",
                     Type = NotificationType.AUCTIONSTART,

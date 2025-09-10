@@ -100,10 +100,12 @@ namespace Bidzy.API.Hubs
             await Clients.Group("App").SendAsync("UserSubscribed", newNotification);
 
         }
-        public async Task MarkNotificationAsSeen(NotificationSeenDto payload)
+        public async Task MarkNotificationAsSeen(NotificationSeenDto notificationSeenDto)
         {
-            
-            //await _notificationRepository.MarkAsSeenAsync(payload.);
+            Guid notificationId = Guid.Parse(notificationSeenDto.NotificationId);
+            Guid userId = Guid.Parse(notificationSeenDto.UserId);
+
+            await _notificationRepository.MarkAsSeenAsync(notificationId,userId);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)

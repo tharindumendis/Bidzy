@@ -21,6 +21,7 @@ namespace Bidzy.API.DTOs
                 SellerId = auction.Product.SellerId,
                 SellerName = auction.Product.Seller?.FullName,
                 ImageUrl = auction.Product.ImageUrl,
+                tags = auction.Product.Tags.Select(t => t.tagName).ToArray(),
                 StartTime = auction.StartTime,
                 EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,

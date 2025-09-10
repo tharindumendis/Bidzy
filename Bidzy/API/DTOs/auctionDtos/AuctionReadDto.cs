@@ -8,6 +8,7 @@
         public Guid SellerId { get; set; }
         public string SellerName { get; set; }
         public string ImageUrl { get; set; }
+        public string[] tags { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }

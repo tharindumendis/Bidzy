@@ -1,8 +1,8 @@
-﻿namespace Bidzy.API.DTOs
+﻿namespace Bidzy.Application.DTOs
 {
     public class NotificationSeenDto
     {
-        Guid NotificationId { get; set; }
-        Guid UserId { get; set; }
+        public required string NotificationId { get; set; }
+        public required string UserId { get; set; } 
     }
 }
