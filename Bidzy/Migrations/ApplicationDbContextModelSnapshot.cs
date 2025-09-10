@@ -57,7 +57,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("WinningBidId");
 
-                    b.ToTable("Auctions");
+                    b.ToTable("Auctions", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.AuctionParticipation", b =>
@@ -75,7 +75,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("auctionId");
 
-                    b.ToTable("AuctionParticipations");
+                    b.ToTable("AuctionParticipations", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Bid", b =>
@@ -103,7 +103,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("BidderId");
 
-                    b.ToTable("Bids");
+                    b.ToTable("Bids", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Delivery", b =>
@@ -128,7 +128,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("AuctionId");
 
-                    b.ToTable("Deliveries");
+                    b.ToTable("Deliveries", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Notification", b =>
@@ -163,7 +163,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Otp", b =>
@@ -185,7 +185,7 @@ namespace Bidzy.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Otps");
+                    b.ToTable("Otps", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Payment", b =>
@@ -256,7 +256,7 @@ namespace Bidzy.Migrations
                         .IsUnique()
                         .HasFilter("[PaymentIntentId] IS NOT NULL");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Product", b =>
@@ -284,7 +284,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.SearchHistory", b =>
@@ -307,7 +307,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SearchHistories");
+                    b.ToTable("SearchHistories", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Tag", b =>
@@ -322,7 +322,7 @@ namespace Bidzy.Migrations
 
                     b.HasKey("tagId");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.User", b =>
@@ -362,7 +362,7 @@ namespace Bidzy.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.UserAuctionFavorite", b =>
@@ -380,7 +380,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("auctionId");
 
-                    b.ToTable("UserAuctionFavorite");
+                    b.ToTable("UserAuctionFavorite", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.ViewHistory", b =>
@@ -404,7 +404,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ViewHistories");
+                    b.ToTable("ViewHistories", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.WebhookEventLog", b =>
@@ -417,7 +417,7 @@ namespace Bidzy.Migrations
 
                     b.HasKey("EventId");
 
-                    b.ToTable("WebhookEventLogs");
+                    b.ToTable("WebhookEventLogs", (string)null);
                 });
 
             modelBuilder.Entity("ProductTag", b =>
@@ -432,7 +432,7 @@ namespace Bidzy.Migrations
 
                     b.HasIndex("TagstagId");
 
-                    b.ToTable("ProductTag");
+                    b.ToTable("ProductTag", (string)null);
                 });
 
             modelBuilder.Entity("Bidzy.Domain.Enties.Auction", b =>

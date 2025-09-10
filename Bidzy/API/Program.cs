@@ -150,9 +150,9 @@ builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddScoped<IAuctionEngine, AuctionEngine>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+
 
 // Configure Entity Repository
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));

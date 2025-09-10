@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Claims;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.favoriteAuctionsDtos;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
@@ -13,10 +14,11 @@ using Newtonsoft.Json;
 namespace Bidzy.API.Hubs
 {
     [Authorize]
-    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, ILiveAuctionCountService liveCountService) : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
+        private readonly INotificationRepository _notificationRepository = notificationRepository;
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -97,6 +99,11 @@ namespace Bidzy.API.Hubs
             };
             await Clients.Group("App").SendAsync("UserSubscribed", newNotification);
 
+        }
+        public async Task MarkNotificationAsSeen(NotificationSeenDto payload)
+        {
+            
+            //await _notificationRepository.MarkAsSeenAsync(payload.);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
