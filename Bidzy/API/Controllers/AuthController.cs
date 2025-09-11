@@ -84,37 +84,22 @@ namespace Bidzy.API.Controllers
             return Ok(new {sucess = true , message="OTP sent to email."});
         }
 
-        [HttpPost("verifypasswordotp")]
-        public IActionResult VerifyPasswordOtp([FromBody] ExitEmailDto emailDto)
-        {
-            if (emailDto.OTP != null && _cache.ValidateOtp(emailDto.Email, emailDto.OTP))
-            {
-                _cache.StoreValidEmail(emailDto.Email);
-                return Ok(new {sucess = true, message="Otp verified."});
-            }
-            return BadRequest(new { sucess = false, message="Invalid or expired OTP."});
-        }
-
-        [HttpPost("resetpassword")]
+        [HttpPost("resetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
         {
-            bool isValidEmail = _cache.ValidateValidateEmail(resetPasswordDto.Email);
-            if (!isValidEmail)
+            
+            if (resetPasswordDto.OTP != null && _cache.ValidateOtp(resetPasswordDto.Email, resetPasswordDto.OTP))
             {
-                return BadRequest("Email not verified.");
+                if (resetPasswordDto.NewPassword != resetPasswordDto.ConfirmPassword)
+                {
+                    return BadRequest("Passwords do not match.");
+                }
+                var user = await userRepository.GetUserByEmailAsync(resetPasswordDto.Email);
+                user.PasswordHash = PasswordHasher.Hash(resetPasswordDto.NewPassword);
+                await userRepository.UpdateUserAsync(user);
+                return Ok(new { sucess = true, message = "Password reset successfully." });
             }
-            var user = await userRepository.GetUserByEmailAsync(resetPasswordDto.Email);
-            if ( user == null)
-            {
-                return BadRequest("User with this email is not found.");
-            }
-            if (resetPasswordDto.NewPassword != resetPasswordDto.ConfirmPassword)
-            {
-                return BadRequest("Passwords do not match.");
-            }
-            user.PasswordHash = PasswordHasher.Hash(resetPasswordDto.NewPassword);
-            await userRepository.UpdateUserAsync(user);
-            return Ok(new { sucess = true, message = "Password reset successfully." });
+            return BadRequest(new { sucess = false, message="Invalid or expired OTP."});
         }
 
         [Authorize]
