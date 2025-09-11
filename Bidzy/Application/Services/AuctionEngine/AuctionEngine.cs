@@ -32,7 +32,7 @@ namespace Bidzy.Application.Services.AuctionEngine
             _bidRepository = bidRepository;
             _liveAuctionCountService = liveAuctionCountService;
         }
-        public async Task<AuctionReadDto> CreateAuctionAsync(AuctionAddDto dto)
+        public async Task<ShopAuctionDto> CreateAuctionAsync(AuctionAddDto dto)
         {
             var auction = dto.ToEntity();
             var saved = await _auctionRepo.AddAuctionAsync(auction);
@@ -51,7 +51,7 @@ namespace Bidzy.Application.Services.AuctionEngine
                 }
             }
 
-            return saved.ToReadDto();
+            return saved.ToshopAuctionDto();
         }
 
         public async Task StartAuctionAsync(Guid auctionId)

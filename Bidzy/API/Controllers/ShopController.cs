@@ -1,5 +1,7 @@
 ﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.AuctionEngine;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -10,10 +12,12 @@ namespace Bidzy.API.Controllers
     public class ShopController : ControllerBase
     {
         private readonly IAuctionRepository auctionRepository;
+        private readonly IAuctionEngine auctionEngine;
 
-        public ShopController(IAuctionRepository auctionRepository)
+        public ShopController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine)
         {
             this.auctionRepository = auctionRepository;
+            this.auctionEngine = auctionEngine;
         }
         [Authorize]
         [HttpGet("auctions")]
@@ -29,6 +33,15 @@ namespace Bidzy.API.Controllers
                 return NotFound("No auctions found for this shop");
             }
             return Ok(auctions.Select(a => a.ToshopAuctionDto()));
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
+        {
+            DateTime rowStartTime = auctionAddDto.StartTime;
+            DateTime rowEndTime = auctionAddDto.EndTime;
+            return Ok(await auctionEngine.CreateAuctionAsync(auctionAddDto));
         }
     }
 }

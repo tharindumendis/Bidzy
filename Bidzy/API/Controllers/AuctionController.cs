@@ -55,13 +55,14 @@ namespace Bidzy.API.Controllers
             return Ok(auctions.ToReadDto());
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
-        {
-            DateTime rowStartTime = auctionAddDto.StartTime;
-            DateTime rowEndTime = auctionAddDto.EndTime;
-            return Ok(await _auctionEngine.CreateAuctionAsync(auctionAddDto));
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
+        //{
+        //    DateTime rowStartTime = auctionAddDto.StartTime;
+        //    DateTime rowEndTime = auctionAddDto.EndTime;
+        //    return Ok(await _auctionEngine.CreateAuctionAsync(auctionAddDto));
+        //}
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuction([FromRoute] Guid id, [FromBody] AuctionUpdateDto auctionUpdateDto)
