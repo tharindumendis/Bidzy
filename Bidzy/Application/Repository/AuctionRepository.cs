@@ -20,6 +20,8 @@ namespace Bidzy.Application.Repository
             return await dbContext.Auctions
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
+                .Include(p => p.Product)
+                    .ThenInclude(t => t.Tags)
                 .Include(b => b.WinningBid)
                     .ThenInclude(a => a.Bidder)
                 .ToListAsync();
@@ -86,6 +88,8 @@ namespace Bidzy.Application.Repository
             var auction = await dbContext.Auctions
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
+                .Include(p => p.Product)
+                    .ThenInclude(t => t.Tags)
                 .Include(b => b.WinningBid)
                     .ThenInclude(a => a.Bidder)
                 .Include(b => b.Bids)

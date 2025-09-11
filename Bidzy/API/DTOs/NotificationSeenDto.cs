@@ -2,7 +2,7 @@
 {
     public class NotificationSeenDto
     {
-        public required string NotificationId { get; set; }
+        public string NotificationId { get; set; }
         public required string UserId { get; set; } 
     }
 }

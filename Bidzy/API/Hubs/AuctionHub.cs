@@ -2,10 +2,12 @@
 using System.Security.Claims;
 using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.favoriteAuctionsDtos;
+using Bidzy.Application;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
+using Bidzy.Application.Services.Auth;
 using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -14,11 +16,14 @@ using Newtonsoft.Json;
 namespace Bidzy.API.Hubs
 {
     [Authorize]
-    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository) : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, IAuthService authService, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
         private readonly INotificationRepository _notificationRepository = notificationRepository;
+        private readonly IAuthService _authService = authService;
+
+        public static ConcurrentDictionary<string, HashSet<string>> GroupConnections = new();
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -40,10 +45,14 @@ namespace Bidzy.API.Hubs
                 return;
             }
         }
+
+
+
         public override async Task OnConnectedAsync()
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Console.WriteLine($"User connected: {userId}");
+           
             await base.OnConnectedAsync();
         }
         public async Task LeaveAuctionGroup(HubSubscribeData payload)
@@ -59,6 +68,26 @@ namespace Bidzy.API.Hubs
                     await RemoveFavorite(gId, payload.UserId);
                 }
             }
+        }
+        public async Task JoinAuctionRoom(JoinAuctionRoom payload)
+        {
+            ClaimsPrincipal principal = _authService.ValidateToken(payload.Token);
+            try
+            {
+                // ADD Auction Room by "R" with AuctionID
+                await Groups.AddToGroupAsync(Context.ConnectionId, "R"+payload.AuctionId);
+            }
+            catch
+            {
+                return;
+            }
+            await Clients.Group("R" + payload.AuctionId).SendAsync("ReceiveBidUpdate", "this is  new bid message");
+        }
+        public async Task LeaveAuctionRoom(JoinAuctionRoom payload)
+        {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, "R"+payload.AuctionId);
+                //await Clients.Group("R" + payload.AuctionId).SendAsync("OnlineUpdate", groupCount);
+                
         }
         public async Task SendBidUpdate(string auctionId, string message)
         {
@@ -88,25 +117,33 @@ namespace Bidzy.API.Hubs
             await _liveCountService.BroadcastLiveCountAsync();
             // Notify others in the group 
             // this is temp
-            Notification newNotification = new()
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                Message = $"User {payload.UserId} connected to group {payload.GroupId}",
-                Type = Domain.Enum.NotificationType.SYSTEM,
-                IsSeen = false,
-                Timestamp = DateTime.UtcNow
-            };
-            await Clients.Group("App").SendAsync("UserSubscribed", newNotification);
+            //Notification newNotification = new()
+            //{
+            //    Id = Guid.NewGuid(),
+            //    UserId = Guid.NewGuid(),
+            //    Message = $"User {payload.UserId} connected to group {payload.GroupId}",
+            //    Type = Domain.Enum.NotificationType.SYSTEM,
+            //    IsSeen = false,
+            //    Timestamp = DateTime.UtcNow
+            //};
+            //await Clients.Group("App").SendAsync("UserSubscribed", newNotification);
 
         }
         public async Task MarkNotificationAsSeen(NotificationSeenDto notificationSeenDto)
         {
+            if (notificationSeenDto.NotificationId == null) return;
+
             Guid notificationId = Guid.Parse(notificationSeenDto.NotificationId);
             Guid userId = Guid.Parse(notificationSeenDto.UserId);
 
             await _notificationRepository.MarkAsSeenAsync(notificationId,userId);
         }
+        public async Task MarkAllAsSeen(NotificationSeenDto notificationSeenDto)
+        {
+            Guid userId = Guid.Parse(notificationSeenDto.UserId);
+            await _notificationRepository.MarkAllAsSeenByUserIdAsync(userId);
+        }
+
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -115,16 +152,16 @@ namespace Bidzy.API.Hubs
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.GroupId);
                 await _liveCountService.RemoveConnection(Context.ConnectionId);
                 // this is temp for dev
-                Notification newNotification = new()
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = Guid.NewGuid(),
-                    Message = $"User {user.UserId} connected to group {user.GroupId}",
-                    Type = Domain.Enum.NotificationType.SYSTEM,
-                    IsSeen = false,
-                    Timestamp = DateTime.UtcNow
-                };
-                await Clients.Group("App").SendAsync("UserUnsubscribed", newNotification);
+                //Notification newNotification = new()
+                //{
+                //    Id = Guid.NewGuid(),
+                //    UserId = Guid.NewGuid(),
+                //    Message = $"User {user.UserId} connected to group {user.GroupId}",
+                //    Type = Domain.Enum.NotificationType.SYSTEM,
+                //    IsSeen = false,
+                //    Timestamp = DateTime.UtcNow
+                //};
+                //await Clients.Group("App").SendAsync("UserUnsubscribed", newNotification);
             }
             Console.WriteLine($"Conn {Context.ConnectionId} disconnected. Reason: {exception?.Message}");
 
