@@ -7,7 +7,7 @@ using MimeKit;
 using MimeKit.Text;
 using Org.BouncyCastle.Tls;
 
-namespace Bidzy.Application.Services
+namespace Bidzy.Application.Services.Email
 {
     public class EmailJobService : IEmailJobService
     {

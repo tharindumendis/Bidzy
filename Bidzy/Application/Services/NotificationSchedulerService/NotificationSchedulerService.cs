@@ -1,5 +1,7 @@
 ﻿using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.Email;
+using Bidzy.Application.Services.Scheduler;
 using Bidzy.Domain.Enties;
 using Hangfire;
 

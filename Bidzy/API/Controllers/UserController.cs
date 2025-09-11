@@ -1,7 +1,7 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.userDtos;
-using Bidzy.Application;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

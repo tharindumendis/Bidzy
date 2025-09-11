@@ -1,5 +1,6 @@
 ﻿using Bidzy.API.DTOs.NotificationDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;

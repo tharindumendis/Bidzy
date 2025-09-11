@@ -1,6 +1,8 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.bidDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services;
+using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,16 +14,19 @@ namespace Bidzy.API.Controllers
     public class BidController : ControllerBase
     {
         private readonly IBidRepository bidRepository;
+        private readonly IBidService bidService;    
 
-        public BidController(IBidRepository bidRepository)
+        public BidController(IBidRepository bidRepository, IBidService bidService)
         {
             this.bidRepository = bidRepository;
+            this.bidService = bidService;
         }
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllBids()
         {
-            var bids = await bidRepository.GetAllBidsAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<Bid> bids = await bidService.GetAllBidsByUser(Guid.Parse(userId));
             return Ok(bids.Select(x => x.ToReadDto()));
         }
 
@@ -36,18 +41,18 @@ namespace Bidzy.API.Controllers
             return Ok(bid.ToReadDto());
         }
 
-        [Authorize]
-        [HttpGet("user")]
-        public async Task<IActionResult> GetBidsByUserId()
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var bids = await bidRepository.GetBidsByUserIdAsync(Guid.Parse(userId));
-            if (bids == null || !bids.Any())
-            {
-                return NotFound("No bids found for this user.");
-            }
-            return Ok(bids.Select(b=>b.ToReadDto()));
-        }
+        //[Authorize]
+        //[HttpGet("user")]
+        //public async Task<IActionResult> GetBidsByUserId()
+        //{
+        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //    var bids = await bidRepository.GetBidsByUserIdAsync(Guid.Parse(userId));
+        //    if (bids == null || !bids.Any())
+        //    {
+        //        return NotFound("No bids found for this user.");
+        //    }
+        //    return Ok(bids.Select(b=>b.ToReadDto()));
+        //}
 
         [HttpGet("auction/{auctionId}")]
         public async Task<IActionResult> GetBiddersByAuctionId([FromRoute] Guid auctionId)
@@ -63,8 +68,11 @@ namespace Bidzy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBid([FromBody] BidAddDto bidAddDto)
         {
-            var entity = bidAddDto.ToEntity();
-            var bid = await bidRepository.AddBidAsync(entity);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            bidAddDto.BidderId = Guid.Parse(userId);
+            Bid entity = bidAddDto.ToEntity();
+            Bid bid = await bidService.PlaceBid(entity);
+            if (bid == null) return BadRequest();
             return Ok(bid.ToReadDto());
         }
 

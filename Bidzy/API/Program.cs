@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Bidzy.API.Hubs;
-using Bidzy.Application;
 using Bidzy.Application.Converters;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
@@ -21,6 +20,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Bidzy.Application.Services.Email;
+using Bidzy.Application.Services.Scheduler;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -152,6 +153,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IBidService, BidService>();
 
 
 // Configure Entity Repository

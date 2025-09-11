@@ -11,7 +11,9 @@ namespace Bidzy.API.DTOs
             {
                 Id = bid.Id,
                 AuctionId = bid.AuctionId,
+                Title = bid.Auction?.Product?.Title,
                 BidderId = bid.BidderId,
+                BidderImageUrl = bid.Bidder?.imageUrl,
                 BidderName = bid.Bidder?.FullName ?? string.Empty,
                 Amount = bid.Amount,
                 Timestamp = bid.Timestamp

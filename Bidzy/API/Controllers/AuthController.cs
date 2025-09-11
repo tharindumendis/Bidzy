@@ -1,4 +1,5 @@
-﻿using Bidzy.API.DTOs;
+﻿using System.Security.Claims;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application;
 using Bidzy.Application.DTOs;
@@ -6,6 +7,7 @@ using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.Auth;
+using Bidzy.Application.Services.Email;
 using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +15,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Org.BouncyCastle.Crypto.Generators;
-using System.Security.Claims;
 
 namespace Bidzy.API.Controllers
 {

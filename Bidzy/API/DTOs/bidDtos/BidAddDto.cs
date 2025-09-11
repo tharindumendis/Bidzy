@@ -5,10 +5,9 @@ namespace Bidzy.API.DTOs.bidDtos
     public class BidAddDto
     {
         [Required]
-        public Guid AuctionId { get; set; }
-        [Required]
+        public required Guid AuctionId { get; set; }
         public Guid BidderId { get; set; }
         [Required]
-        public decimal Amount { get; set; }
+        public required decimal Amount { get; set; }
     }
 }

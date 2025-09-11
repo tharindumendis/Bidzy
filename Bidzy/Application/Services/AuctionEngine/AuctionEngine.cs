@@ -2,6 +2,7 @@
 using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.NotificationEngine;
+using Bidzy.Application.Services.Scheduler;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 

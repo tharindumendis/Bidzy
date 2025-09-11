@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Bidzy.Application
+namespace Bidzy.Application.Services.Auth
 {
     public interface IAuthService
     {

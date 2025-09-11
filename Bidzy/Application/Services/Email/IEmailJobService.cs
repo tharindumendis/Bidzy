@@ -3,7 +3,7 @@ using Bidzy.Application.DTOs;
 using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Bidzy.Application.Services
+namespace Bidzy.Application.Services.Email
 {
     public interface IEmailJobService
     {

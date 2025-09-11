@@ -46,6 +46,12 @@ namespace Bidzy.Application.Repository
                 //.Include(b => b.Winner)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
+            public async Task<Auction?> GetAuctionByIdLowAsync(Guid id)
+        {
+            return await dbContext.Auctions
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+        
 
         public async Task<Auction?> AddAuctionAsync(Auction auction)
         {
