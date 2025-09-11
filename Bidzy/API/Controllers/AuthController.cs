@@ -1,8 +1,8 @@
-﻿using System.Security.Claims;
-using Bidzy.API.DTOs;
+﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application;
 using Bidzy.Application.DTOs;
+using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.Auth;
@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Org.BouncyCastle.Crypto.Generators;
+using System.Security.Claims;
 
 namespace Bidzy.API.Controllers
 {
@@ -68,6 +69,54 @@ namespace Bidzy.API.Controllers
 
             return Ok(user.ToReadDto());
         }
+
+        [HttpPost("fogotpassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ExitEmailDto emailDto)
+        {
+            var user = await userRepository.GetUserByEmailAsync(emailDto.Email);
+            if (user == null)
+            {
+                return BadRequest("User with this email is not found.");
+            }
+            var otp = new Random().Next(100000, 999999).ToString();
+            _cache.StoreOtp(emailDto.Email, otp);
+            await emailJobService.SendOTP(otp, emailDto.Email);
+            return Ok(new {sucess = true , message="OTP sent to email."});
+        }
+
+        [HttpPost("verifypasswordotp")]
+        public IActionResult VerifyPasswordOtp([FromBody] ExitEmailDto emailDto)
+        {
+            if (emailDto.OTP != null && _cache.ValidateOtp(emailDto.Email, emailDto.OTP))
+            {
+                _cache.StoreValidEmail(emailDto.Email);
+                return Ok(new {sucess = true, message="Otp verified."});
+            }
+            return BadRequest(new { sucess = false, message="Invalid or expired OTP."});
+        }
+
+        [HttpPost("resetpassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
+        {
+            bool isValidEmail = _cache.ValidateValidateEmail(resetPasswordDto.Email);
+            if (!isValidEmail)
+            {
+                return BadRequest("Email not verified.");
+            }
+            var user = await userRepository.GetUserByEmailAsync(resetPasswordDto.Email);
+            if ( user == null)
+            {
+                return BadRequest("User with this email is not found.");
+            }
+            if (resetPasswordDto.NewPassword != resetPasswordDto.ConfirmPassword)
+            {
+                return BadRequest("Passwords do not match.");
+            }
+            user.PasswordHash = PasswordHasher.Hash(resetPasswordDto.NewPassword);
+            await userRepository.UpdateUserAsync(user);
+            return Ok(new { sucess = true, message = "Password reset successfully." });
+        }
+
         [Authorize]
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
