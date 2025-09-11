@@ -166,6 +166,7 @@ builder.Services.AddTransient<IUserAuctionFavoriteRepository, UserAuctionFavorit
 builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>();
 builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
 builder.Services.AddTransient<IPaymentRepository, PaymentRepository>();
+builder.Services.AddTransient<IViewHistoryRepository, ViewHistoryRepository>();
 
 
 
