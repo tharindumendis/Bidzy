@@ -15,7 +15,7 @@ namespace Bidzy.Domain.Enties
         public decimal Commission { get; set; }
         // Stripe metadata
         public string? PaymentIntentId { get; set; }
-        public string? ChargeId { get; set; }
+        public string ChargeId { get; set; }
         public string? Currency { get; set; }
         public decimal? AmountCaptured { get; set; }
         public decimal? ProcessorFee { get; set; }
