@@ -1,4 +1,5 @@
 ﻿using Bidzy.Domain.Enties;
+using Bidzy.Domain.Enum;
 
 namespace Bidzy.API.DTOs.auctionDtos
 {
@@ -8,5 +9,6 @@ namespace Bidzy.API.DTOs.auctionDtos
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }
+        public AuctionCategories Category { get; set; }
     }
 }

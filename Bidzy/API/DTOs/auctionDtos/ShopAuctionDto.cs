@@ -1,4 +1,5 @@
 ﻿using Bidzy.API.DTOs.bidDtos;
+using Bidzy.Domain.Enum;
 
 namespace Bidzy.API.DTOs.auctionDtos
 {
@@ -8,6 +9,7 @@ namespace Bidzy.API.DTOs.auctionDtos
         public Guid ProductId { get; set; }
         public string ProductTitle { get; set; }
         public string[] tags { get; set; }
+        public string? Category { get; set; }
         public string ImageUrl { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

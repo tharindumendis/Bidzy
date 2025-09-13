@@ -22,6 +22,7 @@ namespace Bidzy.API.DTOs
                 SellerName = auction.Product.Seller?.FullName,
                 ImageUrl = auction.Product.ImageUrl,
                 tags = auction.Product.Tags.Select(t => t.tagName).ToArray(),
+                Category = auction.Category.ToString(),
                 StartTime = auction.StartTime,
                 EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,
@@ -43,7 +44,8 @@ namespace Bidzy.API.DTOs
                 StartTime = auctionAddDto.StartTime.ToUniversalTime(),
                 EndTime = auctionAddDto.EndTime.ToUniversalTime(),
                 MinimumBid = auctionAddDto.MinimumBid,
-                Status = Domain.Enum.AuctionStatus.Scheduled
+                Status = Domain.Enum.AuctionStatus.Scheduled,
+                Category = auctionAddDto.Category
             };
         }
 
@@ -69,6 +71,10 @@ namespace Bidzy.API.DTOs
             {
                 //auction.WinnerId = auctionUpdateDto.WinnerId;
             }
+            if (auctionUpdateDto.Category.HasValue)
+            {
+                auction.Category = auctionUpdateDto.Category.Value;
+            }
         }
 
         public static ShopAuctionDto ToshopAuctionDto(this Auction auction )
@@ -84,6 +90,7 @@ namespace Bidzy.API.DTOs
                 EndTime = auction.EndTime,
                 MinimumBid = auction.MinimumBid,
                 Status = auction.Status.ToString(),
+                Category = auction.Category.ToString(),
                 WinBid = auction.WinningBid?.ToReadDto(),
                 Bids = auction.Bids.Select(b => b.ToReadDto()).ToList() ?? new List<BidReadDto>(),
                 ViewCount = auction.ViewHistories?.Count ?? 0,
