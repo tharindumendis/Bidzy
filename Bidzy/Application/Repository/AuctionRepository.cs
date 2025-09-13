@@ -57,7 +57,8 @@ namespace Bidzy.Application.Repository
         {
             dbContext.Auctions.Add(auction);
             await dbContext.SaveChangesAsync();
-            var saved_auction = await GetAuctionByIdAsync(auction.Id);
+            var saved_auction = await GetAllShopAuctionDetailsByIdAsync(auction.Id);
+            //  write a method to get super auction 
             return saved_auction;
         }
 
@@ -155,6 +156,23 @@ namespace Bidzy.Application.Repository
                 .Include(u => u.ViewHistories)
                 .Include(u => u.participations)
                 .ToListAsync();
+        }
+
+        public async Task<Auction> GetAllShopAuctionDetailsByIdAsync(Guid auctionId)
+        {
+            return await dbContext.Auctions
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(a => a.Product)
+                    .ThenInclude(t => t.Tags)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .Include(b => b.Bids)
+                    .ThenInclude(a => a.Bidder)
+                .Include(u => u.LikedByUsers)
+                .Include(u => u.ViewHistories)
+                .Include(u => u.participations)
+                .FirstOrDefaultAsync(a => a.Id == auctionId);
         }
     }
 }
