@@ -8,6 +8,8 @@ namespace Bidzy.Application.Services.SignalR
         Task BroadcastAuctionStarted(Auction auction);
         Task BroadcastAuctionEnded(Auction auction);
         Task BroadcastNewBid(Bid bid);
+        Task BroadcastWinBid(Bid bid);
+
         Task BroadcastAuctionCancelled(Auction auction);
         Task BroadcastNotification(string groupId, NotificationDto notification);
         Task SendNotificationToUser(Notification notification);

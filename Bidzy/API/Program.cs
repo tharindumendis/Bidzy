@@ -22,6 +22,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.Scheduler;
+using Bidzy.Domain.Enties;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -169,6 +170,7 @@ builder.Services.AddTransient<ISearchhistoryRepository, SearchHistoryRepository>
 builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
 builder.Services.AddTransient<IPaymentRepository, PaymentRepository>();
 builder.Services.AddTransient<IViewHistoryRepository, ViewHistoryRepository>();
+builder.Services.AddTransient<IAppReviewRepository, AppReviewRepository>();
 
 
 

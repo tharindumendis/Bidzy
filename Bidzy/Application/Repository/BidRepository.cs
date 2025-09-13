@@ -33,9 +33,11 @@ namespace Bidzy.Application.Repository
 
         public async Task<List<Bid>> GetBiddersByAuctionIdAsync(Guid auctionId)
         {
+            //TODO can optimize fetch auction separatly and combine
             return await dbContext.Bids
                 .Where(b => b.AuctionId == auctionId)
                 .Include(a => a.Auction)
+                    .ThenInclude(b => b.Product)
                 .Include(b => b.Bidder)
                 .ToListAsync();
         }
@@ -45,6 +47,7 @@ namespace Bidzy.Application.Repository
             return await dbContext.Bids
                 .Where(b=> b.BidderId == userId)
                 .Include(a => a.Auction)
+                    .ThenInclude(b => b.Product)
                 .Include(b => b.Bidder)
                 .ToListAsync();
         }

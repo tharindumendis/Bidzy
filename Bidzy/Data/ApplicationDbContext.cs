@@ -25,6 +25,8 @@ namespace Bidzy.Data
         public DbSet<WebhookEventLog> WebhookEventLogs { get; set; }
         public DbSet<Otp> Otps { get; set; }
 
+        public DbSet<AppReview> AppReviews { get; set; }
+
 
 
 
@@ -146,6 +148,9 @@ namespace Bidzy.Data
             modelBuilder.Entity<Auction>()
                 .Property(a => a.WinAmount)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<AppReview>()
+                .HasKey(a => a.Id);
 
         }
 

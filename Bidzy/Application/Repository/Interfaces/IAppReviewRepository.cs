@@ -4,10 +4,10 @@ namespace Bidzy.Application.Repository.Interfaces
 {
     public interface IAppReviewRepository
     {
-        Task<IEnumerable<AppReview>> GetAll();
-        Task<AppReview?> GetById(Guid id);
-        Task Add(AppReview review);
-        Task Update(AppReview review);
-        Task Delete(AppReview review);
+        Task<IEnumerable<AppReview>> GetAllAsync();
+        Task<AppReview?> GetByIdAsync(Guid id);
+        Task AddAsync(AppReview review);
+        Task UpdateAsync(AppReview review);
+        Task DeleteAsync(AppReview review);
     }    
 }

@@ -14,13 +14,13 @@ namespace Bidzy.Application.Services.SignalR
 
         public async Task BroadcastAuctionStarted(Auction auction)
         {
-            await _guestHubContext.Clients.Group(auction.Id.ToString())
+            await _hubContext.Clients.Group("R" + auction.Id.ToString())
                 .SendAsync("AuctionStarted", auction.ToReadDto());
         }
 
         public async Task BroadcastAuctionEnded(Auction auction)
         {
-            await _guestHubContext.Clients.Group(auction.Id.ToString())
+            await _hubContext.Clients.Group("R" + auction.Id.ToString())
                 .SendAsync("AuctionEnded", auction.ToReadDto());
         }
 
@@ -29,10 +29,15 @@ namespace Bidzy.Application.Services.SignalR
             await _hubContext.Clients.Group("R" +bid.AuctionId.ToString())
                 .SendAsync("ReceiveBidUpdate", bid.ToReadDto());
         }
+        public async Task BroadcastWinBid(Bid bid)
+        {
+            await _hubContext.Clients.Group("R" + bid.AuctionId.ToString())
+                .SendAsync("WinBidUpdate", bid.ToReadDto());
+        }
         // TODO
         public async Task BroadcastAuctionCancelled(Auction auction)
         {
-            await _guestHubContext.Clients.Group(auction.Id.ToString())
+            await _hubContext.Clients.Group("R" + auction.Id.ToString())
                 .SendAsync("AuctionCancelled", auction.ToReadDto());
         }
         public async Task BroadcastNotification(string groupId, NotificationDto notification)
