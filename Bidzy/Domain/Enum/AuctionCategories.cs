@@ -11,15 +11,7 @@
         Fashion,
         Automobiles,
         WineAndSpirits,
-        MusicAndInstruments,
         Photography,
-        DecorativeArts,
-        RealEstate,
-        Technology,
-        Watches,
-        Sports,
-        FilmAndEntertainment,
-        ToysAndGames,
         Other
     }
 }

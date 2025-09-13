@@ -22,6 +22,8 @@ namespace Bidzy.Domain.Enties
         public decimal WinAmount { get; set; }
         public Bid? WinningBid { get; set; }
 
+        public AuctionCategories Category { get; set; }
+
         [JsonIgnore]
         public ICollection<Bid> Bids { get; set; } = new List<Bid>();
 
