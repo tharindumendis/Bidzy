@@ -1,14 +1,15 @@
 ﻿using Bidzy.API.DTOs.bidDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Services
 {
-    public class BidService(IBidRepository bidRepository, IAuctionRepository auctionRepository) : IBidService
+    public class BidService(IBidRepository bidRepository, IAuctionRepository auctionRepository, ISignalRNotifier signalRNotifier) : IBidService
     {
         private readonly IBidRepository _bidRepository = bidRepository;
         private readonly IAuctionRepository _auctionRepository = auctionRepository;
-        
+        private readonly ISignalRNotifier _signalRNotifier = signalRNotifier;
 
         public async Task<List<Bid>> GetAllBidsByUser(Guid userId)
         {
@@ -34,6 +35,7 @@ namespace Bidzy.Application.Services
                     BidderId = bid.BidderId,
                 };
                var savedBid = await _bidRepository.AddBidAsync(newBid);
+               await _signalRNotifier.BroadcastNewBid(savedBid);
                return savedBid;
             }
             return null;

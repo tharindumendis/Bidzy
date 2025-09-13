@@ -18,7 +18,7 @@ namespace Bidzy.API.Controllers
 
         [Authorize]
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage(IFormFile file, [FromQuery] string type, [FromQuery] string entityId)
+        public IActionResult UploadImage(IFormFile file, [FromQuery] string type, [FromQuery] string entityId)
         {
             var imageUrl = imageService.UploadImage(file, type, entityId);
             return Ok(new { imageUrl });

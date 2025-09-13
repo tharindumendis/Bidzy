@@ -26,8 +26,8 @@ namespace Bidzy.Application.Services.SignalR
 
         public async Task BroadcastNewBid(Bid bid)
         {
-            await _guestHubContext.Clients.Group(bid.AuctionId.ToString())
-                .SendAsync("NewBidPlaced", bid.ToReadDto());
+            await _hubContext.Clients.Group("R" +bid.AuctionId.ToString())
+                .SendAsync("ReceiveBidUpdate", bid.ToReadDto());
         }
         // TODO
         public async Task BroadcastAuctionCancelled(Auction auction)

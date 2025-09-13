@@ -26,6 +26,7 @@ namespace Bidzy.Application.Repository
         {
             return await dbContext.Bids
                 .Include(a => a.Auction)
+                    .ThenInclude(a => a.Product)
                 .Include(b => b.Bidder)
                 .FirstOrDefaultAsync(x => x.Id == bidId);
         }
@@ -52,7 +53,8 @@ namespace Bidzy.Application.Repository
         {
             dbContext.Bids.Add(bid);
             await dbContext.SaveChangesAsync();
-            return bid;
+            var newBid = await GetBidByIdAsync(bid.Id);
+            return newBid;
         }
 
         public async Task<Bid?> UpdateBidAsync(Bid bid)

@@ -23,6 +23,7 @@ namespace Bidzy.API.Hubs
         private readonly IAuthService _authService = authService;
 
         public static ConcurrentDictionary<string, HashSet<string>> GroupConnections = new();
+        public static List<string> RoomIds = [];
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -75,6 +76,7 @@ namespace Bidzy.API.Hubs
             {
                 // ADD Auction Room by "R" with AuctionID
                 await Groups.AddToGroupAsync(Context.ConnectionId, "R"+payload.AuctionId);
+   
             }
             catch
             {
@@ -85,8 +87,8 @@ namespace Bidzy.API.Hubs
         public async Task LeaveAuctionRoom(JoinAuctionRoom payload)
         {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, "R"+payload.AuctionId);
-                //await Clients.Group("R" + payload.AuctionId).SendAsync("OnlineUpdate", groupCount);
-                
+            //await Clients.Group("R" + payload.AuctionId).SendAsync("OnlineUpdate", groupCount);
+
         }
         public async Task SendBidUpdate(string auctionId, string message)
         {

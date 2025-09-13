@@ -65,6 +65,7 @@ namespace Bidzy.Application.Services.NotificationEngine
         public async Task NotifyAuctionEndedAsync(Auction auction, Bid winningBid)
         {
             await signalRNotifier.BroadcastAuctionEnded(auction);
+            await signalRNotifier.BroadcastWinBid(winningBid);
 
 
             List<Notification> NotificationsList = [];
