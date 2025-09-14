@@ -7,6 +7,7 @@ using Bidzy.Data;
 using Stripe;
 using Stripe.Checkout;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Bidzy.Application.Services.Payments
 {
@@ -18,13 +19,16 @@ namespace Bidzy.Application.Services.Payments
         private readonly ApplicationDbContext _db;
         private readonly INotificationRepository _nrepo;
 
-        public StripePaymentService(IPaymentRepository paymentRepository, IBidRepository bidRepository, IOptions<StripeSettings> settings, ApplicationDbContext db, INotificationRepository nrepo)
+        private readonly ILogger<StripePaymentService> _logger;
+
+        public StripePaymentService(IPaymentRepository paymentRepository, IBidRepository bidRepository, IOptions<StripeSettings> settings, ApplicationDbContext db, INotificationRepository nrepo, ILogger<StripePaymentService> logger)
         {
             _paymentRepository = paymentRepository;
             _bidRepository = bidRepository;
             _settings = settings;
             _db = db;
             _nrepo = nrepo;
+            _logger = logger;
             StripeConfiguration.ApiKey = _settings.Value.SecretKey;
         }
 
@@ -85,13 +89,21 @@ namespace Bidzy.Application.Services.Payments
         {
             var secret = _settings.Value.WebhookSecret;
             Event stripeEvent;
+            _logger.LogInformation("Received Stripe webhook. Signature: {SignatureHeader}", signatureHeader);
             try
             {
                 stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, secret);
+                _logger.LogInformation("Stripe webhook successfully constructed event of type: {EventType}", stripeEvent.Type);
             }
-            catch
+            catch (StripeException ex)
             {
+                _logger.LogError(ex, "Error constructing Stripe event: {Message}", ex.Message);
                 throw; // Let controller translate to 400
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error constructing Stripe event: {Message}", ex.Message);
+                throw;
             }
 
             // Idempotent webhook processing by Event.Id
@@ -105,15 +117,18 @@ namespace Bidzy.Application.Services.Payments
 
             if (stripeEvent.Type == Events.CheckoutSessionCompleted)
             {
+                _logger.LogInformation("Processing checkout.session.completed event.");
                 var session = stripeEvent.Data.Object as Session;
                 if (session != null && session.ClientReferenceId != null)
                 {
                     if (Guid.TryParse(session.ClientReferenceId, out var bidId))
                     {
+                        _logger.LogInformation("Checkout session completed for BidId: {BidId}", bidId);
                         // Create payment record if not exists
                         var existing = await _paymentRepository.GetByBidIdAsync(bidId);
                         if (existing == null)
                         {
+                            _logger.LogInformation("Creating new payment record for BidId: {BidId}", bidId);
                             // Stripe reports amount_total in smallest currency unit
                             var amountTotal = (session.AmountTotal ?? 0) / 100m;
                             var bid = await _bidRepository.GetBidByIdAsync(bidId);
@@ -141,7 +156,10 @@ namespace Bidzy.Application.Services.Payments
                                     }
                                 }
                             }
-                            catch { }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error fetching payment intent/charge details for PaymentIntentId: {PaymentIntentId}", paymentIntentId);
+                            }
                             var payment = new Payment
                             {
                                 Id = Guid.NewGuid(),
@@ -157,6 +175,7 @@ namespace Bidzy.Application.Services.Payments
                                 PaidAt = DateTime.UtcNow
                             };
                             await _paymentRepository.AddAsync(payment);
+                            _logger.LogInformation("Payment record created for BidId: {BidId}", bidId);
 
                             // Create Delivery record (Pending) if not exists
                             if (bid != null)
@@ -167,6 +186,7 @@ namespace Bidzy.Application.Services.Payments
                                     var existingDelivery = await _db.Deliveries.FirstOrDefaultAsync(d => d.AuctionId == auc.Id);
                                     if (existingDelivery == null)
                                     {
+                                        _logger.LogInformation("Creating new delivery record for AuctionId: {AuctionId}", auc.Id);
                                         _db.Deliveries.Add(new Delivery
                                         {
                                             Id = Guid.NewGuid(),
@@ -175,6 +195,7 @@ namespace Bidzy.Application.Services.Payments
                                             ShippedAt = DateTime.MinValue
                                         });
                                         await _db.SaveChangesAsync();
+                                        _logger.LogInformation("Delivery record created for AuctionId: {AuctionId}", auc.Id);
                                     }
 
                                     // Notifications to seller and buyer
@@ -198,22 +219,45 @@ namespace Bidzy.Application.Services.Payments
                                             Timestamp = DateTime.UtcNow,
                                             IsSeen = false
                                         });
+                                        _logger.LogInformation("Notifications sent for payment completion for AuctionId: {AuctionId}", auc.Id);
                                     }
-                                    catch { }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error sending notifications for payment completion for AuctionId: {AuctionId}", auc.Id);
+                                    }
                                 }
                             }
                         }
+                        else
+                        {
+                            _logger.LogInformation("Payment record already exists for BidId: {BidId}. Status: {Status}", bidId, existing.Status);
+                        }
                     }
+                    else
+                    {
+                        _logger.LogWarning("Invalid BidId in ClientReferenceId: {ClientReferenceId}", session.ClientReferenceId);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Session or ClientReferenceId is null for checkout.session.completed event.");
                 }
             }
             else if (stripeEvent.Type == Events.PaymentIntentPaymentFailed)
             {
+                _logger.LogWarning("Processing payment_intent.payment_failed event.");
                 var pi = stripeEvent.Data.Object as PaymentIntent;
                 // Optional: if pending payments are created, mark them failed here
+                _logger.LogInformation("PaymentIntent {PaymentIntentId} failed.", pi?.Id);
             }
             else if (stripeEvent.Type == Events.CheckoutSessionExpired)
             {
+                _logger.LogWarning("Processing checkout.session.expired event.");
                 // Session expired without completion; nothing to persist since we create on success
+            }
+            else
+            {
+                _logger.LogInformation("Unhandled Stripe event type: {EventType}", stripeEvent.Type);
             }
             // Optionally: handle refunds/disputes when model supports it
         }

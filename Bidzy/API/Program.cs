@@ -23,6 +23,9 @@ using Microsoft.OpenApi.Models;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.Scheduler;
 using Bidzy.Domain.Enties;
+using FluentValidation.AspNetCore;
+using Bidzy.Application.Validators;
+using AspNetCoreRateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,13 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
     });
+builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CreateCheckoutSessionRequestValidator>());
+// Configure IP Rate Limiting
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -88,9 +98,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "yourIssuer",
-        ValidAudience = "yourAudience",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("bidzyUltraSecureKey_2025!@#LongEnoughToPass"))
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
     options.Events = new JwtBearerEvents
     {
@@ -209,6 +219,8 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseIpRateLimiting();
 
 app.UseAuthorization();
 

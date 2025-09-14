@@ -91,6 +91,7 @@ namespace Bidzy.API.Controllers
             return Ok(new { url });
         }
 
+        [Authorize]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetPaymentById([FromRoute] Guid id)
         {
@@ -99,6 +100,7 @@ namespace Bidzy.API.Controllers
             return Ok(ToDto(p));
         }
 
+        [Authorize]
         [HttpGet("bid/{bidId:guid}")]
         public async Task<IActionResult> GetByBid([FromRoute] Guid bidId)
         {
@@ -107,15 +109,20 @@ namespace Bidzy.API.Controllers
             return Ok(ToDto(p));
         }
 
+        [Authorize]
         [HttpGet("user/{userId:guid}")]
         public async Task<IActionResult> GetByUser([FromRoute] Guid userId, [FromQuery] string role = "buyer")
         {
+            var claimsUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.Parse(claimsUserId) != userId) return Forbid("You can only view your own payments.");
+
             IEnumerable<Domain.Enties.Payment> list = role.Equals("seller", StringComparison.OrdinalIgnoreCase)
                 ? await _paymentRepository.GetByUserAsSellerAsync(userId)
                 : await _paymentRepository.GetByUserAsBuyerAsync(userId);
             return Ok(list.Select(ToDto));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("recent")]
         public async Task<IActionResult> Recent([FromQuery] int take = 25)
         {
