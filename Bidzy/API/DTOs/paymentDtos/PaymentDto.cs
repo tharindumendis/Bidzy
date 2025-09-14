@@ -17,5 +17,9 @@ namespace Bidzy.API.DTOs.paymentDtos
         public DateTime PaidAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public string? RefundId { get; set; }
+        public decimal? RefundAmount { get; set; }
+        public string? RefundStatus { get; set; }
+        public DateTime? RefundedAt { get; set; }
     }
 }

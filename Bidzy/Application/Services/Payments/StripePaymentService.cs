@@ -49,6 +49,7 @@ namespace Bidzy.Application.Services.Payments
                 SuccessUrl = successUrl,
                 CancelUrl = cancelUrl,
                 ClientReferenceId = winningBid.Id.ToString(),
+                Metadata = new Dictionary<string, string> { ["bidId"] = winningBid.Id.ToString() },
                 PaymentMethodTypes = new List<string> { "card" },
                 LineItems = new List<SessionLineItemOptions>
                 {

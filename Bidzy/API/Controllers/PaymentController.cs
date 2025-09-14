@@ -61,6 +61,22 @@ namespace Bidzy.API.Controllers
                 return BadRequest("SuccessUrl and CancelUrl are required for frontend integration.");
             }
 
+            // Create Pending Payment
+            var commission = Math.Round(winningBid.Amount * _stripeSettings.Value.CommissionRate, 4, MidpointRounding.AwayFromZero);
+            var totalAmount = winningBid.Amount + commission;
+
+            var pendingPayment = new Domain.Enties.Payment
+            {
+                Id = Guid.NewGuid(),
+                BidId = winningBid.Id,
+                TotalAmount = totalAmount,
+                Commission = commission,
+                Currency = _stripeSettings.Value.Currency,
+                Status = Domain.Enum.PaymentStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _paymentRepository.AddAsync(pendingPayment);
+
             string success = request.SuccessUrl;
             string cancel = request.CancelUrl;
 
