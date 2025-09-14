@@ -56,10 +56,13 @@ namespace Bidzy.API.Controllers
             if (existing != null && existing.Status == Domain.Enum.PaymentStatus.Completed)
                 return BadRequest("Payment already completed for this auction.");
 
-            // Build sensible defaults for success/cancel if not provided
-            string origin = $"{Request.Scheme}://{Request.Host}";
-            string success = string.IsNullOrWhiteSpace(request.SuccessUrl) ? $"{origin}/pay/success.html" : request.SuccessUrl;
-            string cancel = string.IsNullOrWhiteSpace(request.CancelUrl) ? $"{origin}/pay/cancel.html" : request.CancelUrl;
+            if (string.IsNullOrWhiteSpace(request.SuccessUrl) || string.IsNullOrWhiteSpace(request.CancelUrl))
+            {
+                return BadRequest("SuccessUrl and CancelUrl are required for frontend integration.");
+            }
+
+            string success = request.SuccessUrl;
+            string cancel = request.CancelUrl;
 
             var url = await _stripePaymentService.CreateCheckoutSessionForWinningBidAsync(
                 winningBid,

@@ -84,6 +84,10 @@ namespace Bidzy.Data
                 .HasPrecision(18, 4);
 
             modelBuilder.Entity<Payment>()
+                .Property(p => p.RefundAmount)
+                .HasPrecision(18, 4);
+
+            modelBuilder.Entity<Payment>()
                 .HasIndex(p => p.PaymentIntentId)
                 .IsUnique()
                 .HasFilter("[PaymentIntentId] IS NOT NULL");
@@ -92,6 +96,17 @@ namespace Bidzy.Data
                 .HasIndex(p => p.ChargeId)
                 .IsUnique()
                 .HasFilter("[ChargeId] IS NOT NULL");
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => new { p.Status, p.PaidAt });
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.BidId);
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.RefundId)
+                .IsUnique()
+                .HasFilter("[RefundId] IS NOT NULL");
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)

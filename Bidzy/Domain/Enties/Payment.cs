@@ -9,13 +9,14 @@ namespace Bidzy.Domain.Enties
         [Required]
         public Guid BidId { get; set; }
         public Bid Bid { get; set; }
+        public User User { get; set; } // Nav via Bid.Bidder
         [Required]
         public decimal TotalAmount { get; set; }
         [Required]
         public decimal Commission { get; set; }
         // Stripe metadata
         public string? PaymentIntentId { get; set; }
-        public string ChargeId { get; set; }
+        public string ChargeId { get; set; } = string.Empty;
         public string? Currency { get; set; }
         public decimal? AmountCaptured { get; set; }
         public decimal? ProcessorFee { get; set; }
@@ -23,11 +24,15 @@ namespace Bidzy.Domain.Enties
         public string? ReceiptUrl { get; set; }
         public string? StatusReason { get; set; }
         [Required]
-        public PaymentStatus Status { get; set; } // Pending, Completed, Failed
+        public PaymentStatus Status { get; set; }
         [Required]
         public DateTime PaidAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
+        // Refund fields
+        public string? RefundId { get; set; }
+        public decimal? RefundAmount { get; set; }
+        public string? RefundStatus { get; set; }
+        public DateTime? RefundedAt { get; set; }
     }
 }
