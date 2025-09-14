@@ -1,4 +1,5 @@
-﻿using Bidzy.Application.Repository.Interfaces;
+﻿using Bidzy.API.DTOs;
+using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Bidzy.Domain.Enties;
 using Microsoft.EntityFrameworkCore;
@@ -78,7 +79,36 @@ namespace Bidzy.Application.Repository
             await dbContext.SaveChangesAsync();
             return bids;
         }
+        public IQueryable<Bid> Query() => dbContext.Bids.AsQueryable();
+        public Task<Bid?> GetWinningBidAsync(Guid auctionId, DateTime endTime)
+        {
+            return dbContext.Bids
+                .Where(bid => bid.AuctionId == auctionId && bid.Timestamp <= endTime)
+                .Include(a => a.Auction)
+                    .ThenInclude(a => a.Product)
+                .OrderByDescending(bid => bid.Amount)
+                .ThenBy(bid => bid.Timestamp)
+                .FirstOrDefaultAsync();
+        }
+        public async Task<PagedResult<Bid>> GetPagedBidsByUserAsync(Guid userId, int page, int pageSize)
+        {
+            var query = dbContext.Bids
+                .Where(b => b.BidderId == userId)
+                .Include(b => b.Auction)
+                    .ThenInclude(a => a.Product)
+                .OrderByDescending(b => b.Timestamp); // Sort by latest bid
 
+            var totalCount = await query.CountAsync(); // Safe sequential call
+            var pagedItems = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
+            return new PagedResult<Bid>
+            {
+                TotalCount = totalCount,
+                Items = pagedItems
+            };
+        }
     }
 }

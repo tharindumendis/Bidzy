@@ -37,6 +37,27 @@ namespace Bidzy.API.Controllers
             var dtoList = notifications.Select(NotificationDtoMapper.ToDto);
             return Ok(dtoList);
         }
+        [Authorize]
+        [HttpGet("myNotification")]
+        public async Task<IActionResult> GetNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var pagedNotifications = await notificationRepository.GetNotificationsByUserIdAsync(Guid.Parse(userId), page, pageSize);
+
+            return Ok(new
+            {
+                currentPage = page,
+                pageSize = pageSize,
+                totalCount = pagedNotifications.TotalCount,
+                totalPages = (int)Math.Ceiling(pagedNotifications.TotalCount / (double)pageSize),
+                items = pagedNotifications.Items
+                .Select(n => NotificationDtoMapper.ToDto(n))
+                .Where(dto => dto != null)
+
+            });
+        }
 
         [HttpPost]
         public async Task<IActionResult> AddNotifications([FromBody] CreateNotificationDto dto)

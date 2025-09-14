@@ -1,4 +1,5 @@
-﻿using Bidzy.Domain.Enties;
+﻿using Bidzy.API.DTOs;
+using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 
 namespace Bidzy.Application.Repository.Interfaces
@@ -19,5 +20,6 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<int> CancelledAuctionCountAsync();
         Task<int> EndedAuctionCountAsync();
         Task<List<Auction>> GetAllShopAuctionDetailsAsync(Guid id);
+        Task<PagedResult<Auction>> SearchAuctionsAsync(AuctionSearchParams searchParams);
     }
 }
