@@ -13,5 +13,7 @@ namespace Bidzy.Application.Services.Email
         Task SendAuctionCancelledEmail(Auction auction);
         Task SendAuctionStartedEmailForSeller(string auctionId, [EmailAddress] string receiverEmail);
         Task SendOTP(string OTP, [EmailAddress] string receiverEmail);
+        Task SendPaymentReceiptEmail(Payment payment, User buyer, Auction auction);
+        Task SendPaymentFailedEmail(Payment payment, User buyer, Auction auction, string reason);
     }
 }

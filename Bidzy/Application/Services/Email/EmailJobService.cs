@@ -236,5 +236,76 @@ namespace Bidzy.Application.Services.Email
             };
             return SendEmailAsync(dto);
         }
+
+        public Task SendPaymentReceiptEmail(Payment payment, User buyer, Auction auction)
+        {
+            var dto = new EmailDto
+            {
+                ReceiverEmail = buyer.Email,
+                Subject = $"Payment Receipt for Auction #{auction.Id}",
+                Body = $@"
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2 style=""color: #28a745;"">Payment Successful!</h2>
+                        <p>Dear {buyer.FullName},</p>
+                        <p>Your payment for <strong>Auction #{auction.Id} - {auction.Product.Title}</strong> has been successfully processed.</p>
+
+                        <h3 style=""margin-top: 20px;"">Payment Details:</h3>
+                        <ul>
+                          <li><strong>Payment ID:</strong> {payment.Id}</li>
+                          <li><strong>Auction Item:</strong> {auction.Product.Title}</li>
+                          <li><strong>Amount Paid:</strong> {payment.TotalAmount:C} {payment.Currency.ToUpper()}</li>
+                          <li><strong>Date:</strong> {payment.PaidAt.ToUniversalTime():dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                        </ul>
+
+                        <p>You can view your payment details and auction status on your Bidzy account.</p>
+                        <p>
+                          🔗 <a href=""https://bidzy.com/my-payments/{payment.Id}"" style=""color: #007BFF; font-weight: bold;"">View Payment Details</a>
+                        </p>
+
+                        <p>Thank you for using BIDZY!</p>
+                        <br/>
+                        <p>Best regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
+            };
+            return SendEmailAsync(dto);
+        }
+
+        public Task SendPaymentFailedEmail(Payment payment, User buyer, Auction auction, string reason)
+        {
+            var dto = new EmailDto
+            {
+                ReceiverEmail = buyer.Email,
+                Subject = $"Payment Failed for Auction #{auction.Id}",
+                Body = $@"
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2 style=""color: #dc3545;"">Payment Failed!</h2>
+                        <p>Dear {buyer.FullName},</p>
+                        <p>We regret to inform you that your payment for <strong>Auction #{auction.Id} - {auction.Product.Title}</strong> has failed.</p>
+
+                        <h3 style=""margin-top: 20px;"">Payment Details:</h3>
+                        <ul>
+                          <li><strong>Payment ID:</strong> {payment.Id}</li>
+                          <li><strong>Auction Item:</strong> {auction.Product.Title}</li>
+                          <li><strong>Attempted Amount:</strong> {payment.TotalAmount:C} {payment.Currency.ToUpper()}</li>
+                          <li><strong>Reason:</strong> {reason}</li>
+                          <li><strong>Date:</strong> {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                        </ul>
+
+                        <p>Please try again or update your payment method. If you continue to experience issues, please contact our support team.</p>
+                        <p>
+                          🔗 <a href=""https://bidzy.com/my-payments/{payment.Id}"" style=""color: #007BFF; font-weight: bold;"">Retry Payment</a>
+                        </p>
+
+                        <p>We apologize for any inconvenience.</p>
+                        <br/>
+                        <p>Best regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
+            };
+            return SendEmailAsync(dto);
+        }
     }
 }
