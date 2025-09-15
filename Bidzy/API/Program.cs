@@ -51,7 +51,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Bidzy API", Version = "v1" });
 
-    // 🔐 Add JWT Bearer Authorization
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -149,6 +148,13 @@ builder.Services.AddCors(options =>
               .SetIsOriginAllowed(_ => true); // Adjust for production
     });
 });
+//    options.AddDefaultPolicy(policy =>
+//    {
+//        policy.AllowAnyHeader()
+//              .AllowAnyMethod()
+//              .AllowCredentials()
+//              .SetIsOriginAllowed(_ => true); // Adjust for production
+//    });
 
 
 
@@ -211,7 +217,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseCors();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

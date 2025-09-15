@@ -5,8 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Bidzy.Application.Services.Auth
 {
-    public class AuthService : IAuthService
+    public class AuthService(IConfiguration configuration) : IAuthService
     {
+        private readonly IConfiguration _configuration = configuration;
+
         public string GenerateJwtToken(Guid userId, string email, string role)
         {
             var claims = new[]
@@ -18,12 +20,12 @@ namespace Bidzy.Application.Services.Auth
         new Claim(ClaimTypes.Role, role) // Role claim for [Authorize(Roles = "Admin")]
     };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("bidzyUltraSecureKey_2025!@#LongEnoughToPass"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: "yourIssuer",
-                audience: "yourAudience",
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(24),
                 signingCredentials: creds);
@@ -33,7 +35,7 @@ namespace Bidzy.Application.Services.Auth
         public ClaimsPrincipal ValidateToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes("bidzyUltraSecureKey_2025!@#LongEnoughToPass");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
             var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
@@ -41,8 +43,8 @@ namespace Bidzy.Application.Services.Auth
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidIssuer = "yourIssuer",
-                ValidAudience = "yourAudience",
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
                 ValidateLifetime = true
             }, out SecurityToken validatedToken);
 
