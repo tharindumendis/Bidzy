@@ -56,10 +56,30 @@ namespace Bidzy.API.Controllers
             if (existing != null && existing.Status == Domain.Enum.PaymentStatus.Completed)
                 return BadRequest("Payment already completed for this auction.");
 
-            // Build sensible defaults for success/cancel if not provided
-            string origin = $"{Request.Scheme}://{Request.Host}";
-            string success = string.IsNullOrWhiteSpace(request.SuccessUrl) ? $"{origin}/pay/success.html" : request.SuccessUrl;
-            string cancel = string.IsNullOrWhiteSpace(request.CancelUrl) ? $"{origin}/pay/cancel.html" : request.CancelUrl;
+            if (string.IsNullOrWhiteSpace(request.SuccessUrl) || string.IsNullOrWhiteSpace(request.CancelUrl))
+            {
+                return BadRequest("SuccessUrl and CancelUrl are required for frontend integration.");
+            }
+
+            // Create Pending Payment
+            var commission = Math.Round(winningBid.Amount * _stripeSettings.Value.CommissionRate, 4, MidpointRounding.AwayFromZero);
+            var totalAmount = winningBid.Amount + commission;
+
+            var pendingPayment = new Domain.Enties.Payment
+            {
+                Id = Guid.NewGuid(),
+                BidId = winningBid.Id,
+                UserId = winningBid.BidderId,
+                TotalAmount = totalAmount,
+                Commission = commission,
+                Currency = _stripeSettings.Value.Currency,
+                Status = Domain.Enum.PaymentStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _paymentRepository.AddAsync(pendingPayment);
+
+            string success = request.SuccessUrl;
+            string cancel = request.CancelUrl;
 
             var url = await _stripePaymentService.CreateCheckoutSessionForWinningBidAsync(
                 winningBid,
@@ -72,6 +92,7 @@ namespace Bidzy.API.Controllers
             return Ok(new { url });
         }
 
+        [Authorize]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetPaymentById([FromRoute] Guid id)
         {
@@ -80,6 +101,7 @@ namespace Bidzy.API.Controllers
             return Ok(ToDto(p));
         }
 
+        [Authorize]
         [HttpGet("bid/{bidId:guid}")]
         public async Task<IActionResult> GetByBid([FromRoute] Guid bidId)
         {
@@ -88,15 +110,20 @@ namespace Bidzy.API.Controllers
             return Ok(ToDto(p));
         }
 
+        [Authorize]
         [HttpGet("user/{userId:guid}")]
         public async Task<IActionResult> GetByUser([FromRoute] Guid userId, [FromQuery] string role = "buyer")
         {
+            var claimsUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.Parse(claimsUserId) != userId) return Forbid("You can only view your own payments.");
+
             IEnumerable<Domain.Enties.Payment> list = role.Equals("seller", StringComparison.OrdinalIgnoreCase)
                 ? await _paymentRepository.GetByUserAsSellerAsync(userId)
                 : await _paymentRepository.GetByUserAsBuyerAsync(userId);
             return Ok(list.Select(ToDto));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("recent")]
         public async Task<IActionResult> Recent([FromQuery] int take = 25)
         {
@@ -120,7 +147,11 @@ namespace Bidzy.API.Controllers
             Status = p.Status.ToString(),
             PaidAt = p.PaidAt,
             CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
+            UpdatedAt = p.UpdatedAt,
+            RefundId = p.RefundId,
+            RefundAmount = p.RefundAmount,
+            RefundStatus = p.RefundStatus,
+            RefundedAt = p.RefundedAt
         };
     }
 }

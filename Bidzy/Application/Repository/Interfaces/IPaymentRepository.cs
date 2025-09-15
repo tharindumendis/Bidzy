@@ -6,6 +6,7 @@ namespace Bidzy.Application.Repository.Interfaces
     {
         Task<Payment?> GetByIdAsync(Guid id);
         Task<Payment?> GetByBidIdAsync(Guid bidId);
+        Task<Payment?> GetByChargeIdAsync(string chargeId);
         Task<IEnumerable<Payment>> GetByUserAsBuyerAsync(Guid userId);
         Task<IEnumerable<Payment>> GetByUserAsSellerAsync(Guid userId);
         Task<IEnumerable<Payment>> ListRecentAsync(int take = 25);

@@ -12,16 +12,19 @@ namespace Bidzy.Application.Services.NotificationEngine
         private readonly INotificationRepository notificationRepository;
         private readonly ISignalRNotifier signalRNotifier;
         private readonly IEmailJobService emailJobService;
+        private readonly IUserRepository userRepository;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             ISignalRNotifier signalRNotifier,
-            IEmailJobService emailJobService
+            IEmailJobService emailJobService,
+            IUserRepository userRepository
             )
         {
             this.notificationRepository = notificationRepository;
             this.signalRNotifier = signalRNotifier;
             this.emailJobService = emailJobService;
+            this.userRepository = userRepository;
         }
 
         public async Task NotifyAuctionStartedAsync(Auction auction)
@@ -165,6 +168,42 @@ namespace Bidzy.Application.Services.NotificationEngine
             await notificationRepository.AddNotificationsAsync(NotificationsList);
             await emailJobService.SendAuctionCancelledEmail(targetAuction);
 
+        }
+
+        public async Task NotifyPaymentFailedAsync(Payment payment, User buyer, Auction auction, string reason)
+        {
+            List<Notification> NotificationsList = new List<Notification>();
+
+            NotificationsList.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = buyer.Id,
+                Message = $"Your payment for auction '{auction.Product.Title}' failed. Reason: {reason}",
+                Type = NotificationType.PAYMENTFAILED,
+                Link = $"/my-payments/{payment.Id}",
+                IsSeen = false
+            });
+
+            signalRNotifier.SendNotificationToUsers(NotificationsList);
+            await notificationRepository.AddNotificationsAsync(NotificationsList);
+        }
+
+        public async Task NotifyPaymentRefundedAsync(Payment payment, User buyer, Auction auction)
+        {
+            List<Notification> NotificationsList = new List<Notification>();
+
+            NotificationsList.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = buyer.Id,
+                Message = $"Your payment for auction '{auction.Product.Title}' has been refunded. Amount: {payment.RefundAmount:C} {payment.Currency.ToUpper()}",
+                Type = NotificationType.PAYMENTREFUNDED,
+                Link = $"/my-payments/{payment.Id}",
+                IsSeen = false
+            });
+
+            signalRNotifier.SendNotificationToUsers(NotificationsList);
+            await notificationRepository.AddNotificationsAsync(NotificationsList);
         }
     }
 }

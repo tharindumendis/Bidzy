@@ -18,6 +18,12 @@ namespace Bidzy.Application.Repository
             return await _db.Payments.FirstOrDefaultAsync(p => p.BidId == bidId);
         }
 
+        public async Task<Payment?> GetByChargeIdAsync(string chargeId)
+        {
+            if (string.IsNullOrWhiteSpace(chargeId)) return null;
+            return await _db.Payments.FirstOrDefaultAsync(p => p.ChargeId == chargeId);
+        }
+
         public async Task AddAsync(Payment payment)
         {
             await _db.Payments.AddAsync(payment);
