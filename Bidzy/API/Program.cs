@@ -31,6 +31,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddMemoryCache();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://192.168.8.134:3000", "http://localhost:3000") // your frontend IP
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -44,6 +57,7 @@ builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection(
 builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
 builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -51,6 +65,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Bidzy API", Version = "v1" });
 
+    //  Add JWT Bearer Authorization
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -138,16 +153,8 @@ builder.Services.AddHangfire((sp, config) =>
 });
 builder.Services.AddScoped<IJobScheduler, JobScheduler>();
 // Configure CORS Policy
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials()
-              .SetIsOriginAllowed(_ => true); // Adjust for production
-    });
-});
+//builder.Services.AddCors(options =>
+//{
 //    options.AddDefaultPolicy(policy =>
 //    {
 //        policy.AllowAnyHeader()
@@ -155,6 +162,7 @@ builder.Services.AddCors(options =>
 //              .AllowCredentials()
 //              .SetIsOriginAllowed(_ => true); // Adjust for production
 //    });
+//});
 
 
 
