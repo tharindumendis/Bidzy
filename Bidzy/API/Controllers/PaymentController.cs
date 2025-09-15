@@ -69,6 +69,7 @@ namespace Bidzy.API.Controllers
             {
                 Id = Guid.NewGuid(),
                 BidId = winningBid.Id,
+                UserId = winningBid.BidderId,
                 TotalAmount = totalAmount,
                 Commission = commission,
                 Currency = _stripeSettings.Value.Currency,
@@ -146,7 +147,11 @@ namespace Bidzy.API.Controllers
             Status = p.Status.ToString(),
             PaidAt = p.PaidAt,
             CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
+            UpdatedAt = p.UpdatedAt,
+            RefundId = p.RefundId,
+            RefundAmount = p.RefundAmount,
+            RefundStatus = p.RefundStatus,
+            RefundedAt = p.RefundedAt
         };
     }
 }

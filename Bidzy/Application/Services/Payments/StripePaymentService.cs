@@ -168,6 +168,7 @@ namespace Bidzy.Application.Services.Payments
                             {
                                 Id = Guid.NewGuid(),
                                 BidId = bidId,
+                                UserId = bid != null ? bid.BidderId : Guid.Empty,
                                 TotalAmount = amountTotal,
                                 Commission = commission,
                                 Currency = currency,
@@ -321,11 +322,165 @@ namespace Bidzy.Application.Services.Payments
                     _logger.LogInformation("Checkout session expired, but no associated BidId found in ClientReferenceId or no pending payment record.");
                 }
             }
+            else if (stripeEvent.Type == Events.ChargeRefunded)
+            {
+                _logger.LogInformation("Processing charge.refunded event.");
+                var charge = stripeEvent.Data.Object as Charge;
+                if (charge != null)
+                {
+                    var payment = await _paymentRepository.GetByChargeIdAsync(charge.Id);
+                    if (payment != null)
+                    {
+                        payment.RefundId = charge.Refunds?.Data?.LastOrDefault()?.Id;
+                        payment.RefundAmount = charge.AmountRefunded / 100m;
+                        payment.RefundedAt = DateTime.UtcNow;
+                        payment.RefundStatus = "Refunded";
+                        payment.Status = PaymentStatus.Refunded;
+                        payment.UpdatedAt = DateTime.UtcNow;
+                        await _paymentRepository.UpdateAsync(payment);
+
+                        var bid = await _bidRepository.GetBidByIdAsync(payment.BidId);
+                        if (bid != null && !bid.IsRefunded)
+                        {
+                            bid.IsRefunded = true;
+                            await _bidRepository.UpdateBidAsync(bid);
+
+                            try
+                            {
+                                var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
+                                var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
+                                if (auction != null)
+                                {
+                                    await _nrepo.AddNotificationAsync(new Notification
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        UserId = auction.Product.SellerId,
+                                        Message = $"Payment refunded for '{auction.Product.Title}'.",
+                                        Type = NotificationType.PAYMENTREFUNDED,
+                                        Timestamp = DateTime.UtcNow,
+                                        IsSeen = false
+                                    });
+                                }
+                                if (buyer != null)
+                                {
+                                    await _nrepo.AddNotificationAsync(new Notification
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        UserId = buyer.Id,
+                                        Message = "Your payment refund has been processed.",
+                                        Type = NotificationType.PAYMENTREFUNDED,
+                                        Timestamp = DateTime.UtcNow,
+                                        IsSeen = false
+                                    });
+                                }
+
+                                if (auction != null && buyer != null)
+                                {
+                                    await _emailJobService.SendRefundReceiptEmail(payment, buyer, auction);
+                                    await _emailJobService.SendRefundNotificationEmail(payment, auction.Product.Seller, auction);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error sending refund notifications/emails for BidId: {BidId}", bid.Id);
+                            }
+                        }
+                    }
+                }
+            }
+            
             else
             {
                 _logger.LogInformation("Unhandled Stripe event type: {EventType}", stripeEvent.Type);
             }
-            // Optionally: handle refunds/disputes when model supports it
+            // Optionally: extend additional events here in future
         }
+
+        public async Task<Payment> CreateRefundAsync(Guid paymentId, Guid userId)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(paymentId) ?? throw new KeyNotFoundException("Payment not found");
+            if (payment.Status != PaymentStatus.Completed)
+                throw new InvalidOperationException("Only completed payments can be refunded.");
+
+            var bid = await _bidRepository.GetBidByIdAsync(payment.BidId) ?? throw new InvalidOperationException("Associated bid not found.");
+            if (bid.BidderId != userId)
+                throw new UnauthorizedAccessException("You are not allowed to refund this payment.");
+
+            var options = new RefundCreateOptions();
+            if (!string.IsNullOrEmpty(payment.PaymentIntentId))
+            {
+                options.PaymentIntent = payment.PaymentIntentId;
+            }
+            else if (!string.IsNullOrEmpty(payment.ChargeId))
+            {
+                options.Charge = payment.ChargeId;
+            }
+            else
+            {
+                throw new InvalidOperationException("Payment has no PaymentIntentId or ChargeId.");
+            }
+
+            var refundService = new RefundService();
+            var refund = await refundService.CreateAsync(options, new RequestOptions
+            {
+                IdempotencyKey = $"refund:{payment.Id}:full"
+            });
+
+            // Update payment and bid for full refund
+            payment.RefundId = refund.Id;
+            payment.RefundAmount = refund.Amount / 100m;
+            payment.RefundedAt = DateTime.UtcNow;
+            payment.RefundStatus = "Refunded";
+            payment.Status = PaymentStatus.Refunded;
+            payment.UpdatedAt = DateTime.UtcNow;
+            await _paymentRepository.UpdateAsync(payment);
+
+            bid.IsRefunded = true;
+            await _bidRepository.UpdateBidAsync(bid);
+
+            try
+            {
+                var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
+                var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
+                if (auction != null)
+                {
+                    await _nrepo.AddNotificationAsync(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = auction.Product.SellerId,
+                        Message = $"Payment refunded for '{auction.Product.Title}'.",
+                        Type = NotificationType.PAYMENTREFUNDED,
+                        Timestamp = DateTime.UtcNow,
+                        IsSeen = false
+                    });
+                }
+                if (buyer != null)
+                {
+                    await _nrepo.AddNotificationAsync(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = buyer.Id,
+                        Message = "Your payment refund has been processed.",
+                        Type = NotificationType.PAYMENTREFUNDED,
+                        Timestamp = DateTime.UtcNow,
+                        IsSeen = false
+                    });
+                }
+
+                if (auction != null && buyer != null)
+                {
+                    await _emailJobService.SendRefundReceiptEmail(payment, buyer, auction);
+                    await _emailJobService.SendRefundNotificationEmail(payment, auction.Product.Seller, auction);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending refund notifications/emails for PaymentId: {PaymentId}", payment.Id);
+            }
+
+            return payment;
+        }
+
+        
     }
 }

@@ -9,6 +9,8 @@ namespace Bidzy.Domain.Enties
         [Required]
         public Guid BidId { get; set; }
         public Bid Bid { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
         public User User { get; set; } // Nav via Bid.Bidder
         [Required]
         public decimal TotalAmount { get; set; }

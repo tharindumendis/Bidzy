@@ -9,5 +9,6 @@
         public User Bidder { get; set; }
         public decimal Amount { get; set; }
         public DateTime Timestamp { get; set; }
+        public bool IsRefunded { get; set; } = false;
     }
 }

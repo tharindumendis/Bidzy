@@ -254,7 +254,7 @@ namespace Bidzy.Application.Services.Email
                         <ul>
                           <li><strong>Payment ID:</strong> {payment.Id}</li>
                           <li><strong>Auction Item:</strong> {auction.Product.Title}</li>
-                          <li><strong>Amount Paid:</strong> {payment.TotalAmount:C} {payment.Currency.ToUpper()}</li>
+                          <li><strong>Amount Paid:</strong> {payment.TotalAmount:C} {(payment.Currency?.ToUpper() ?? "")}</li>
                           <li><strong>Date:</strong> {payment.PaidAt.ToUniversalTime():dddd, MMMM d, yyyy h:mm tt} UTC</li>
                         </ul>
 
@@ -289,7 +289,7 @@ namespace Bidzy.Application.Services.Email
                         <ul>
                           <li><strong>Payment ID:</strong> {payment.Id}</li>
                           <li><strong>Auction Item:</strong> {auction.Product.Title}</li>
-                          <li><strong>Attempted Amount:</strong> {payment.TotalAmount:C} {payment.Currency.ToUpper()}</li>
+                          <li><strong>Attempted Amount:</strong> {payment.TotalAmount:C} {(payment.Currency?.ToUpper() ?? "")}</li>
                           <li><strong>Reason:</strong> {reason}</li>
                           <li><strong>Date:</strong> {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC</li>
                         </ul>
@@ -302,6 +302,71 @@ namespace Bidzy.Application.Services.Email
                         <p>We apologize for any inconvenience.</p>
                         <br/>
                         <p>Best regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
+            };
+            return SendEmailAsync(dto);
+        }
+
+        public Task SendRefundReceiptEmail(Payment payment, User buyer, Auction auction)
+        {
+            var dto = new EmailDto
+            {
+                ReceiverEmail = buyer.Email,
+                Subject = $"Refund Processed for Auction #{auction.Id}",
+                Body = $@"
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2 style=""color: #28a745;"">Refund Successful</h2>
+                        <p>Dear {buyer.FullName},</p>
+                        <p>Your refund for <strong>Auction #{auction.Id} - {auction.Product.Title}</strong> has been processed.</p>
+
+                        <h3 style=""margin-top: 20px;"">Refund Details:</h3>
+                        <ul>
+                          <li><strong>Payment ID:</strong> {payment.Id}</li>
+                          <li><strong>Refund ID:</strong> {payment.RefundId}</li>
+                          <li><strong>Refund Amount:</strong> {payment.RefundAmount:C} {(payment.Currency?.ToUpper() ?? "")}</li>
+                          <li><strong>Date:</strong> {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                        </ul>
+
+                        <p>You can view details in your Bidzy account.</p>
+                        <p>
+                          🔗 <a href=""https://bidzy.com/my-payments/{payment.Id}"" style=""color: #007BFF; font-weight: bold;"">View Payment</a>
+                        </p>
+
+                        <br/>
+                        <p>Best regards,<br/>The BIDZY Team</p>
+                      </body>
+                    </html>"
+            };
+            return SendEmailAsync(dto);
+        }
+
+        public Task SendRefundNotificationEmail(Payment payment, User seller, Auction auction)
+        {
+            var dto = new EmailDto
+            {
+                ReceiverEmail = seller.Email,
+                Subject = $"Refund Issued for Auction #{auction.Id}",
+                Body = $@"
+                    <html>
+                      <body style=""font-family: Arial, sans-serif; color: #333; line-height: 1.6;"">
+                        <h2>Refund Notification</h2>
+                        <p>Hello {seller.FullName},</p>
+                        <p>A refund has been issued for <strong>Auction #{auction.Id} - {auction.Product.Title}</strong>.</p>
+
+                        <h3 style=""margin-top: 20px;"">Details:</h3>
+                        <ul>
+                          <li><strong>Payment ID:</strong> {payment.Id}</li>
+                          <li><strong>Refund ID:</strong> {payment.RefundId}</li>
+                          <li><strong>Refund Amount:</strong> {payment.RefundAmount:C} {(payment.Currency?.ToUpper() ?? "")}</li>
+                          <li><strong>Date:</strong> {DateTime.UtcNow:dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                        </ul>
+
+                        <p>You can review this transaction in your seller dashboard.</p>
+
+                        <br/>
+                        <p>Regards,<br/>The BIDZY Team</p>
                       </body>
                     </html>"
             };
