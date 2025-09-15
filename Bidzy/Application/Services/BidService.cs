@@ -1,7 +1,10 @@
-﻿using Bidzy.API.DTOs.bidDtos;
+﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.bidDtos;
+using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.Application.Services
 {
@@ -40,5 +43,12 @@ namespace Bidzy.Application.Services
             }
             return null;
         }
+        public async Task<PagedResult<Bid>> GetPagedBidsByUserAsync(Guid userId, int page, int pageSize)
+        {
+            PagedResult<Bid> result = await _bidRepository.GetPagedBidsByUserAsync(userId, page, pageSize);
+
+            return result;
+        }
+
     }
 }

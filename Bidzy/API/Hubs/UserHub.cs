@@ -43,10 +43,11 @@ namespace Bidzy.API.Hubs
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            await _liveCountService.RemoveConnection(Context.ConnectionId);
+
             if (Connections.TryRemove(Context.ConnectionId, out var user))
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.GroupId);
-                await _liveCountService.RemoveConnection(Context.ConnectionId);
                 // this is temp for dev
                 Notification newNotification = new()
                 {

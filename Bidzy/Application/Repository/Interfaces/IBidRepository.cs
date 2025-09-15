@@ -1,4 +1,5 @@
-﻿using Bidzy.Domain.Enties;
+﻿using Bidzy.API.DTOs;
+using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Repository.Interfaces
 {
@@ -11,6 +12,9 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<Bid?> AddBidAsync(Bid bid);
         Task<Bid?> UpdateBidAsync(Bid bid);
         Task<Bid?> DeleteBidAsync(Guid bidId);
+        IQueryable<Bid> Query();
+        Task<Bid?> GetWinningBidAsync(Guid auctionId, DateTime endTime);
+        Task<PagedResult<Bid>> GetPagedBidsByUserAsync(Guid userId, int page, int pageSize);
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using Bidzy.Application.Repository.Interfaces;
+﻿using Bidzy.API.DTOs;
+using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
@@ -158,7 +159,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async Task<Auction> GetAllShopAuctionDetailsByIdAsync(Guid auctionId)
+        public async Task<Auction?> GetAllShopAuctionDetailsByIdAsync(Guid auctionId)
         {
             return await dbContext.Auctions
                 .Include(a => a.Product)
@@ -173,6 +174,38 @@ namespace Bidzy.Application.Repository
                 .Include(u => u.ViewHistories)
                 .Include(u => u.participations)
                 .FirstOrDefaultAsync(a => a.Id == auctionId);
+        }
+        public async Task<PagedResult<Auction>> SearchAuctionsAsync(AuctionSearchParams searchParams)
+        {
+            var keyword = searchParams.Title?.ToLower();
+
+            var query = dbContext.Auctions
+                .Include(a => a.Product)
+                    .ThenInclude(p => p.Tags)
+                .Where(a =>
+                    //(a.Status != AuctionStatus.Cancelled && a.Status != AuctionStatus.Ended) &&
+                    (
+                        string.IsNullOrEmpty(keyword) ||
+                        a.Product.Title.ToLower().Contains(keyword) ||
+                        a.Product.Tags.Any(t => t.tagName.ToLower().Contains(keyword))
+                    ) &&
+                    (!searchParams.Status.HasValue || a.Status == searchParams.Status.Value) &&
+                    (!searchParams.Category.HasValue || a.Category == searchParams.Category.Value) &&
+                    (!searchParams.SellerId.HasValue || a.Product.SellerId == searchParams.SellerId.Value)
+                )
+                .OrderByDescending(a => a.StartTime);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((searchParams.Page - 1) * searchParams.PageSize)
+                .Take(searchParams.PageSize)
+                .ToListAsync();
+
+            return new PagedResult<Auction>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
     }
 }

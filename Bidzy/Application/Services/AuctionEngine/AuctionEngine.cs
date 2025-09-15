@@ -111,19 +111,23 @@ namespace Bidzy.Application.Services.AuctionEngine
             await _auctionRepo.UpdateAuctionAsync(auction);
             await _notificationService.NotifyAuctionCancelledAsync(auction);
         }
-        private async Task<Bid?> DetermineWinner(Auction auction)
+        //private async Task<Bid?> DetermineWinner(Auction auction)
+        //{
+        //    List<Bid> AllBids = await _bidRepository.GetBiddersByAuctionIdAsync(auction.Id);
+        //    var validBids = AllBids
+        //        .Where(bid => bid.Timestamp <= auction.EndTime)
+        //        .OrderByDescending(bid => bid.Amount)      // Highest amount first
+        //        .ThenBy(bid => bid.Timestamp)              // If tie, earliest bid wins
+        //        .ToList();
+
+
+        //    return validBids.FirstOrDefault();
+        //}
+        private Task<Bid?> DetermineWinner(Auction auction)
         {
-            List<Bid> AllBids = await _bidRepository.GetBiddersByAuctionIdAsync(auction.Id);
-            var validBids = AllBids
-                .Where(bid => bid.Timestamp <= auction.EndTime)
-                .OrderByDescending(bid => bid.Amount)      // Highest amount first
-                .ThenBy(bid => bid.Timestamp)              // If tie, earliest bid wins
-                .ToList();
-
-
-            return validBids.FirstOrDefault();
+            return _bidRepository.GetWinningBidAsync(auction.Id, auction.EndTime);
         }
 
-       
+
     }
 }

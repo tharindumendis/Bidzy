@@ -29,6 +29,24 @@ namespace Bidzy.API.Controllers
             List<Bid> bids = await bidService.GetAllBidsByUser(Guid.Parse(userId));
             return Ok(bids.Select(x => x.ToReadDto()));
         }
+        [Authorize]
+        [HttpGet("myBids")]
+        public async Task<IActionResult> GetMyBids([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var pagedBids = await bidService.GetPagedBidsByUserAsync(Guid.Parse(userId), page, pageSize);
+
+            return Ok(new
+            {
+                currentPage = page,
+                pageSize = pageSize,
+                totalCount = pagedBids.TotalCount,
+                totalPages = (int)Math.Ceiling(pagedBids.TotalCount / (double)pageSize),
+                items = pagedBids.Items.Select(x => x.ToReadDto())
+            });
+        }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetBidById([FromRoute] Guid id)
