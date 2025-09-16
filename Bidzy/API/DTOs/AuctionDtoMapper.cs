@@ -18,6 +18,7 @@ namespace Bidzy.API.DTOs
                 Id = auction.Id,
                 ProductId = auction.ProductId,
                 ProductTitle = auction.Product?.Title,
+                Description = auction.Product?.Description,
                 SellerId = auction.Product.SellerId,
                 SellerName = auction.Product.Seller?.FullName,
                 ImageUrl = auction.Product.ImageUrl,

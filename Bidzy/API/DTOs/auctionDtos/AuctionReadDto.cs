@@ -5,6 +5,7 @@
         public Guid Id { get; set; }
         public Guid ProductId { get; set; }
         public string ProductTitle { get; set; }
+        public string Description { get; set; }
         public Guid SellerId { get; set; }
         public string SellerName { get; set; }
         public string ImageUrl { get; set; }
