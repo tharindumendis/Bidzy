@@ -1,33 +1,33 @@
 ﻿using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Bidzy.Application
 {
     public class StartupTask : IHostedService
     {
-        private readonly IAuctionRepository _auctionRepository;
-        private readonly ILiveAuctionCountService _liveCountService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public StartupTask(IAuctionRepository auctionRepository, ILiveAuctionCountService liveCountService)
+        public StartupTask(IServiceScopeFactory scopeFactory)
         {
-            _auctionRepository = auctionRepository;
-            _liveCountService = liveCountService;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine("Running startup task...");
 
-            await StartMethodAsync();
-        }
+            using var scope = _scopeFactory.CreateScope();
 
-        private async Task StartMethodAsync()
-        {
-            int activeCount = await _auctionRepository.ActiveAuctionCountAsync();
-            int scheduledCount = await _auctionRepository.ScheduledAuctionCountAsync();
+            var auctionRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
+            var liveCountService = scope.ServiceProvider.GetRequiredService<ILiveAuctionCountService>();
 
-            await _liveCountService.UpdateScheduledCount(scheduledCount);
-            await _liveCountService.UpdateOngoingCount(activeCount);
+            int activeCount = await auctionRepository.ActiveAuctionCountAsync();
+            int scheduledCount = await auctionRepository.ScheduledAuctionCountAsync();
+
+            await liveCountService.UpdateScheduledCount(scheduledCount);
+            await liveCountService.UpdateOngoingCount(activeCount);
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

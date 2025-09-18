@@ -57,6 +57,8 @@ namespace Bidzy.Application.Services.AuctionEngine
         public async Task StartAuctionAsync(Guid auctionId)
         {
             var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
+            if (auction.Status == AuctionStatus.Cancelled) return;
+
             auction.Status = AuctionStatus.Active;
             await _auctionRepo.UpdateAuctionAsync(auction);
             await _liveAuctionCountService.RemoveScheduledCount(1);
@@ -76,7 +78,9 @@ namespace Bidzy.Application.Services.AuctionEngine
         public async Task EndAuctionAsync(Guid auctionId)
         {
             var auction = await _auctionRepo.GetAuctionDetailsByAuctionIdAsync(auctionId);
-            
+
+            if (auction.Status == AuctionStatus.Cancelled) return;
+
             Bid winBid = await DetermineWinner(auction);
             if(winBid == null)
             {
@@ -94,8 +98,12 @@ namespace Bidzy.Application.Services.AuctionEngine
         {
 
             var auction = await _auctionRepo.GetAuctionByIdAsync(auctionId);
+            if (auction == null) return;
 
-            if(auction?.Status == AuctionStatus.Active)
+            if (auction?.Status == AuctionStatus.Cancelled) return;
+
+
+            if (auction?.Status == AuctionStatus.Active)
             {
                 await _liveAuctionCountService.RemoveOngoingCount(1);
             }

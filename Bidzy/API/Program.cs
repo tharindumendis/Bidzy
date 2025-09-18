@@ -1,18 +1,24 @@
 ﻿using System.Text;
+using AspNetCoreRateLimit;
 using Bidzy.API.Hubs;
+using Bidzy.Application;
 using Bidzy.Application.Converters;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Application.Services.Auth;
+using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.NotificationEngine;
-using Bidzy.Application.Services.Payments;
-using Bidzy.Application.Settings;
-using Stripe;
 using Bidzy.Application.Services.NotificationSchedulerService;
+using Bidzy.Application.Services.Payments;
+using Bidzy.Application.Services.Scheduler;
 using Bidzy.Application.Services.SignalR;
+using Bidzy.Application.Settings;
+using Bidzy.Application.Validators;
 using Bidzy.Data;
+using Bidzy.Domain.Enties;
+using FluentValidation.AspNetCore;
 using Hangfire;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Authentication;
@@ -20,12 +26,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Bidzy.Application.Services.Email;
-using Bidzy.Application.Services.Scheduler;
-using Bidzy.Domain.Enties;
-using FluentValidation.AspNetCore;
-using Bidzy.Application.Validators;
-using AspNetCoreRateLimit;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -179,6 +180,10 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IBidService, BidService>();
+
+// tthis class run when server start
+builder.Services.AddHostedService<StartupTask>();
+
 
 
 // Configure Entity Repository
