@@ -38,6 +38,16 @@ namespace Bidzy.Application.Repository
                     .ThenInclude(a => a.Bidder)
                 .ToListAsync();
         }
+        public async Task<List<Auction>> GetAllActiveOrScheduledAuctionAsync()
+        {
+            return await dbContext.Auctions
+                .Where(x => x.Status == AuctionStatus.Scheduled || x.Status == AuctionStatus.Active)
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .ToListAsync();
+        }
 
         public async Task<Auction?> GetAuctionByIdAsync(Guid id)
         {

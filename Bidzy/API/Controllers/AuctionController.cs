@@ -32,6 +32,12 @@ namespace Bidzy.API.Controllers
             var auctions = await auctionRepository.GetAllAuctionsAsync();
             return Ok(auctions.Select(x => x.ToReadDto()));
         }
+        [HttpGet("guess")]
+        public async Task<IActionResult> GetAllGuessAuctions()
+        {
+            var auctions = await auctionRepository.GetAllActiveOrScheduledAuctionAsync();
+            return Ok(auctions.Select(x => x.ToReadDto()));
+        }
 
         [HttpGet("status/{statusId}")]
         public async Task<IActionResult> GetAllAuctionsByStatus([FromRoute] AuctionStatus statusId)
