@@ -13,11 +13,13 @@ namespace Bidzy.API.Controllers
     {
         private readonly IAuctionRepository auctionRepository;
         private readonly IAuctionEngine auctionEngine;
+        private readonly IProductRepository productRepository;
 
-        public ShopController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine)
+        public ShopController(IAuctionRepository auctionRepository, IAuctionEngine auctionEngine, IProductRepository productRepository)
         {
             this.auctionRepository = auctionRepository;
             this.auctionEngine = auctionEngine;
+            this.productRepository = productRepository;
         }
         [Authorize]
         [HttpGet("auctions")]
@@ -33,6 +35,19 @@ namespace Bidzy.API.Controllers
                 return NotFound("No auctions found for this shop");
             }
             return Ok(auctions.Select(a => a.ToshopAuctionDto()));
+        }
+        [Authorize]
+        [HttpGet("products")]
+        public async Task<IActionResult> GetAllShopProductDetails()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var products = await productRepository.GetProductsByUserIdAsync(Guid.Parse(userId));
+            if (products == null || !products.Any())
+            {
+                return NotFound("No products found for this shop");
+            }
+            return Ok(products.Select(a => a.ToReadDto()));
         }
 
         [Authorize]

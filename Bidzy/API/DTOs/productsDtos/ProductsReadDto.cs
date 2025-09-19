@@ -11,7 +11,6 @@ namespace Bidzy.API.DTOs.productsDtos
         public string ImageUrl { get; set; }
         public Guid SellerId { get; set; }
         public string SellerName { get; set; }
-
         public List<string> Tags { get; set; }
     }
 }

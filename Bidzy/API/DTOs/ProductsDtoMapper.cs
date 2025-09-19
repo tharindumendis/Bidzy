@@ -18,6 +18,21 @@ namespace Bidzy.API.DTOs
                 Tags = product.Tags.Select(t => t.tagName).ToList()
             };
         }
+        public static ProductsReadDto ToShopDto(this Product product)
+        {
+            return new ProductsReadDto
+            {
+                Id = product.Id,
+                Title = product.Title,
+                Description = product.Description,
+                ImageUrl = product.ImageUrl,
+                SellerId = product.SellerId,
+                SellerName = product.Seller?.FullName ?? string.Empty,
+                Tags = product.Tags.Select(t => t.tagName).ToList()
+            };
+        }
+
+
 
         public static Product ToEntity (this ProductAddDto productAddDto, List<Tag> tags,Guid sellerId)
         {
