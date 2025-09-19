@@ -27,7 +27,6 @@ namespace Bidzy.Domain.Enties
         public string? StatusReason { get; set; }
         [Required]
         public PaymentStatus Status { get; set; }
-        [Required]
         public DateTime PaidAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
