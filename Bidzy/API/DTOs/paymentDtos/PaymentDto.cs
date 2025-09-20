@@ -14,7 +14,7 @@ namespace Bidzy.API.DTOs.paymentDtos
         public string? ChargeId { get; set; }
         public string? ReceiptUrl { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime PaidAt { get; set; }
+        public DateTime? PaidAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? RefundId { get; set; }

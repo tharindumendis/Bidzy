@@ -255,7 +255,7 @@ namespace Bidzy.Application.Services.Email
                           <li><strong>Payment ID:</strong> {payment.Id}</li>
                           <li><strong>Auction Item:</strong> {auction.Product.Title}</li>
                           <li><strong>Amount Paid:</strong> {payment.TotalAmount:C} {(payment.Currency?.ToUpper() ?? "")}</li>
-                          <li><strong>Date:</strong> {payment.PaidAt.ToUniversalTime():dddd, MMMM d, yyyy h:mm tt} UTC</li>
+                          <li><strong>Date:</strong> {(payment.PaidAt ?? payment.CreatedAt).ToUniversalTime():dddd, MMMM d, yyyy h:mm tt} UTC</li>
                         </ul>
 
                         <p>You can view your payment details and auction status on your Bidzy account.</p>

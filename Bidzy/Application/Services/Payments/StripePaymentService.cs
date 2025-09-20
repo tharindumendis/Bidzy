@@ -51,13 +51,24 @@ namespace Bidzy.Application.Services.Payments
             // amount in smallest currency unit (e.g., cents)
             long unitAmount = (long)Math.Round(total * 100m, 0, MidpointRounding.AwayFromZero);
 
+            var metadata = new Dictionary<string, string>
+            {
+                ["bidId"] = winningBid.Id.ToString(),
+                ["auctionId"] = winningBid.AuctionId.ToString(),
+                ["buyerId"] = winningBid.BidderId.ToString()
+            };
+
             var options = new SessionCreateOptions
             {
                 Mode = "payment",
                 SuccessUrl = successUrl,
                 CancelUrl = cancelUrl,
                 ClientReferenceId = winningBid.Id.ToString(),
-                Metadata = new Dictionary<string, string> { ["bidId"] = winningBid.Id.ToString() },
+                Metadata = metadata,
+                PaymentIntentData = new SessionPaymentIntentDataOptions
+                {
+                    Metadata = new Dictionary<string, string>(metadata)
+                },
                 PaymentMethodTypes = new List<string> { "card" },
                 LineItems = new List<SessionLineItemOptions>
                 {
@@ -110,39 +121,53 @@ namespace Bidzy.Application.Services.Payments
                 throw;
             }
 
-            // Idempotent webhook processing by Event.Id
-            var existingEvent = await _db.WebhookEventLogs.FindAsync(stripeEvent.Id);
-            if (existingEvent != null)
+            if (await _db.WebhookEventLogs.AsNoTracking().AnyAsync(e => e.EventId == stripeEvent.Id))
             {
-                return; // already processed
+                _logger.LogInformation("Stripe event {EventId} already processed.", stripeEvent.Id);
+                return;
             }
-            _db.WebhookEventLogs.Add(new Domain.Enties.WebhookEventLog { EventId = stripeEvent.Id, ReceivedAt = DateTime.UtcNow });
-            await _db.SaveChangesAsync();
 
-            if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            try
             {
-                _logger.LogInformation("Processing checkout.session.completed event.");
-                var session = stripeEvent.Data.Object as Session;
-                if (session != null && session.ClientReferenceId != null)
+                _db.WebhookEventLogs.Add(new WebhookEventLog
                 {
-                    if (Guid.TryParse(session.ClientReferenceId, out var bidId))
+                    EventId = stripeEvent.Id,
+                    ReceivedAt = DateTime.UtcNow
+                });
+
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogWarning(ex, "Stripe event {EventId} already recorded concurrently.", stripeEvent.Id);
+                    await transaction.RollbackAsync();
+                    return;
+                }
+
+                if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+                {
+                    _logger.LogInformation("Processing checkout.session.completed event.");
+                    var session = stripeEvent.Data.Object as Session;
+                    if (session != null && session.ClientReferenceId != null)
                     {
-                        _logger.LogInformation("Checkout session completed for BidId: {BidId}", bidId);
-                        // Create payment record if not exists
-                        var existing = await _paymentRepository.GetByBidIdAsync(bidId);
-                        if (existing == null)
+                        if (Guid.TryParse(session.ClientReferenceId, out var bidId))
                         {
-                            _logger.LogInformation("Creating new payment record for BidId: {BidId}", bidId);
-                            // Stripe reports amount_total in smallest currency unit
+                            _logger.LogInformation("Checkout session completed for BidId: {BidId}", bidId);
+                            // Upsert payment record for Bid
+                            var existing = await _paymentRepository.GetByBidIdAsync(bidId);
                             var amountTotal = (session.AmountTotal ?? 0) / 100m;
                             var bid = await _bidRepository.GetBidByIdAsync(bidId);
                             var commission = bid != null ? Math.Max(0m, amountTotal - bid.Amount) : 0m;
-                            // Attempt to fetch intent/charge details
+
                             string? currency = session.Currency;
                             string? paymentIntentId = session.PaymentIntentId;
                             string? chargeId = null;
                             string? receiptUrl = null;
                             decimal? amountCaptured = null;
+
                             try
                             {
                                 if (!string.IsNullOrEmpty(paymentIntentId))
@@ -157,6 +182,7 @@ namespace Bidzy.Application.Services.Payments
                                         var ch = await chargeService.GetAsync(chargeId);
                                         receiptUrl = ch?.ReceiptUrl;
                                         currency ??= ch?.Currency;
+                                        paymentIntentId ??= ch?.PaymentIntentId;
                                     }
                                 }
                             }
@@ -164,25 +190,49 @@ namespace Bidzy.Application.Services.Payments
                             {
                                 _logger.LogError(ex, "Error fetching payment intent/charge details for PaymentIntentId: {PaymentIntentId}", paymentIntentId);
                             }
-                            var payment = new Payment
+
+                            var payment = existing ?? new Payment
                             {
                                 Id = Guid.NewGuid(),
                                 BidId = bidId,
                                 UserId = bid != null ? bid.BidderId : Guid.Empty,
-                                TotalAmount = amountTotal,
-                                Commission = commission,
-                                Currency = currency,
-                                PaymentIntentId = paymentIntentId,
-                                ChargeId = chargeId,
-                                AmountCaptured = amountCaptured,
-                                ReceiptUrl = receiptUrl,
-                                Status = PaymentStatus.Completed,
-                                PaidAt = DateTime.UtcNow
+                                CreatedAt = existing?.CreatedAt ?? DateTime.UtcNow
                             };
-                            await _paymentRepository.AddAsync(payment);
-                            _logger.LogInformation("Payment record created for BidId: {BidId}", bidId);
 
-                            // Create Delivery record (Pending) if not exists
+                            payment.BidId = bidId;
+                            if (bid != null)
+                            {
+                                payment.UserId = bid.BidderId;
+                            }
+                            payment.TotalAmount = amountTotal;
+                            payment.Commission = commission;
+                            payment.Currency = currency;
+                            payment.PaymentIntentId = paymentIntentId;
+                            payment.ChargeId = chargeId;
+                            payment.AmountCaptured = amountCaptured;
+                            payment.ReceiptUrl = receiptUrl;
+                            payment.ProcessorFee = null;
+                            payment.NetAmount = null;
+                            payment.Status = PaymentStatus.Completed;
+                            payment.StatusReason = null;
+                            payment.PaidAt = DateTime.UtcNow;
+                            payment.RefundId = null;
+                            payment.RefundAmount = null;
+                            payment.RefundStatus = null;
+                            payment.RefundedAt = null;
+                            payment.UpdatedAt = DateTime.UtcNow;
+
+                            if (existing == null)
+                            {
+                                await _paymentRepository.AddAsync(payment);
+                                _logger.LogInformation("Payment record created for BidId: {BidId}", bidId);
+                            }
+                            else
+                            {
+                                await _paymentRepository.UpdateAsync(payment);
+                                _logger.LogInformation("Payment record for BidId: {BidId} updated to Completed.", bidId);
+                            }
+
                             if (bid != null)
                             {
                                 var auc = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
@@ -203,7 +253,6 @@ namespace Bidzy.Application.Services.Payments
                                         _logger.LogInformation("Delivery record created for AuctionId: {AuctionId}", auc.Id);
                                     }
 
-                                    // Notifications to seller and buyer
                                     try
                                     {
                                         await _nrepo.AddNotificationAsync(new Notification
@@ -226,7 +275,6 @@ namespace Bidzy.Application.Services.Payments
                                         });
                                         _logger.LogInformation("Notifications sent for payment completion for AuctionId: {AuctionId}", auc.Id);
 
-                                        // Send payment receipt email
                                         var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
                                         if (buyer != null)
                                         {
@@ -243,155 +291,157 @@ namespace Bidzy.Application.Services.Payments
                         }
                         else
                         {
-                            _logger.LogInformation("Payment record already exists for BidId: {BidId}. Status: {Status}", bidId, existing.Status);
+                            _logger.LogWarning("Invalid BidId in ClientReferenceId: {ClientReferenceId}", session.ClientReferenceId);
                         }
                     }
                     else
                     {
-                        _logger.LogWarning("Invalid BidId in ClientReferenceId: {ClientReferenceId}", session.ClientReferenceId);
+                        _logger.LogWarning("Session or ClientReferenceId is null for checkout.session.completed event.");
                     }
                 }
-                else
+                else if (stripeEvent.Type == Events.PaymentIntentPaymentFailed)
                 {
-                    _logger.LogWarning("Session or ClientReferenceId is null for checkout.session.completed event.");
-                }
-            }
-            else if (stripeEvent.Type == Events.PaymentIntentPaymentFailed)
-            {
-                _logger.LogWarning("Processing payment_intent.payment_failed event.");
-                var pi = stripeEvent.Data.Object as PaymentIntent;
-                if (pi != null && pi.Metadata != null && pi.Metadata.TryGetValue("bidId", out var bidIdString) && Guid.TryParse(bidIdString, out var bidId))
-                {
-                    var payment = await _paymentRepository.GetByBidIdAsync(bidId);
-                    if (payment != null)
+                    _logger.LogWarning("Processing payment_intent.payment_failed event.");
+                    var pi = stripeEvent.Data.Object as PaymentIntent;
+                    if (pi != null && pi.Metadata != null && pi.Metadata.TryGetValue("bidId", out var bidIdString) && Guid.TryParse(bidIdString, out var bidId))
                     {
-                        payment.Status = PaymentStatus.Failed;
-                        payment.StatusReason = pi.LastPaymentError?.Message ?? "Payment failed";
-                        payment.UpdatedAt = DateTime.UtcNow;
-                        await _paymentRepository.UpdateAsync(payment);
-                        _logger.LogInformation("Payment record for BidId: {BidId} updated to Failed. Reason: {Reason}", bidId, payment.StatusReason);
-
-                        var bid = await _bidRepository.GetBidByIdAsync(bidId);
-                        if (bid != null)
+                        var payment = await _paymentRepository.GetByBidIdAsync(bidId);
+                        if (payment != null)
                         {
-                            var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
-                            var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
-                            if (buyer != null && auction != null)
-                            {
-                                await _emailJobService.SendPaymentFailedEmail(payment, buyer, auction, payment.StatusReason);
-                                _logger.LogInformation("Payment failed email sent to buyer {BuyerEmail} for AuctionId: {AuctionId}", buyer.Email, auction.Id);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    _logger.LogInformation("PaymentIntent {PaymentIntentId} failed, but no associated BidId found in metadata or payment record.", pi?.Id);
-                }
-            }
-            else if (stripeEvent.Type == Events.CheckoutSessionExpired)
-            {
-                _logger.LogWarning("Processing checkout.session.expired event.");
-                var session = stripeEvent.Data.Object as Session;
-                if (session != null && session.ClientReferenceId != null && Guid.TryParse(session.ClientReferenceId, out var bidId))
-                {
-                    var payment = await _paymentRepository.GetByBidIdAsync(bidId);
-                    if (payment != null && payment.Status == PaymentStatus.Pending)
-                    {
-                        payment.Status = PaymentStatus.Failed;
-                        payment.StatusReason = "Checkout session expired";
-                        payment.UpdatedAt = DateTime.UtcNow;
-                        await _paymentRepository.UpdateAsync(payment);
-                        _logger.LogInformation("Payment record for BidId: {BidId} updated to Failed due to session expiration.", bidId);
+                            payment.Status = PaymentStatus.Failed;
+                            payment.StatusReason = pi.LastPaymentError?.Message ?? "Payment failed";
+                            payment.UpdatedAt = DateTime.UtcNow;
+                            await _paymentRepository.UpdateAsync(payment);
+                            _logger.LogInformation("Payment record for BidId: {BidId} updated to Failed. Reason: {Reason}", bidId, payment.StatusReason);
 
-                        var bid = await _bidRepository.GetBidByIdAsync(bidId);
-                        if (bid != null)
-                        {
-                            var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
-                            var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
-                            if (buyer != null && auction != null)
-                            {
-                                await _emailJobService.SendPaymentFailedEmail(payment, buyer, auction, payment.StatusReason);
-                                _logger.LogInformation("Payment failed email sent to buyer {BuyerEmail} for AuctionId: {AuctionId} due to session expiration.", buyer.Email, auction.Id);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    _logger.LogInformation("Checkout session expired, but no associated BidId found in ClientReferenceId or no pending payment record.");
-                }
-            }
-            else if (stripeEvent.Type == Events.ChargeRefunded)
-            {
-                _logger.LogInformation("Processing charge.refunded event.");
-                var charge = stripeEvent.Data.Object as Charge;
-                if (charge != null)
-                {
-                    var payment = await _paymentRepository.GetByChargeIdAsync(charge.Id);
-                    if (payment != null)
-                    {
-                        payment.RefundId = charge.Refunds?.Data?.LastOrDefault()?.Id;
-                        payment.RefundAmount = charge.AmountRefunded / 100m;
-                        payment.RefundedAt = DateTime.UtcNow;
-                        payment.RefundStatus = "Refunded";
-                        payment.Status = PaymentStatus.Refunded;
-                        payment.UpdatedAt = DateTime.UtcNow;
-                        await _paymentRepository.UpdateAsync(payment);
-
-                        var bid = await _bidRepository.GetBidByIdAsync(payment.BidId);
-                        if (bid != null && !bid.IsRefunded)
-                        {
-                            bid.IsRefunded = true;
-                            await _bidRepository.UpdateBidAsync(bid);
-
-                            try
+                            var bid = await _bidRepository.GetBidByIdAsync(bidId);
+                            if (bid != null)
                             {
                                 var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
                                 var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
-                                if (auction != null)
+                                if (buyer != null && auction != null)
                                 {
-                                    await _nrepo.AddNotificationAsync(new Notification
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        UserId = auction.Product.SellerId,
-                                        Message = $"Payment refunded for '{auction.Product.Title}'.",
-                                        Type = NotificationType.PAYMENTREFUNDED,
-                                        Timestamp = DateTime.UtcNow,
-                                        IsSeen = false
-                                    });
-                                }
-                                if (buyer != null)
-                                {
-                                    await _nrepo.AddNotificationAsync(new Notification
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        UserId = buyer.Id,
-                                        Message = "Your payment refund has been processed.",
-                                        Type = NotificationType.PAYMENTREFUNDED,
-                                        Timestamp = DateTime.UtcNow,
-                                        IsSeen = false
-                                    });
-                                }
-
-                                if (auction != null && buyer != null)
-                                {
-                                    await _emailJobService.SendRefundReceiptEmail(payment, buyer, auction);
-                                    await _emailJobService.SendRefundNotificationEmail(payment, auction.Product.Seller, auction);
+                                    await _emailJobService.SendPaymentFailedEmail(payment, buyer, auction, payment.StatusReason);
+                                    _logger.LogInformation("Payment failed email sent to buyer {BuyerEmail} for AuctionId: {AuctionId}", buyer.Email, auction.Id);
                                 }
                             }
-                            catch (Exception ex)
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("PaymentIntent {PaymentIntentId} failed, but no associated BidId found in metadata or payment record.", pi?.Id);
+                    }
+                }
+                else if (stripeEvent.Type == Events.CheckoutSessionExpired)
+                {
+                    _logger.LogWarning("Processing checkout.session.expired event.");
+                    var session = stripeEvent.Data.Object as Session;
+                    if (session != null && session.ClientReferenceId != null && Guid.TryParse(session.ClientReferenceId, out var bidId))
+                    {
+                        var payment = await _paymentRepository.GetByBidIdAsync(bidId);
+                        if (payment != null && payment.Status == PaymentStatus.Pending)
+                        {
+                            payment.Status = PaymentStatus.Failed;
+                            payment.StatusReason = "Checkout session expired";
+                            payment.UpdatedAt = DateTime.UtcNow;
+                            await _paymentRepository.UpdateAsync(payment);
+                            _logger.LogInformation("Payment record for BidId: {BidId} updated to Failed due to session expiration.", bidId);
+
+                            var bid = await _bidRepository.GetBidByIdAsync(bidId);
+                            if (bid != null)
                             {
-                                _logger.LogError(ex, "Error sending refund notifications/emails for BidId: {BidId}", bid.Id);
+                                var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
+                                var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
+                                if (buyer != null && auction != null)
+                                {
+                                    await _emailJobService.SendPaymentFailedEmail(payment, buyer, auction, payment.StatusReason);
+                                    _logger.LogInformation("Payment failed email sent to buyer {BuyerEmail} for AuctionId: {AuctionId} due to session expiration.", buyer.Email, auction.Id);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Checkout session expired, but no associated BidId found in ClientReferenceId or no pending payment record.");
+                    }
+                }
+                else if (stripeEvent.Type == Events.ChargeRefunded)
+                {
+                    _logger.LogInformation("Processing charge.refunded event.");
+                    var charge = stripeEvent.Data.Object as Charge;
+                    if (charge != null)
+                    {
+                        var payment = await _paymentRepository.GetByChargeIdAsync(charge.Id);
+                        if (payment != null)
+                        {
+                            payment.RefundId = charge.Refunds?.Data?.LastOrDefault()?.Id;
+                            payment.RefundAmount = charge.AmountRefunded / 100m;
+                            payment.RefundedAt = DateTime.UtcNow;
+                            payment.RefundStatus = "Refunded";
+                            payment.Status = PaymentStatus.Refunded;
+                            payment.UpdatedAt = DateTime.UtcNow;
+                            await _paymentRepository.UpdateAsync(payment);
+
+                            var bid = await _bidRepository.GetBidByIdAsync(payment.BidId);
+                            if (bid != null && !bid.IsRefunded)
+                            {
+                                bid.IsRefunded = true;
+                                await _bidRepository.UpdateBidAsync(bid);
+
+                                try
+                                {
+                                    var auction = await _db.Auctions.Include(a => a.Product).FirstOrDefaultAsync(a => a.Id == bid.AuctionId);
+                                    var buyer = await _userRepository.GetUserByIdAsync(bid.BidderId);
+                                    if (auction != null)
+                                    {
+                                        await _nrepo.AddNotificationAsync(new Notification
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            UserId = auction.Product.SellerId,
+                                            Message = $"Payment refunded for '{auction.Product.Title}'.",
+                                            Type = NotificationType.PAYMENTREFUNDED,
+                                            Timestamp = DateTime.UtcNow,
+                                            IsSeen = false
+                                        });
+                                    }
+                                    if (buyer != null)
+                                    {
+                                        await _nrepo.AddNotificationAsync(new Notification
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            UserId = buyer.Id,
+                                            Message = "Your payment refund has been processed.",
+                                            Type = NotificationType.PAYMENTREFUNDED,
+                                            Timestamp = DateTime.UtcNow,
+                                            IsSeen = false
+                                        });
+                                    }
+
+                                    if (auction != null && buyer != null)
+                                    {
+                                        await _emailJobService.SendRefundReceiptEmail(payment, buyer, auction);
+                                        await _emailJobService.SendRefundNotificationEmail(payment, auction.Product.Seller, auction);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error sending refund notifications/emails for BidId: {BidId}", bid.Id);
+                                }
                             }
                         }
                     }
                 }
-            }
             
-            else
+                else
+                {
+                    _logger.LogInformation("Unhandled Stripe event type: {EventType}", stripeEvent.Type);
+                }
+                await transaction.CommitAsync();
+            }
+            catch
             {
-                _logger.LogInformation("Unhandled Stripe event type: {EventType}", stripeEvent.Type);
+                await transaction.RollbackAsync();
+                throw;
             }
             // Optionally: extend additional events here in future
         }

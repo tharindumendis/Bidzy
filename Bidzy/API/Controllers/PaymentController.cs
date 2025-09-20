@@ -3,6 +3,7 @@ using Bidzy.API.DTOs.paymentDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.Payments;
 using Bidzy.Application.Settings;
+using Bidzy.Domain.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -61,22 +62,48 @@ namespace Bidzy.API.Controllers
                 return BadRequest("SuccessUrl and CancelUrl are required for frontend integration.");
             }
 
-            // Create Pending Payment
+            // Ensure there is a single pending payment record to reconcile against Stripe
             var commission = Math.Round(winningBid.Amount * _stripeSettings.Value.CommissionRate, 4, MidpointRounding.AwayFromZero);
             var totalAmount = winningBid.Amount + commission;
+            var currency = _stripeSettings.Value.Currency;
 
-            var pendingPayment = new Domain.Enties.Payment
+            var paymentRecord = existing;
+            if (paymentRecord == null)
             {
-                Id = Guid.NewGuid(),
-                BidId = winningBid.Id,
-                UserId = winningBid.BidderId,
-                TotalAmount = totalAmount,
-                Commission = commission,
-                Currency = _stripeSettings.Value.Currency,
-                Status = Domain.Enum.PaymentStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _paymentRepository.AddAsync(pendingPayment);
+                paymentRecord = new Domain.Enties.Payment
+                {
+                    Id = Guid.NewGuid(),
+                    BidId = winningBid.Id,
+                    UserId = winningBid.BidderId,
+                    TotalAmount = totalAmount,
+                    Commission = commission,
+                    Currency = currency,
+                    Status = PaymentStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _paymentRepository.AddAsync(paymentRecord);
+            }
+            else
+            {
+                paymentRecord.TotalAmount = totalAmount;
+                paymentRecord.Commission = commission;
+                paymentRecord.Currency = currency;
+                paymentRecord.Status = PaymentStatus.Pending;
+                paymentRecord.StatusReason = null;
+                paymentRecord.PaymentIntentId = null;
+                paymentRecord.ChargeId = null;
+                paymentRecord.AmountCaptured = null;
+                paymentRecord.ProcessorFee = null;
+                paymentRecord.NetAmount = null;
+                paymentRecord.ReceiptUrl = null;
+                paymentRecord.PaidAt = null;
+                paymentRecord.RefundId = null;
+                paymentRecord.RefundAmount = null;
+                paymentRecord.RefundStatus = null;
+                paymentRecord.RefundedAt = null;
+                paymentRecord.UpdatedAt = DateTime.UtcNow;
+                await _paymentRepository.UpdateAsync(paymentRecord);
+            }
 
             string success = request.SuccessUrl;
             string cancel = request.CancelUrl;

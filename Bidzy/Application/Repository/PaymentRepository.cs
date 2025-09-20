@@ -38,24 +38,28 @@ namespace Bidzy.Application.Repository
 
         public async Task<IEnumerable<Payment>> GetByUserAsBuyerAsync(Guid userId)
         {
-            return await _db.Payments
-                .Where(p => _db.Bids.Any(b => b.Id == p.BidId && b.BidderId == userId))
-                .OrderByDescending(p => p.PaidAt)
+            return await (from payment in _db.Payments
+                          join bid in _db.Bids on payment.BidId equals bid.Id
+                          where bid.BidderId == userId
+                          orderby (payment.PaidAt ?? payment.CreatedAt) descending
+                          select payment)
                 .ToListAsync();
         }
         public async Task<IEnumerable<Payment>> GetByUserAsSellerAsync(Guid userId)
         {
-            return await _db.Payments
-                .Where(p => _db.Auctions
-                    .Any(a => a.Id == _db.Bids.Where(b => b.Id == p.BidId).Select(b => b.AuctionId).FirstOrDefault()
-                               && a.Product.SellerId == userId))
-                .OrderByDescending(p => p.PaidAt)
+            return await (from payment in _db.Payments
+                          join bid in _db.Bids on payment.BidId equals bid.Id
+                          join auction in _db.Auctions on bid.AuctionId equals auction.Id
+                          join product in _db.Products on auction.ProductId equals product.Id
+                          where product.SellerId == userId
+                          orderby (payment.PaidAt ?? payment.CreatedAt) descending
+                          select payment)
                 .ToListAsync();
         }
         public async Task<IEnumerable<Payment>> ListRecentAsync(int take = 25)
         {
             return await _db.Payments
-                .OrderByDescending(p => p.PaidAt)
+                .OrderByDescending(p => p.PaidAt ?? p.CreatedAt)
                 .Take(Math.Clamp(take, 1, 200))
                 .ToListAsync();
         }

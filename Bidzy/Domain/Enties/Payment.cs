@@ -18,7 +18,7 @@ namespace Bidzy.Domain.Enties
         public decimal Commission { get; set; }
         // Stripe metadata
         public string? PaymentIntentId { get; set; }
-        public string ChargeId { get; set; } = string.Empty;
+        public string? ChargeId { get; set; }
         public string? Currency { get; set; }
         public decimal? AmountCaptured { get; set; }
         public decimal? ProcessorFee { get; set; }
@@ -27,7 +27,11 @@ namespace Bidzy.Domain.Enties
         public string? StatusReason { get; set; }
         [Required]
         public PaymentStatus Status { get; set; }
+<<<<<<< Updated upstream
         public DateTime PaidAt { get; set; }
+=======
+        public DateTime? PaidAt { get; set; }
+>>>>>>> Stashed changes
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         // Refund fields
