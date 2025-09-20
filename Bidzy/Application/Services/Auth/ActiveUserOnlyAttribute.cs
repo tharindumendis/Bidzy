@@ -21,7 +21,7 @@ namespace Bidzy.Application.Services.Auth
             var userId = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = dbContext.Users.Find(userId);
 
-            if (user == null)
+            if (user == null || user.IsActive == false)
             {
                 context.Result = new ForbidResult();
             }

@@ -25,6 +25,7 @@ namespace Bidzy.Domain.Enties
     {
         [Key]
         public Guid Id { get; set; }
+        public bool IsActive { get; set; } = false;
 
         [Required]
         public string FullName { get; set; }

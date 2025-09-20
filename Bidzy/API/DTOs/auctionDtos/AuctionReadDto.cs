@@ -17,6 +17,6 @@
         public string Status { get; set; }
         public Guid? WinningBidId { get; set; }
         public decimal? WinAmount { get; set; }
-        public string? WinningBid { get; set; }
+        public Guid? WinnerId { get; set; }
     }
 }

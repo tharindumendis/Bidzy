@@ -9,10 +9,6 @@ namespace Bidzy.API.DTOs
     {
         public static AuctionReadDto ToReadDto(this Auction auction)
         {
-            DateTime rowStartTime = auction.StartTime;
-            DateTime UTCStartTime = auction.StartTime.ToUniversalTime();
-            DateTime rowEndTime = auction.EndTime;
-            DateTime UTCEndTime = auction.EndTime.ToUniversalTime();
             return new AuctionReadDto
             {
                 Id = auction.Id,
@@ -30,9 +26,7 @@ namespace Bidzy.API.DTOs
                 Status = auction.Status.ToString(),
                 WinningBidId = auction.WinningBidId,
                 WinAmount = auction.WinningBid != null ? auction.WinningBid.Amount : null,
-                WinningBid = auction.WinningBid != null
-                            ? $"{auction.WinningBid.Bidder?.FullName ?? "Unknown"}"
-                            : "No winning bid"
+                WinnerId = auction.WinningBid?.BidderId != null ? auction.WinningBid?.BidderId : null
             };
         }
 

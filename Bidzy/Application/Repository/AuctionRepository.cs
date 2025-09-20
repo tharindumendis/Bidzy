@@ -54,7 +54,7 @@ namespace Bidzy.Application.Repository
             return await dbContext.Auctions
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
-                //.Include(b => b.Winner)
+                .Include(b => b.WinningBid)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
             public async Task<Auction?> GetAuctionByIdLowAsync(Guid id)

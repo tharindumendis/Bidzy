@@ -93,13 +93,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-//// Temp
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = "Dummy";
-//    options.DefaultChallengeScheme = "Dummy";
-//}).AddScheme<AuthenticationSchemeOptions, DummyAuthHandler>("Dummy", options => { });
-//// End Temp
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
