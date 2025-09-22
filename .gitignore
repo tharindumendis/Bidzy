@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Bidzy/wwwroot/images/product
+/Bidzy/wwwroot/images/profile

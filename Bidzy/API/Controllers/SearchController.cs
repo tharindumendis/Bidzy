@@ -24,7 +24,7 @@ namespace Bidzy.API.Controllers
             var result = await _auctionRepository.SearchAuctionsAsync(searchParams);
             try
             {
-                _searchRepository.SaveSearchAsync(searchParams.Title, Guid.Parse(userId));
+                await _searchRepository.SaveSearchAsync(searchParams.Title, Guid.Parse(userId));
             }
             catch
             {

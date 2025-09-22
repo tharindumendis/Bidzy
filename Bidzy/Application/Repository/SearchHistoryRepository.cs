@@ -23,7 +23,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async void SaveSearchAsync(string query, Guid userId)
+        public async Task SaveSearchAsync(string query, Guid userId)
         {
             SearchHistory searchHistory = new SearchHistory
             {

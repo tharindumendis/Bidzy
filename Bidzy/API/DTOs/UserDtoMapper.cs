@@ -28,6 +28,7 @@ namespace Bidzy.API.DTOs
                 Id = newId,
                 FullName = userAddDto.FullName,
                 Email = userAddDto.Email,
+                IsActive = true,
                 Phone = userAddDto.PhoneNumber,
                 PasswordHash = userAddDto.Password,
                 imageUrl = "/Image/profile/"+newId.ToString(),
