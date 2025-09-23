@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using AspNetCoreRateLimit;
 using Bidzy.API.Hubs;
 using Bidzy.Application;
@@ -204,21 +204,29 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHangfireDashboard("/test/job",
+}
+
+var hangfireSection = app.Configuration.GetSection("Hangfire");
+if (hangfireSection.GetValue<bool>("EnableDashboard"))
+{
+    var dashboardPath = hangfireSection.GetValue<string>("DashboardPath") ?? "/hangfire";
+    var dashboardUser = hangfireSection.GetValue<string>("DashboardUser") ?? "admin";
+    var dashboardPass = hangfireSection.GetValue<string>("DashboardPass") ?? "admin";
+
+    app.UseHangfireDashboard(dashboardPath,
         new DashboardOptions
         {
-            DashboardTitle = "Hangfire Job Demo Application",
+            DashboardTitle = "Bidzy Hangfire Dashboard",
             DisplayStorageConnectionString = false,
             Authorization = new[]
-        {
-            new HangfireCustomBasicAuthenticationFilter
             {
-                User = "admin",
-                Pass = "admin"
+                new HangfireCustomBasicAuthenticationFilter
+                {
+                    User = dashboardUser,
+                    Pass = dashboardPass
+                }
             }
-        }
-        }
-        );
+        });
 }
 
 app.UseRouting();
