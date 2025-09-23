@@ -18,19 +18,22 @@ namespace Bidzy.API.Controllers
         private readonly IPaymentRepository _paymentRepository;
         private readonly IStripePaymentService _stripePaymentService;
         private readonly IOptions<StripeSettings> _stripeSettings;
+        private readonly ILogger<PaymentController> _logger;
 
         public PaymentController(
             IAuctionRepository auctionRepository,
             IBidRepository bidRepository,
             IPaymentRepository paymentRepository,
             IStripePaymentService stripePaymentService,
-            IOptions<StripeSettings> stripeSettings)
+            IOptions<StripeSettings> stripeSettings,
+            ILogger<PaymentController> logger)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _paymentRepository = paymentRepository;
             _stripePaymentService = stripePaymentService;
             _stripeSettings = stripeSettings;
+            _logger = logger;
         }
 
         [Authorize]
@@ -42,6 +45,7 @@ namespace Bidzy.API.Controllers
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
+            _logger.LogInformation("[Payment] Create checkout requested for auction {AuctionId} by user {UserId}", request.AuctionId, userId);
 
             var auction = await _auctionRepository.GetAuctionByIdAsync(request.AuctionId);
             if (auction == null) return NotFound("Auction not found.") ;
@@ -49,34 +53,49 @@ namespace Bidzy.API.Controllers
 
             var winningBid = await _bidRepository.GetBidByIdAsync(auction.WinningBidId.Value);
             if (winningBid == null) return BadRequest("Winning bid not found.");
-            if (winningBid.BidderId.ToString() != userId) return Forbid();
+            if (winningBid.BidderId.ToString() != userId)
+            {
+                _logger.LogWarning("[Payment] User {UserId} attempted to pay for bid {BidId} not owned by them", userId, auction.WinningBidId);
+                return Forbid();
+            }
 
             // prevent duplicate payments
             var existing = await _paymentRepository.GetByBidIdAsync(winningBid.Id);
             if (existing != null && existing.Status == Domain.Enum.PaymentStatus.Completed)
+            {
+                _logger.LogInformation("[Payment] Payment already completed for bid {BidId}", winningBid.Id);
                 return BadRequest("Payment already completed for this auction.");
+            }
 
             if (string.IsNullOrWhiteSpace(request.SuccessUrl) || string.IsNullOrWhiteSpace(request.CancelUrl))
             {
                 return BadRequest("SuccessUrl and CancelUrl are required for frontend integration.");
             }
+            else
+            {
+                _logger.LogInformation("[Payment] Using successUrl={SuccessUrl} cancelUrl={CancelUrl}", request.SuccessUrl, request.CancelUrl);
+            }
 
-            // Create Pending Payment
-            var commission = Math.Round(winningBid.Amount * _stripeSettings.Value.CommissionRate, 4, MidpointRounding.AwayFromZero);
+            // Create Pending Payment if none exists
+            var commission = Math.Round(winningBid.Amount * _stripeSettings.Value.CommissionRate, 2, MidpointRounding.AwayFromZero);
             var totalAmount = winningBid.Amount + commission;
 
-            var pendingPayment = new Domain.Enties.Payment
+            if (existing == null)
             {
-                Id = Guid.NewGuid(),
-                BidId = winningBid.Id,
-                UserId = winningBid.BidderId,
-                TotalAmount = totalAmount,
-                Commission = commission,
-                Currency = _stripeSettings.Value.Currency,
-                Status = Domain.Enum.PaymentStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _paymentRepository.AddAsync(pendingPayment);
+                var pendingPayment = new Domain.Enties.Payment
+                {
+                    Id = Guid.NewGuid(),
+                    BidId = winningBid.Id,
+                    UserId = winningBid.BidderId,
+                    TotalAmount = totalAmount,
+                    Commission = commission,
+                    Currency = _stripeSettings.Value.Currency,
+                    Status = Domain.Enum.PaymentStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _paymentRepository.AddAsync(pendingPayment);
+                _logger.LogInformation("[Payment] Pending payment created for bid {BidId} amount={Total} commission={Commission}", pendingPayment.BidId, pendingPayment.TotalAmount, pendingPayment.Commission);
+            }
 
             string success = request.SuccessUrl;
             string cancel = request.CancelUrl;
@@ -88,7 +107,7 @@ namespace Bidzy.API.Controllers
                 successUrl: success,
                 cancelUrl: cancel
             );
-
+            _logger.LogInformation("[Payment] Checkout session url generated for bid {BidId}", winningBid.Id);
             return Ok(new { url });
         }
 
@@ -98,6 +117,9 @@ namespace Bidzy.API.Controllers
         {
             var p = await _paymentRepository.GetByIdAsync(id);
             if (p == null) return NotFound();
+            var claimsUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(claimsUserId)) return Unauthorized();
+            if (p.UserId.ToString() != claimsUserId && !User.IsInRole("Admin")) return Forbid();
             return Ok(ToDto(p));
         }
 
@@ -107,6 +129,65 @@ namespace Bidzy.API.Controllers
         {
             var p = await _paymentRepository.GetByBidIdAsync(bidId);
             if (p == null) return NotFound();
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdValue) || !Guid.TryParse(userIdValue, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            if (!User.IsInRole("Admin"))
+            {
+                var isBuyer = p.UserId == userId;
+                var isSeller = false;
+
+                if (!isBuyer)
+                {
+                    var bid = await _bidRepository.GetBidByIdAsync(p.BidId);
+                    if (bid != null)
+                    {
+                        var auction = await _auctionRepository.GetAuctionByIdAsync(bid.AuctionId);
+                        if (auction?.Product != null)
+                        {
+                            isSeller = auction.Product.SellerId == userId;
+                        }
+                    }
+                }
+
+                if (!isBuyer && !isSeller)
+                {
+                    return Forbid();
+                }
+            }
+
+            return Ok(ToDto(p));
+        }
+
+        [Authorize]
+        [HttpGet("auction/{auctionId:guid}")]
+        public async Task<IActionResult> GetByAuction([FromRoute] Guid auctionId)
+        {
+            var auction = await _auctionRepository.GetAuctionByIdAsync(auctionId);
+            if (auction == null) return NotFound("Auction not found");
+            if (auction.WinningBidId == null) return NotFound("Auction has no winning bid");
+
+            var p = await _paymentRepository.GetByBidIdAsync(auction.WinningBidId.Value);
+            if (p == null) return NotFound();
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdValue) || !Guid.TryParse(userIdValue, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            if (!User.IsInRole("Admin"))
+            {
+                var isBuyer = p.UserId == userId;
+                var isSeller = auction.Product?.SellerId == userId;
+
+                if (!isBuyer && !isSeller)
+                {
+                    return Forbid();
+                }
+            }
             return Ok(ToDto(p));
         }
 

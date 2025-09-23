@@ -17,5 +17,6 @@ namespace Bidzy.Application.Services.Email
         Task SendPaymentFailedEmail(Payment payment, User buyer, Auction auction, string reason);
         Task SendRefundReceiptEmail(Payment payment, User buyer, Auction auction);
         Task SendRefundNotificationEmail(Payment payment, User seller, Auction auction);
+        Task SendPaymentReceiptSellerEmail(Payment payment, User seller, User buyer, Auction auction);
     }
 }

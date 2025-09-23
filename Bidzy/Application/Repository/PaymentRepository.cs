@@ -40,22 +40,23 @@ namespace Bidzy.Application.Repository
         {
             return await _db.Payments
                 .Where(p => _db.Bids.Any(b => b.Id == p.BidId && b.BidderId == userId))
-                .OrderByDescending(p => p.PaidAt)
+                .OrderByDescending(p => p.PaidAt ?? p.CreatedAt)
                 .ToListAsync();
         }
         public async Task<IEnumerable<Payment>> GetByUserAsSellerAsync(Guid userId)
         {
-            return await _db.Payments
-                .Where(p => _db.Auctions
-                    .Any(a => a.Id == _db.Bids.Where(b => b.Id == p.BidId).Select(b => b.AuctionId).FirstOrDefault()
-                               && a.Product.SellerId == userId))
-                .OrderByDescending(p => p.PaidAt)
-                .ToListAsync();
+            var query = from p in _db.Payments
+                        join b in _db.Bids on p.BidId equals b.Id
+                        join a in _db.Auctions on b.AuctionId equals a.Id
+                        where a.Product.SellerId == userId
+                        orderby (p.PaidAt ?? p.CreatedAt) descending
+                        select p;
+            return await query.ToListAsync();
         }
         public async Task<IEnumerable<Payment>> ListRecentAsync(int take = 25)
         {
             return await _db.Payments
-                .OrderByDescending(p => p.PaidAt)
+                .OrderByDescending(p => p.PaidAt ?? p.CreatedAt)
                 .Take(Math.Clamp(take, 1, 200))
                 .ToListAsync();
         }
