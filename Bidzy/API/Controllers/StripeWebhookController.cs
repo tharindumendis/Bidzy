@@ -1,4 +1,3 @@
-using System.IO;
 using Bidzy.Application.Services.Payments;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
@@ -45,3 +44,4 @@ namespace Bidzy.API.Controllers
         }
     }
 }
+
