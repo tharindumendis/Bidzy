@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bidzy", "Bidzy\Bidzy.csproj
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bidzy.Test", "Bidzy.Test\Bidzy.Test.csproj", "{F066BD4D-6926-4269-87DF-5C1AAE4E84BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{02FBC492-CF2A-468F-9BDF-F8748D6C1FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02FBC492-CF2A-468F-9BDF-F8748D6C1FFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02FBC492-CF2A-468F-9BDF-F8748D6C1FFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F066BD4D-6926-4269-87DF-5C1AAE4E84BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F066BD4D-6926-4269-87DF-5C1AAE4E84BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F066BD4D-6926-4269-87DF-5C1AAE4E84BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F066BD4D-6926-4269-87DF-5C1AAE4E84BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
