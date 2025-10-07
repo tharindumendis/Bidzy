@@ -82,7 +82,7 @@ namespace Bidzy.API.Controllers
             var otp = new Random().Next(100000, 999999).ToString();
             _cache.StoreOtp(emailDto.Email, otp);
             await emailJobService.SendOTP(otp, emailDto.Email);
-            return Ok(new {sucess = true , message="OTP sent to email."});
+            return Ok(new {success = true , message="OTP sent to email."});
         }
 
         [HttpPost("resetPassword")]
@@ -98,9 +98,9 @@ namespace Bidzy.API.Controllers
                 var user = await userRepository.GetUserByEmailAsync(resetPasswordDto.Email);
                 user.PasswordHash = PasswordHasher.Hash(resetPasswordDto.NewPassword);
                 await userRepository.UpdateUserAsync(user);
-                return Ok(new { sucess = true, message = "Password reset successfully." });
+                return Ok(new { success = true, message = "Password reset successfully." });
             }
-            return BadRequest(new { sucess = false, message="Invalid or expired OTP."});
+            return BadRequest(new { success = false, message="Invalid or expired OTP."});
         }
 
         [Authorize]

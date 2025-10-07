@@ -34,24 +34,48 @@ namespace Bidzy.Application.Services.AuctionEngine
         }
         public async Task<ShopAuctionDto> CreateAuctionAsync(AuctionAddDto dto)
         {
-            var auction = dto.ToEntity();
-            var saved = await _auctionRepo.AddAuctionAsync(auction);
-
-            if (saved != null)
+            if (dto.EndTime <= dto.StartTime)
             {
-                var delay = saved.StartTime - DateTime.UtcNow;
-                if (delay.TotalSeconds > 0)
-                {
-                    _jobScheduler.Schedule<IAuctionEngine>(Services => Services.StartAuctionAsync(saved.Id), delay);
-                    await _liveAuctionCountService.AddScheduledCount(1);
-                }
-                else
-                {
-                    StartAuctionAsync(saved.Id).Wait();
-                }
+                throw new ArgumentException("End time must be after start time.");
+            }
+            if (dto.StartTime <= DateTime.UtcNow)
+            {
+                throw new ArgumentException("Start time must be in the future.");
+            }
+            if (dto.MinimumBid <= 0)
+            {
+                throw new ArgumentException("Minimum bid must be greater than zero.");
+            }
+            if (!Enum.IsDefined(typeof(AuctionCategories), dto.Category))
+            {
+                throw new ArgumentException("Invalid auction category.");
             }
 
-            return saved.ToshopAuctionDto();
+            var auction = dto.ToEntity();
+            try 
+            {
+                var saved = await _auctionRepo.AddAuctionAsync(auction);
+                if (saved != null)
+                {
+                    var delay = saved.StartTime - DateTime.UtcNow;
+                    if (delay.TotalSeconds > 0)
+                    {
+                        _jobScheduler.Schedule<IAuctionEngine>(Services => Services.StartAuctionAsync(saved.Id), delay);
+                        await _liveAuctionCountService.AddScheduledCount(1);
+                    }
+                    else
+                    {
+                        StartAuctionAsync(saved.Id).Wait();
+                    }
+                }
+
+                return saved.ToshopAuctionDto();
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error Saving Auction.", ex);
+            }
         }
 
         public async Task StartAuctionAsync(Guid auctionId)

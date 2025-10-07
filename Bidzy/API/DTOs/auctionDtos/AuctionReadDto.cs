@@ -14,6 +14,7 @@
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal MinimumBid { get; set; }
+        public decimal? MaxBid { get; set; }
         public string Status { get; set; }
         public Guid? WinningBidId { get; set; }
         public decimal? WinAmount { get; set; }

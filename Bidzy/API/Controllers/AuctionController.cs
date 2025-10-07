@@ -1,4 +1,6 @@
-﻿using Bidzy.API.DTOs;
+﻿using System.Collections.Generic;
+using System.Security.Claims;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.AuctionEngine;
@@ -29,13 +31,14 @@ namespace Bidzy.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllAuctions()
         {
-            var auctions = await auctionRepository.GetAllAuctionsAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var auctions = await auctionRepository.GetSuggestedAuctionsWithMaxBidAsync(Guid.Parse(userId));
             return Ok(auctions.Select(x => x.ToReadDto()));
         }
         [HttpGet("guess")]
         public async Task<IActionResult> GetAllGuessAuctions()
         {
-            var auctions = await auctionRepository.GetAllActiveOrScheduledAuctionAsync();
+            var auctions = await auctionRepository.GetAllActiveOrScheduledAuctionsWithMaxBidAsync();
             return Ok(auctions.Select(x => x.ToReadDto()));
         }
 
@@ -94,15 +97,6 @@ namespace Bidzy.API.Controllers
             return NoContent();
         }
 
-        [HttpGet ("search")]
-        public async Task<IActionResult> getSearchedAuctions([FromQuery] string query)
-        {
-            var auctions = await auctionRepository.GetAllAuctionsAsync();
-            var filteredAuctions = auctions.Where(q =>
-                q.Product.Title.Contains(query, StringComparison.OrdinalIgnoreCase));
-            searchhistoryRepository.SaveSearchAsync(query, Guid.Parse("f0029d2c-1863-4cfe-8ebc-adf7549b9ab7"));
-            return Ok(filteredAuctions.Select(x => x.ToReadDto()));
-        }
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetAuctionsByUserId([FromRoute] Guid userId)

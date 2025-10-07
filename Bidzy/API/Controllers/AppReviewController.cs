@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.appReviewDtos;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Domain.Enties;

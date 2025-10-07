@@ -1,4 +1,5 @@
 ﻿using Bidzy.API.DTOs;
+using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Data;
 using Bidzy.Domain.Enties;
@@ -27,7 +28,178 @@ namespace Bidzy.Application.Repository
                     .ThenInclude(a => a.Bidder)
                 .ToListAsync();
         }
+        public async Task<List<AuctionWithMaxBidDto>> GetAllAuctionsWithMaxBidAsync()
+        {
+            return await dbContext.Auctions
+                .Include(a => a.Product).ThenInclude(p => p.Seller)
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.WinningBid).ThenInclude(b => b.Bidder)
+                .Include(a => a.Bids)
+                .Select(a => new AuctionWithMaxBidDto
+                {
+                    Auction = a,
+                    MaxBidAmount = a.Bids.Any() ? a.Bids.Max(b => b.Amount) : null
+                })
+                .ToListAsync();
+        }
+        public async Task<List<Auction>> GetSuggestedAuctionsAsync(Guid userId)
+        {
+            var recentKeywords = await dbContext.SearchHistories
+                .Where(sh => sh.UserId == userId)
+                .OrderByDescending(sh => sh.Timestamp)
+                .Select(sh => sh.Query.ToLower())
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
 
+            var likedCategories = await dbContext.Auctions
+                .Where(a => a.LikedByUsers.Any(l => l.userId == userId))
+                .Select(a => a.Category)
+                .Distinct()
+                .ToListAsync();
+
+            // Step 1: Get active auctions first
+            var activeAuctions = await dbContext.Auctions
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.Product).ThenInclude(p => p.Seller)
+                .Where(a => a.Status == AuctionStatus.Active)
+                .OrderByDescending(a => a.StartTime)
+                .Take(10) // You can adjust this to prioritize more actives
+                .ToListAsync();
+
+            var selectedIds = activeAuctions.Select(a => a.Id).ToHashSet();
+
+            // Step 2: Get personalized suggestions (excluding already selected)
+            var suggestedAuctions = await dbContext.Auctions
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.Product).ThenInclude(p => p.Seller)
+                .Where(a =>
+                    (a.Status == AuctionStatus.Active || a.Status == AuctionStatus.Scheduled) &&
+                    !selectedIds.Contains(a.Id) &&
+                    (
+                        recentKeywords.Any(k =>
+                            a.Product.Title.ToLower().Contains(k) ||
+                            a.Product.Tags.Any(t => t.tagName.ToLower().Contains(k))
+                        ) ||
+                        likedCategories.Contains(a.Category)
+                    )
+                )
+                .OrderByDescending(a => a.StartTime)
+                .Take(20 - activeAuctions.Count)
+                .ToListAsync();
+
+            selectedIds.UnionWith(suggestedAuctions.Select(a => a.Id));
+
+            // Step 3: Fill remaining slots with general scheduled auctions
+            var fallbackAuctions = new List<Auction>();
+            if (activeAuctions.Count + suggestedAuctions.Count < 20)
+            {
+                fallbackAuctions = await dbContext.Auctions
+                    .Include(a => a.Product).ThenInclude(p => p.Tags)
+                    .Include(a => a.Product).ThenInclude(p => p.Seller)
+                    .Where(a =>
+                        (a.Status == AuctionStatus.Active || a.Status == AuctionStatus.Scheduled) &&
+                        !selectedIds.Contains(a.Id)
+                    )
+                    .OrderByDescending(a => a.StartTime)
+                    .Take(20 - activeAuctions.Count - suggestedAuctions.Count)
+                    .ToListAsync();
+            }
+
+            // Final result: active first, then suggested, then fallback
+            var finalList = activeAuctions
+                .Concat(suggestedAuctions)
+                .Concat(fallbackAuctions)
+                .Take(20)
+                .ToList();
+
+            return finalList;
+        }
+
+        public async Task<List<AuctionWithMaxBidDto>> GetSuggestedAuctionsWithMaxBidAsync(Guid userId)
+        {
+            var recentKeywords = await dbContext.SearchHistories
+                .Where(sh => sh.UserId == userId)
+                .OrderByDescending(sh => sh.Timestamp)
+                .Select(sh => sh.Query.ToLower())
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+
+            var likedCategories = await dbContext.Auctions
+                .Where(a => a.LikedByUsers.Any(l => l.userId == userId))
+                .Select(a => a.Category)
+                .Distinct()
+                .ToListAsync();
+
+            // Step 1: Get active auctions first
+            var activeAuctions = await dbContext.Auctions
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.Product).ThenInclude(p => p.Seller)
+                .Include(a => a.Bids)
+                .Where(a => a.Status == AuctionStatus.Active)
+                .OrderByDescending(a => a.StartTime)
+                .Take(10)
+                .ToListAsync();
+
+            var selectedIds = activeAuctions.Select(a => a.Id).ToHashSet();
+
+            // Step 2: Get personalized suggestions
+            var suggestedAuctions = await dbContext.Auctions
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.Product).ThenInclude(p => p.Seller)
+                .Include(a => a.Bids)
+                .Where(a =>
+                    (a.Status == AuctionStatus.Active || a.Status == AuctionStatus.Scheduled) &&
+                    !selectedIds.Contains(a.Id) &&
+                    (
+                        recentKeywords.Any(k =>
+                            a.Product.Title.ToLower().Contains(k) ||
+                            a.Product.Tags.Any(t => t.tagName.ToLower().Contains(k))
+                        ) ||
+                        likedCategories.Contains(a.Category)
+                    )
+                )
+                .OrderByDescending(a => a.StartTime)
+                .Take(20 - activeAuctions.Count)
+                .ToListAsync();
+
+            selectedIds.UnionWith(suggestedAuctions.Select(a => a.Id));
+
+            // Step 3: Fill remaining slots with fallback auctions
+            var fallbackAuctions = new List<Auction>();
+            if (activeAuctions.Count + suggestedAuctions.Count < 20)
+            {
+                fallbackAuctions = await dbContext.Auctions
+                    .Include(a => a.Product).ThenInclude(p => p.Tags)
+                    .Include(a => a.Product).ThenInclude(p => p.Seller)
+                    .Include(a => a.Bids)
+                    .Where(a =>
+                        (a.Status == AuctionStatus.Active || a.Status == AuctionStatus.Scheduled) &&
+                        !selectedIds.Contains(a.Id)
+                    )
+                    .OrderByDescending(a => a.StartTime)
+                    .Take(20 - activeAuctions.Count - suggestedAuctions.Count)
+                    .ToListAsync();
+            }
+
+            // Step 4: Combine and project to DTO
+            var allAuctions = activeAuctions
+                .Concat(suggestedAuctions)
+                .Concat(fallbackAuctions)
+                .Take(20)
+                .ToList();
+
+            var result = allAuctions
+                .Select(a => new AuctionWithMaxBidDto
+                {
+                    Auction = a,
+                    MaxBidAmount = a.Bids.Any() ? a.Bids.Max(b => b.Amount) : null
+                })
+                .ToList();
+
+            return result;
+        }
         public async Task<List<Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status)
         {
             return await dbContext.Auctions
@@ -46,6 +218,21 @@ namespace Bidzy.Application.Repository
                     .ThenInclude(s => s.Seller)
                 .Include(b => b.WinningBid)
                     .ThenInclude(a => a.Bidder)
+                .ToListAsync();
+        }
+        public async Task<List<AuctionWithMaxBidDto>> GetAllActiveOrScheduledAuctionsWithMaxBidAsync()
+        {
+            return await dbContext.Auctions
+                .Where(x => x.Status == AuctionStatus.Scheduled || x.Status == AuctionStatus.Active)
+                .Include(a => a.Product).ThenInclude(s => s.Seller)
+                .Include(a => a.Product).ThenInclude(p => p.Tags)
+                .Include(a => a.WinningBid).ThenInclude(b => b.Bidder)
+                .Include(a => a.Bids)
+                .Select(a => new AuctionWithMaxBidDto
+                {
+                    Auction = a,
+                    MaxBidAmount = a.Bids.Any() ? a.Bids.Max(b => b.Amount) : null
+                })
                 .ToListAsync();
         }
 
@@ -193,7 +380,7 @@ namespace Bidzy.Application.Repository
                 .Include(a => a.Product)
                     .ThenInclude(p => p.Tags)
                 .Where(a =>
-                    //(a.Status != AuctionStatus.Cancelled && a.Status != AuctionStatus.Ended) &&
+                    (a.Status != AuctionStatus.Cancelled && a.Status != AuctionStatus.Ended) &&
                     (
                         string.IsNullOrEmpty(keyword) ||
                         a.Product.Title.ToLower().Contains(keyword) ||

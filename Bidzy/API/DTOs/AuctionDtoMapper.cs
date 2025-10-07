@@ -1,5 +1,6 @@
 ﻿using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.API.DTOs.bidDtos;
+using Bidzy.Application.DTOs;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 
@@ -29,7 +30,33 @@ namespace Bidzy.API.DTOs
                 WinnerId = auction.WinningBid?.BidderId != null ? auction.WinningBid?.BidderId : null
             };
         }
-
+        public static AuctionReadDto ToReadDto(this AuctionWithMaxBidDto auctionMaxDto)
+        {
+            AuctionReadDto auctionReadDto = new AuctionReadDto
+            {
+                Id = auctionMaxDto.Auction.Id,
+                ProductId = auctionMaxDto.Auction.ProductId,
+                ProductTitle = auctionMaxDto.Auction.Product?.Title,
+                Description = auctionMaxDto.Auction.Product?.Description,
+                SellerId = auctionMaxDto.Auction.Product.SellerId,
+                SellerName = auctionMaxDto.Auction.Product.Seller?.FullName,
+                ImageUrl = auctionMaxDto.Auction.Product.ImageUrl,
+                tags = auctionMaxDto.Auction.Product.Tags.Select(t => t.tagName).ToArray(),
+                Category = auctionMaxDto.Auction.Category.ToString(),
+                StartTime = auctionMaxDto.Auction.StartTime,
+                EndTime = auctionMaxDto.Auction.EndTime,
+                MinimumBid = auctionMaxDto.Auction.MinimumBid,
+                Status = auctionMaxDto.Auction.Status.ToString(),
+                WinningBidId = auctionMaxDto.Auction.WinningBidId,
+                WinAmount = auctionMaxDto.Auction.WinningBid != null ? auctionMaxDto.Auction.WinningBid.Amount : null,
+                WinnerId = auctionMaxDto.Auction.WinningBid?.BidderId != null ? auctionMaxDto.Auction.WinningBid?.BidderId : null
+            };
+            if (auctionMaxDto.MaxBidAmount.HasValue)
+            {
+                auctionReadDto.MaxBid = auctionMaxDto.MaxBidAmount.Value;
+            }
+            return auctionReadDto;
+        }
         public static Auction ToEntity (this AuctionAddDto auctionAddDto)
         {
             return new Auction
