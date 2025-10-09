@@ -71,7 +71,7 @@ namespace Bidzy.API.Controllers
             return Ok(user.ToReadDto());
         }
 
-        [HttpPost("fogotpassword")]
+        [HttpPost("forgotpassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ExitEmailDto emailDto)
         {
             var user = await userRepository.GetUserByEmailAsync(emailDto.Email);
@@ -82,7 +82,7 @@ namespace Bidzy.API.Controllers
             var otp = new Random().Next(100000, 999999).ToString();
             _cache.StoreOtp(emailDto.Email, otp);
             await emailJobService.SendOTP(otp, emailDto.Email);
-            return Ok(new {success = true , message="OTP sent to email."});
+            return Ok(new { success = true , message="OTP sent to email."});
         }
 
         [HttpPost("resetPassword")]

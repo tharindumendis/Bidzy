@@ -13,7 +13,7 @@ namespace Bidzy.Domain.Enties
         [Required]
         public Guid SellerId { get; set; }
         public User Seller { get; set; }
-
+        public bool IsActive { get; set; } = true;
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 
     }
