@@ -6,6 +6,7 @@ using Bidzy.Application.Converters;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
+using Bidzy.Application.Services.Admin;
 using Bidzy.Application.Services.AuctionEngine;
 using Bidzy.Application.Services.Auth;
 using Bidzy.Application.Services.Email;
@@ -173,6 +174,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IBidService, BidService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // tthis class run when server start
 builder.Services.AddHostedService<StartupTask>();
