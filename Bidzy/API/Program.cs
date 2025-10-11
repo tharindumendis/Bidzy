@@ -201,6 +201,7 @@ builder.Services.AddTransient<IAppReviewRepository, AppReviewRepository>();
 
 
 var app = builder.Build();
+DbInitializer.ApplyMigrations(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

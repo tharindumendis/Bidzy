@@ -1,15 +1,20 @@
-version: '3.8'
-services:
+version: "3.8"
+
+services:   
   backend:
-    build: .
+    build:
+      context: ./Bidzy              # Make sure your Dockerfile is in the same folder as this compose file
+      dockerfile: Dockerfile   # Optional, but explicit
+    container_name: bidzy-backend
     ports:
-      - "5000:5000"
+      - "5000:8080"            # 8080 is exposed by .NET runtime container; maps to local 5000
     depends_on:
       - db
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=BidzyDb;User=sa;Password=YourStrong!Passw0rd;"
-      ConnectionStrings__HangfireConnection: "Server=db;Database=BidzyDb;User=sa;Password=YourStrong!Passw0rd;"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=BidzyDb;User=sa;Password=BidzyNSBM@2025!;TrustServerCertificate=True;"
+      ConnectionStrings__HangfireConnection: "Server=db;Database=BidzyDb;User=sa;Password=BidzyNSBM@2025!;TrustServerCertificate=True;"
       EmailSettings__Sender: "bidzyweb@gmail.com"
       EmailSettings__AppPassword: "ecwn poeh vovr unpd"
       Jwt__Key: "bidzyUltraSecureKey_2025!@#LongEnoughToPass"
@@ -25,15 +30,24 @@ services:
       IpRateLimiting__RealIpHeader: "X-Real-IP"
       IpRateLimiting__ClientIdHeader: "X-ClientId"
       IpRateLimiting__HttpStatusCode: "429"
+    networks:
+      - bidzy-net
+
   db:
-    image: mcr.microsoft.com/mssql/server:2022-lts
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
+    container_name: bidzy-db
     environment:
-      SA_PASSWORD: "YourStrong!Passw0rd"
+      SA_PASSWORD: "BidzyNSBM@2025!"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
     volumes:
-      - db-data:/var/lib/mssql
+      - db-data:/var/opt/mssql   # fixed path; correct for SQL Server on Linux containers
+    networks:
+      - bidzy-net
 
 volumes:
   db-data:
+
+networks:
+  bidzy-net:

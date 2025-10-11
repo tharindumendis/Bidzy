@@ -1,15 +1,53 @@
-version: '3.8'
-services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: sql_express
+version: "3.8"
+
+services:   
+  backend:
+    build:
+      context: ./Bidzy              # Make sure your Dockerfile is in the same folder as this compose file
+      dockerfile: Dockerfile   # Optional, but explicit
+    container_name: bidzy-backend
+    ports:
+      - "5000:8080"            # 8080 is exposed by .NET runtime container; maps to local 5000
+    depends_on:
+      - db
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_PID=Express
-      - SA_PASSWORD=MSql-passw0rd!
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=BidzyDb;User=sa;Password=BidzyNSBM@2025!;TrustServerCertificate=True;"
+      ConnectionStrings__HangfireConnection: "Server=db;Database=BidzyDb;User=sa;Password=BidzyNSBM@2025!;TrustServerCertificate=True;"
+      EmailSettings__Sender: "bidzyweb@gmail.com"
+      EmailSettings__AppPassword: "ecwn poeh vovr unpd"
+      Jwt__Key: "bidzyUltraSecureKey_2025!@#LongEnoughToPass"
+      Jwt__Issuer: "Bidzy"
+      Jwt__Audience: "BidzyUsers"
+      Stripe__PublishableKey: "pk_test_51RrLPcKB1cfct2lQWheAgnRqb01YuD2lKqf2wYM0ha3TKOICZoLHWaSTS0GFFI4irWQ1COFlIw0TCl7GpO7xTmbC00GOYavsQN"
+      Stripe__SecretKey: "sk_test_51RrLPcKB1cfct2lQfbfGI4T0UubYMMmhlHSVLWClBRqiUEosPkVv6QUjCPll1i7mR05BwUOm5Vk808cXuaMx4k6E00WsUxEQ4j"
+      Stripe__WebhookSecret: "whsec_515f4f06b0628ea7bcbe2376aa5c3f1974547bb6ea9407c946104b610a96a864."
+      Stripe__Currency: "usd"
+      Stripe__CommissionRate: "0.10"
+      IpRateLimiting__EnableEndpointRateLimiting: "true"
+      IpRateLimiting__StackBlockedRequests: "false"
+      IpRateLimiting__RealIpHeader: "X-Real-IP"
+      IpRateLimiting__ClientIdHeader: "X-ClientId"
+      IpRateLimiting__HttpStatusCode: "429"
+    networks:
+      - bidzy-net
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
+    container_name: bidzy-db
+    environment:
+      SA_PASSWORD: "BidzyNSBM@2025!"
+      ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
     volumes:
-      - sqlserverdata:/var/opt/mssql
+      - db-data:/var/opt/mssql   # fixed path; correct for SQL Server on Linux containers
+    networks:
+      - bidzy-net
+
 volumes:
-  sqlserverdata:
+  db-data:
+
+networks:
+  bidzy-net:

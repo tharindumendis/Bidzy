@@ -22,12 +22,20 @@ namespace Bidzy.Application
 
             var auctionRepository = scope.ServiceProvider.GetRequiredService<IAuctionRepository>();
             var liveCountService = scope.ServiceProvider.GetRequiredService<ILiveAuctionCountService>();
+            try
+            {
 
-            int activeCount = await auctionRepository.ActiveAuctionCountAsync();
-            int scheduledCount = await auctionRepository.ScheduledAuctionCountAsync();
 
-            await liveCountService.UpdateScheduledCount(scheduledCount);
-            await liveCountService.UpdateOngoingCount(activeCount);
+                int activeCount = await auctionRepository.ActiveAuctionCountAsync();
+                int scheduledCount = await auctionRepository.ScheduledAuctionCountAsync();
+
+                await liveCountService.UpdateScheduledCount(scheduledCount);
+                await liveCountService.UpdateOngoingCount(activeCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during startup task: {ex.Message}");
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
