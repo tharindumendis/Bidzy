@@ -1,4 +1,6 @@
 ﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.adminDtos;
+using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application.Services.Admin;
 using Microsoft.AspNetCore.Mvc;
 
@@ -84,6 +86,13 @@ namespace Bidzy.API.Controllers
         public async Task<IActionResult> GetAllAnalytics()
         {
             return Ok(await adminService.GetSiteAnalyticsAsync());
+        }
+
+        [HttpPost("addAdmin")]
+        public async Task<IActionResult> AddAdmin([FromBody] AddAdminDto adminCreateDto)
+        {
+            var adminUser = await adminService.AddAdminUserAsync(adminCreateDto);
+            return Ok(new { Message = "Admin user created successfully.", User = adminUser });
         }
     }
 }
