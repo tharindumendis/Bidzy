@@ -21,9 +21,20 @@ namespace Bidzy.API.Hubs
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
         private readonly INotificationRepository _notificationRepository = notificationRepository;
         private readonly IAuthService _authService = authService;
+        private const string AdminGroup = "AdminDashboardGroup";
 
         public static ConcurrentDictionary<string, HashSet<string>> GroupConnections = new();
         public static List<string> RoomIds = [];
+
+        public async Task JoinAdminDashboard(JoinAuctionRoom payload)   
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroup);
+        }
+
+        public async Task LeaveAdminDashboard()
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroup);
+        }
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -234,5 +245,7 @@ namespace Bidzy.API.Hubs
             }
             return;
         }
+
+        
     }
 }

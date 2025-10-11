@@ -1,4 +1,6 @@
 ﻿using Bidzy.API.DTOs;
+using Bidzy.API.DTOs.adminDtos;
+using Bidzy.API.DTOs.userDtos;
 using Bidzy.Domain.Enties;
 
 namespace Bidzy.Application.Services.Admin
@@ -18,5 +20,7 @@ namespace Bidzy.Application.Services.Admin
         Task<Auction?> CancelAuctionAsync(Guid auctionId);
 
         Task<SiteAnalyticsDto> GetSiteAnalyticsAsync();
+
+        Task<User> AddAdminUserAsync(AddAdminDto addAdminDto);
     }
 }

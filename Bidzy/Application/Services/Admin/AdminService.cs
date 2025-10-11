@@ -1,8 +1,14 @@
-﻿using Bidzy.API.DTOs;
+﻿using Bidzy.API.Controllers;
+using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.adminDtos;
+using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Services.Auth;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
+using MailKit;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 
 namespace Bidzy.Application.Services.Admin
@@ -90,6 +96,8 @@ namespace Bidzy.Application.Services.Admin
             return updatedAuction;
         }
 
+        
+
         public async Task<SiteAnalyticsDto> GetSiteAnalyticsAsync()
         {
             var totalUsers = await userRepository.GetAllUsersAsync();
@@ -124,6 +132,23 @@ namespace Bidzy.Application.Services.Admin
                                 .Sum(a => a.WinningBid.Amount)
                 }
             };
+
+        }
+        public async Task<User> AddAdminUserAsync(AddAdminDto addAdminDto)
+        {
+            addAdminDto.Password = PasswordHasher.Hash(addAdminDto.Password);
+            var entity = addAdminDto.ToEntity();
+            entity.Role = UserRole.Admin;
+            entity.IsActive = false;
+            entity.imageUrl = "/user/admin";
+            var user = await userRepository.AddUserAsync(entity);
+
+            if (user == null)
+            {
+                throw new InvalidOperationException("Failed to add admin user.");
+            }
+
+            return user;
         }
     }
 }

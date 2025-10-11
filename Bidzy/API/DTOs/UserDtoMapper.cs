@@ -1,4 +1,5 @@
-﻿using Bidzy.API.DTOs.userDtos;
+﻿using Bidzy.API.DTOs.adminDtos;
+using Bidzy.API.DTOs.userDtos;
 using Bidzy.Domain.Enties;
 using Bidzy.Domain.Enum;
 
@@ -64,6 +65,19 @@ namespace Bidzy.API.DTOs
                 ImageUrl = user.imageUrl,
                 FavoriteAuctions = user.AuctionLikes.Select(al => al.auctionId.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
+            };
+        }
+
+        public static User ToEntity(this AddAdminDto addAdminDto)
+        {
+            Guid newId = Guid.NewGuid();
+            return new User
+            {
+                Id = newId,
+                FullName = addAdminDto.FullName,
+                Email = addAdminDto.Email,
+                Phone = addAdminDto.PhoneNumber,
+                PasswordHash = addAdminDto.Password,
             };
         }
     }
