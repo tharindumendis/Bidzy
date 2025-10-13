@@ -7,6 +7,7 @@ using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services;
 using Bidzy.Application.Services.Auth;
+using Bidzy.Application.Services.SignalR;
 using Bidzy.Domain.Enties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -15,26 +16,17 @@ using Newtonsoft.Json;
 namespace Bidzy.API.Hubs
 {
     [Authorize]
-    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, IAuthService authService, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository) : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, IAuthService authService, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository, ILiveUserTracker liveUserTracker) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
         private readonly INotificationRepository _notificationRepository = notificationRepository;
         private readonly IAuthService _authService = authService;
-        private const string AdminGroup = "AdminDashboardGroup";
+        private readonly ILiveUserTracker liveUserTracker = liveUserTracker;
+
 
         public static ConcurrentDictionary<string, HashSet<string>> GroupConnections = new();
         public static List<string> RoomIds = [];
-
-        public async Task JoinAdminDashboard(JoinAuctionRoom payload)   
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroup);
-        }
-
-        public async Task LeaveAdminDashboard()
-        {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroup);
-        }
 
         public async Task JoinAuctionGroup(HubSubscribeData payload)
         {
@@ -62,8 +54,13 @@ namespace Bidzy.API.Hubs
         public override async Task OnConnectedAsync()
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine($"User connected: {userId}");
-           
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await liveUserTracker.UserConnected(userId, Context.ConnectionId);
+
+                Console.WriteLine($"✅ User Connected: {userId}. Total Live Users: {liveUserTracker.GetLiveUserCount()}");
+            }
+
             await base.OnConnectedAsync();
         }
         public async Task LeaveAuctionGroup(HubSubscribeData payload)
@@ -159,6 +156,15 @@ namespace Bidzy.API.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await liveUserTracker.UserDisconnected(userId, Context.ConnectionId);
+
+                Console.WriteLine($"🔌 User Disconnected: {userId}. Total Live Users: {liveUserTracker.GetLiveUserCount()}");
+            }
+
             if (Connections.TryRemove(Context.ConnectionId, out var user))
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.GroupId);
