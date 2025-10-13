@@ -12,7 +12,7 @@ namespace Bidzy.API.Hubs
     public class UserHub(ILiveAuctionCountService liveCountService) : Hub
     {
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
-        private const string AdminGroup = "AdminDashboardGroup";
+        private const string AdminGroupName = "AdminDashboardGroup";
 
 
         // Track active connections
@@ -46,12 +46,12 @@ namespace Bidzy.API.Hubs
 
         public async Task JoinAdminDashboard()
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroup);
+            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroupName);
         }
 
         public async Task LeaveAdminDashboard()
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroup);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroupName);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)

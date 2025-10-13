@@ -60,6 +60,7 @@ builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
 builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddSingleton<ILiveUserTracker, SignalRUserTracker>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -116,11 +117,12 @@ builder.Services.AddAuthentication(options =>
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
-
-            // If the request is for SignalR hub
             var path = context.HttpContext.Request.Path;
+
             if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/auctionHub"))
+                (path.StartsWithSegments("/auctionHub") ||
+                 path.StartsWithSegments("/userHub") ||
+                 path.StartsWithSegments("/analyticsHub")))
             {
                 context.Token = accessToken;
             }
@@ -175,6 +177,7 @@ builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IBidService, BidService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IAdminDashboardHubService, AdminDashboardHubService>();
 
 // tthis class run when server start
 builder.Services.AddHostedService<StartupTask>();
@@ -250,6 +253,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<AuctionHub>("/auctionHub");
 app.MapHub<UserHub>("/userHub");
+app.MapHub<AnalyticsHub>("/analyticsHub");
 
 
 
