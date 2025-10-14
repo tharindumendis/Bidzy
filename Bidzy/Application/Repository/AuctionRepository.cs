@@ -423,7 +423,7 @@ namespace Bidzy.Application.Repository
         public async Task<IEnumerable<Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId)
         {
             return await dbContext.Auctions
-                .Where(a => a.WinningBidId == userId) // Filter for auctions won by this user
+                .Where(a => a.WinningBid.Bidder.Id == userId) // Filter for auctions won by this user
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
                 .Include(a => a.Product)
