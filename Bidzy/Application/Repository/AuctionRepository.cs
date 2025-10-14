@@ -244,12 +244,12 @@ namespace Bidzy.Application.Repository
                 .Include(b => b.WinningBid)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
-            public async Task<Auction?> GetAuctionByIdLowAsync(Guid id)
+        public async Task<Auction?> GetAuctionByIdLowAsync(Guid id)
         {
             return await dbContext.Auctions
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
-        
+
 
         public async Task<Auction?> AddAuctionAsync(Auction auction)
         {
@@ -403,6 +403,36 @@ namespace Bidzy.Application.Repository
                 TotalCount = totalCount,
                 Items = items
             };
+        }
+
+        public async Task<IEnumerable<Auction>> GetFullAuctionsByIdsAsync(IEnumerable<Guid> auctionIds)
+        {
+            return await dbContext.Auctions
+                .Where(a => auctionIds.Contains(a.Id)) // Filter by the list of provided IDs
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(a => a.Product)
+                    .ThenInclude(t => t.Tags)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .Include(b => b.Bids) // include all bids for the auction
+                    .ThenInclude(a => a.Bidder)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId)
+        {
+            return await dbContext.Auctions
+                .Where(a => a.WinningBidId == userId) // Filter for auctions won by this user
+                .Include(a => a.Product)
+                    .ThenInclude(s => s.Seller)
+                .Include(a => a.Product)
+                    .ThenInclude(t => t.Tags)
+                .Include(b => b.WinningBid)
+                    .ThenInclude(a => a.Bidder)
+                .Include(b => b.Bids)
+                    .ThenInclude(a => a.Bidder)
+                .ToListAsync();
         }
     }
 }

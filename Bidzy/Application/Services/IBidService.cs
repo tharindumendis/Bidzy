@@ -10,5 +10,7 @@ namespace Bidzy.Application.Services
         Task<Bid?> PlaceBid(Bid dto);
         Task<PagedResult<Bid>> GetPagedBidsByUserAsync(Guid userId, int page, int pageSize);
 
+        Task<BidderActivityDto> GetBidderActivityAsync(Guid userId);
+
     }
 }

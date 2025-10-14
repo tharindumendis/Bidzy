@@ -50,5 +50,21 @@ namespace Bidzy.Application.Services
             return result;
         }
 
+        public async Task<BidderActivityDto> GetBidderActivityAsync(Guid userId)
+        {
+            var userBids = await _bidRepository.GetBidsByUserIdAsync(userId);
+            var participatedAuctionIds = userBids.Select(b => b.AuctionId).Distinct();
+            var participatedAuctions = await _auctionRepository.GetFullAuctionsByIdsAsync(participatedAuctionIds);
+            var wonAuctions = await _auctionRepository.GetFullWonAuctionsByUserIdAsync(userId);
+
+            var activityDto = new BidderActivityDto
+            {
+                ParticipatedAuctions = participatedAuctions.Select(auction => auction.ToBidderAuctionDto()),
+                WonAuctions = wonAuctions.Select(auction => auction.ToBidderAuctionDto())
+            };
+
+            return activityDto;
+        }
+
     }
 }

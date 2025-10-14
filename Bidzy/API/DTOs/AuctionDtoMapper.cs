@@ -120,5 +120,29 @@ namespace Bidzy.API.DTOs
                 ParticipationCount = auction.participations?.Count ?? 0
             };
         }
+
+        public static BidderAuctionDto ToBidderAuctionDto(this Auction auction)
+        {
+            return new BidderAuctionDto
+            {
+                Id = auction.Id,
+                ProductId = auction.ProductId,
+                ProductTitle = auction.Product.Title,
+                Description = auction.Product.Description,
+                SellerId = auction.Product.SellerId,
+                SellerName = auction.Product.Seller?.FullName,
+                ImageUrl = auction.Product.ImageUrl,
+                tags = auction.Product.Tags.Select(t => t.tagName).ToArray(),
+                Category = auction.Category.ToString(),
+                StartTime = auction.StartTime,
+                EndTime = auction.EndTime,
+                MinimumBid = auction.MinimumBid,
+                Status = auction.Status.ToString(),
+                WinningBidId = auction.WinningBidId,
+                WinAmount = auction.WinningBid != null ? auction.WinningBid.Amount : null,
+                WinnerId = auction.WinningBid?.BidderId != null ? auction.WinningBid?.BidderId : null,
+                Bids = auction.Bids.Select(b => b.ToReadDto()).ToList() ?? new List<BidReadDto>()
+            };
+        }
     }
 }
