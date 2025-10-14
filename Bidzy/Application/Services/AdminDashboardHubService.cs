@@ -3,13 +3,15 @@ using Bidzy.API.DTOs.auctionDtos;
 using Bidzy.API.DTOs.bidDtos;
 using Bidzy.API.DTOs.userDtos;
 using Bidzy.API.Hubs;
+using Bidzy.Application.Services.SignalR;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Bidzy.Application.Services
 {
-    public class AdminDashboardHubService(IHubContext<UserHub> hubContext) : IAdminDashboardHubService
+    public class AdminDashboardHubService(IHubContext<AuctionHub> hubContext, ILiveUserTracker liveUserTracker) : IAdminDashboardHubService
     {
-        private readonly IHubContext<UserHub> hubContext = hubContext;
+        private readonly IHubContext<AuctionHub> hubContext = hubContext;
+        private readonly ILiveUserTracker liveUserTracker = liveUserTracker;
         private const string AdminGroupName = "AdminDashboardGroup";
 
         public async Task BroadcastAnalyticsUpdate(SiteAnalyticsDto siteAnalyticsDto)
@@ -30,6 +32,11 @@ namespace Bidzy.Application.Services
         public async Task BroadcastNewBid(BidReadDto bidReadDto)
         {
             await hubContext.Clients.Group(AdminGroupName).SendAsync("ReceiveNewBid", bidReadDto);
+        }
+
+        public async Task BroadcastLiveUsersUpdate()
+        {
+            await hubContext.Clients.Group(AdminGroupName).SendAsync("RegisteredUserCount", liveUserTracker.GetLiveUserCount());
         }
     }
 
