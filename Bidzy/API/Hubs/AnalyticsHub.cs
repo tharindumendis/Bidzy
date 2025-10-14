@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Bidzy.API.Hubs
 {
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class AnalyticsHub : Hub
     {
         public async Task JoinAdminGroup()

@@ -12,5 +12,6 @@ namespace Bidzy.Application.Services
         Task BroadcastNewUser(UserReadDto userReadDto);
         Task BroadcastAuctionUpdate(AuctionReadDto auctionReadDto);
         Task BroadcastNewBid (BidReadDto bidReadDto);
+        Task BroadcastLiveUsersUpdate();
     }
 }

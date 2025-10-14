@@ -12,8 +12,6 @@ namespace Bidzy.API.Hubs
     public class UserHub(ILiveAuctionCountService liveCountService) : Hub
     {
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
-        private const string AdminGroupName = "AdminDashboardGroup";
-
 
         // Track active connections
         private static readonly ConcurrentDictionary<string, NotificationSubscribeDto> Connections = new();
@@ -23,7 +21,6 @@ namespace Bidzy.API.Hubs
             Connections[Context.ConnectionId] = payload;
 
             // Add user to group (e.g., auction ID)
-            await _liveCountService.AddConnection(Context.ConnectionId, payload);
 
 
             await Groups.AddToGroupAsync(Context.ConnectionId, payload.UserId);
@@ -44,14 +41,11 @@ namespace Bidzy.API.Hubs
 
         }
 
-        public async Task JoinAdminDashboard()
+        public override async Task OnConnectedAsync()
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroupName);
-        }
+            await _liveCountService.AddConnection(Context.ConnectionId, null);
 
-        public async Task LeaveAdminDashboard()
-        {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroupName);
+            await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)

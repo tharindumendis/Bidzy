@@ -27,5 +27,8 @@ namespace Bidzy.Application.Repository.Interfaces
         Task<int> EndedAuctionCountAsync();
         Task<List<Auction>> GetAllShopAuctionDetailsAsync(Guid id);
         Task<PagedResult<Auction>> SearchAuctionsAsync(AuctionSearchParams searchParams);
+
+        Task<IEnumerable<Auction>> GetFullAuctionsByIdsAsync(IEnumerable<Guid> auctionIds);
+        Task<IEnumerable<Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId);
     }
 }

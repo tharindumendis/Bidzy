@@ -117,5 +117,14 @@ namespace Bidzy.API.Controllers
             }
             return NoContent();
         }
+
+        [HttpGet("myActivity")]
+        public async Task<IActionResult> GetBidderActivity()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if(userId == null) return Unauthorized();
+            var activity = await bidService.GetBidderActivityAsync(Guid.Parse(userId));
+            return Ok(activity);
+        }
     }
 }

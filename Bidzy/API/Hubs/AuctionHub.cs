@@ -16,13 +16,15 @@ using Newtonsoft.Json;
 namespace Bidzy.API.Hubs
 {
     [Authorize]
-    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, IAuthService authService, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository, ILiveUserTracker liveUserTracker) : Hub
+    public class AuctionHub(IUserAuctionFavoriteRepository favoriteRepository, IAuthService authService, ILiveAuctionCountService liveCountService, INotificationRepository notificationRepository, ILiveUserTracker liveUserTracker, IAdminDashboardHubService adminDashboardHubService) : Hub
     {
         private readonly IUserAuctionFavoriteRepository _favoriteRepository = favoriteRepository;
         private readonly ILiveAuctionCountService _liveCountService = liveCountService;
         private readonly INotificationRepository _notificationRepository = notificationRepository;
         private readonly IAuthService _authService = authService;
         private readonly ILiveUserTracker liveUserTracker = liveUserTracker;
+        private readonly IAdminDashboardHubService adminDashboardHubService = adminDashboardHubService;
+        private const string AdminGroupName = "AdminDashboardGroup";
 
 
         public static ConcurrentDictionary<string, HashSet<string>> GroupConnections = new();
@@ -54,14 +56,24 @@ namespace Bidzy.API.Hubs
         public override async Task OnConnectedAsync()
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId))
+            var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(userRole))
             {
-                await liveUserTracker.UserConnected(userId, Context.ConnectionId);
+                if (userRole != "Admin")
+                {
+                    await liveUserTracker.UserConnected(userId, Context.ConnectionId);
+                    await _liveCountService.AddConnection(Context.ConnectionId , null);
+                }
 
                 Console.WriteLine($"✅ User Connected: {userId}. Total Live Users: {liveUserTracker.GetLiveUserCount()}");
             }
 
             await base.OnConnectedAsync();
+
+            await adminDashboardHubService.BroadcastLiveUsersUpdate();
+
+            
         }
         public async Task LeaveAuctionGroup(HubSubscribeData payload)
         {
@@ -117,8 +129,9 @@ namespace Bidzy.API.Hubs
         {
             Connections[Context.ConnectionId] = payload;
 
+
+
             // Add user to group (e.g., auction ID)
-            await _liveCountService.AddConnection(Context.ConnectionId, payload);
 
 
             await Groups.AddToGroupAsync(Context.ConnectionId, payload.UserId);
@@ -183,6 +196,7 @@ namespace Bidzy.API.Hubs
             }
             Console.WriteLine($"Conn {Context.ConnectionId} disconnected. Reason: {exception?.Message}");
 
+            await adminDashboardHubService.BroadcastLiveUsersUpdate();
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -252,6 +266,20 @@ namespace Bidzy.API.Hubs
             return;
         }
 
-        
+        //admin dashboard
+        [Authorize(Roles ="Admin")]
+        public async Task JoinAdminDashboard()
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, AdminGroupName);
+            await adminDashboardHubService.BroadcastLiveUsersUpdate();
+        }
+
+        public async Task LeaveAdminDashboard()
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, AdminGroupName);
+            await adminDashboardHubService.BroadcastLiveUsersUpdate();
+        }
+
+
     }
 }
