@@ -2,7 +2,8 @@
 using Bidzy.API.DTOs.bidDtos;
 using Bidzy.API.DTOs.NotificationDtos;
 using Bidzy.API.Hubs;
-using Bidzy.Domain.Enties;
+using Bidzy.Application.Mappers;
+using Bidzy.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.RegularExpressions;
 
@@ -12,6 +13,7 @@ namespace Bidzy.Application.Services.SignalR
     {
         private readonly IHubContext<AuctionHub> _hubContext = hubContext;
         private readonly IHubContext<UserHub> _guestHubContext = guestHubContext;
+
 
 
         public async Task BroadcastAuctionStarted(Auction auction)
@@ -26,7 +28,7 @@ namespace Bidzy.Application.Services.SignalR
                 .SendAsync("AuctionEnded", auction.ToReadDto());
         }
 
-        public async Task BroadcastNewBid(Bid bid)
+        public async Task BroadcastNewBid(Domain.Entities.Bid bid)
         {
             await _hubContext.Clients.Group("R" +bid.AuctionId.ToString())
                 .SendAsync("ReceiveBidUpdate", bid.ToReadDto());
@@ -34,7 +36,7 @@ namespace Bidzy.Application.Services.SignalR
 
 
         }
-        public async Task BroadcastWinBid(Bid bid)
+        public async Task BroadcastWinBid(Domain.Entities.Bid bid)
         {
             await _hubContext.Clients.Group("R" + bid.AuctionId.ToString())
                 .SendAsync("WinBidUpdate", bid.ToReadDto());

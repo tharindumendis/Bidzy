@@ -1,4 +1,4 @@
-﻿using Bidzy.Domain.Enties;
+﻿using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.DTOs
 {

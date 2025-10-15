@@ -1,10 +1,12 @@
 ﻿using Bidzy.API.Controllers;
-using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.adminDtos;
+using Bidzy.API.DTOs.Admin;
 using Bidzy.API.DTOs.userDtos;
-using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Mappers;
+using Bidzy.Application.Repository.Auction;
+using Bidzy.Application.Repository.Product;
+using Bidzy.Application.Repository.User;
 using Bidzy.Application.Services.Auth;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 using MailKit;
 using Microsoft.AspNetCore.Identity;

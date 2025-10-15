@@ -1,5 +1,5 @@
 ﻿using Bidzy.API.DTOs.auctionDtos;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Services.AuctionEngine
 {

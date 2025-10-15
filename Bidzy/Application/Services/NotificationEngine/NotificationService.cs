@@ -1,8 +1,9 @@
 ﻿using Bidzy.API.DTOs.NotificationDtos;
-using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Repository.Notification;
+using Bidzy.Application.Repository.User;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.SignalR;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 
 namespace Bidzy.Application.Services.NotificationEngine
@@ -65,7 +66,7 @@ namespace Bidzy.Application.Services.NotificationEngine
             }
         }
 
-        public async Task NotifyAuctionEndedAsync(Auction auction, Bid winningBid)
+        public async Task NotifyAuctionEndedAsync(Auction auction, Domain.Entities.Bid winningBid)
         {
             await signalRNotifier.BroadcastAuctionEnded(auction);
             await signalRNotifier.BroadcastWinBid(winningBid);

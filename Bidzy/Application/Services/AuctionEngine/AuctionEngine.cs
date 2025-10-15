@@ -1,9 +1,13 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.auctionDtos;
-using Bidzy.Application.Repository.Interfaces;
+using Bidzy.Application.Mappers;
+using Bidzy.Application.Repository.Auction;
+using Bidzy.Application.Repository.Bid;
+using Bidzy.Application.Services.LiveService;
 using Bidzy.Application.Services.NotificationEngine;
+using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.Scheduler;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 
 namespace Bidzy.Application.Services.AuctionEngine
@@ -105,7 +109,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
             if (auction.Status == AuctionStatus.Cancelled) return;
 
-            Bid winBid = await DetermineWinner(auction);
+            Domain.Entities.Bid winBid = await DetermineWinner(auction);
             if(winBid == null)
             {
                 CancelAuctionAsync(auctionId).Wait();
@@ -155,7 +159,7 @@ namespace Bidzy.Application.Services.AuctionEngine
 
         //    return validBids.FirstOrDefault();
         //}
-        private Task<Bid?> DetermineWinner(Auction auction)
+        private Task<Domain.Entities.Bid?> DetermineWinner(Auction auction)
         {
             return _bidRepository.GetWinningBidAsync(auction.Id, auction.EndTime);
         }

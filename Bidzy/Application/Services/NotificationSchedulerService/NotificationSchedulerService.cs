@@ -1,8 +1,7 @@
 ﻿using Bidzy.Application.DTOs;
-using Bidzy.Application.Repository.Interfaces;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.Scheduler;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using Hangfire;
 
 namespace Bidzy.Application.Services.NotificationSchedulerService
@@ -36,7 +35,7 @@ namespace Bidzy.Application.Services.NotificationSchedulerService
             }
         }
 
-        public void ScheduleAuctionEndEmail(Auction auction,Bid bid, DateTime endTime)
+        public void ScheduleAuctionEndEmail(Auction auction,Domain.Entities.Bid bid, DateTime endTime)
         {
             var delay = endTime - DateTime.UtcNow;
             if (delay.TotalSeconds > 0)

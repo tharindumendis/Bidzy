@@ -1,9 +1,6 @@
-using Bidzy.Application.Repository.Interfaces;
-using Bidzy.Application.Settings;
-using Bidzy.Domain.Enties;
+
 using Bidzy.Domain.Enum;
 using Microsoft.Extensions.Options;
-using Bidzy.Data;
 using Stripe;
 using Stripe.Checkout;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +9,14 @@ using Bidzy.Application.Services.Email;
 using System.Text.Json;
 using System.Collections.Generic;
 using Hangfire;
+using Bidzy.Infrastructure.Data;
+using Bidzy.Application.Repository.Bid;
+using Bidzy.Application.Repository.Notification;
+using Bidzy.Application.Repository.User;
+using Bidzy.Application.Repository.Payment;
+using Bidzy.Infrastructure.Configuration;
+using Bidzy.Domain.Entities;
+using Bidzy.Domain;
 
 namespace Bidzy.Application.Services.Payments
 {
@@ -104,7 +109,7 @@ namespace Bidzy.Application.Services.Payments
         }
 
         public async Task<string> CreateCheckoutSessionForWinningBidAsync(
-            Bid winningBid,
+            Domain.Entities.Bid winningBid,
             decimal commissionRate,
             string currency,
             string successUrl,
@@ -537,7 +542,7 @@ namespace Bidzy.Application.Services.Payments
                 _logger.LogInformation("[StripeWebhook] Unhandled event type: {EventType}", stripeEvent.Type);
             }
             // Mark webhook event as processed only after successful handling
-            _db.WebhookEventLogs.Add(new Domain.Enties.WebhookEventLog { EventId = stripeEvent.Id, ReceivedAt = DateTime.UtcNow });
+            _db.WebhookEventLogs.Add(new Domain.Entities.WebhookEventLog { EventId = stripeEvent.Id, ReceivedAt = DateTime.UtcNow });
             _logger.LogInformation("[StripeWebhook] Marking event {EventId} as processed.", stripeEvent.Id);
             await _db.SaveChangesAsync();
             _logger.LogInformation("[StripeWebhook] Event {EventId} processed successfully.", stripeEvent.Id);

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
-using Bidzy.Application.Repository.Interfaces;
-using Bidzy.Application.Services;
-using Bidzy.Domain.Enties;
+using Bidzy.Application.Services.LiveService;
+using Bidzy.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 

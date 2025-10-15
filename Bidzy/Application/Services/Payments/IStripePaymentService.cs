@@ -1,10 +1,10 @@
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Services.Payments
 {
     public interface IStripePaymentService
     {
-        Task<string> CreateCheckoutSessionForWinningBidAsync(Bid winningBid, decimal commissionRate, string currency, string successUrl, string cancelUrl);
+        Task<string> CreateCheckoutSessionForWinningBidAsync(Domain.Entities.Bid winningBid, decimal commissionRate, string currency, string successUrl, string cancelUrl);
         Task HandleWebhookAsync(string json, string signatureHeader);
         Task<Payment> CreateRefundAsync(Guid paymentId, Guid userId);
         Task EnrichPaymentAsync(Guid bidId, string? paymentIntentId);

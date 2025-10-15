@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Bidzy.Application.DTOs;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
@@ -140,7 +140,7 @@ namespace Bidzy.Application.Services.Email
             return SendAuctionStartedEmailForSeller(auction.Id.ToString(), auction.Product.Seller.Email); // Run all email sends concurrently
         }
 
-        public Task SendAuctionEndedEmails(Auction auction,Bid winBid)
+        public Task SendAuctionEndedEmails(Auction auction,Domain.Entities.Bid winBid)
         {
             var dto = new EmailDto
             {

@@ -1,5 +1,5 @@
 ﻿using Bidzy.API.DTOs.NotificationDtos;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Services.SignalR
 {
@@ -7,8 +7,8 @@ namespace Bidzy.Application.Services.SignalR
     {
         Task BroadcastAuctionStarted(Auction auction);
         Task BroadcastAuctionEnded(Auction auction);
-        Task BroadcastNewBid(Bid bid);
-        Task BroadcastWinBid(Bid bid);
+        Task BroadcastNewBid(Domain.Entities.Bid bid);
+        Task BroadcastWinBid(Domain.Entities.Bid bid);
 
         Task BroadcastAuctionCancelled(Auction auction);
         Task BroadcastNotification(string groupId, NotificationDto notification);
