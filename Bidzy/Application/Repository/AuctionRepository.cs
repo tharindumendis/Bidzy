@@ -1,23 +1,25 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.Application.DTOs;
-using Bidzy.Application.Repository.Interfaces;
-using Bidzy.Data;
-using Bidzy.Domain.Enties;
+using Bidzy.Application.Repository.Auction;
 using Bidzy.Domain.Enum;
+using Bidzy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bidzy.Domain.Entities;
+using Bidzy.API.DTOs.Common;
+using Bidzy.API.DTOs.auctionDtos;
 
 namespace Bidzy.Application.Repository
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly ApplicationDbContext  dbContext;
 
         public AuctionRepository(ApplicationDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
 
-        public async Task<List<Auction>> GetAllAuctionsAsync()
+        public async Task<List<Domain.Entities.Auction>> GetAllAuctionsAsync()
         {
             return await dbContext.Auctions
                 .Include(a => a.Product)
@@ -42,7 +44,7 @@ namespace Bidzy.Application.Repository
                 })
                 .ToListAsync();
         }
-        public async Task<List<Auction>> GetSuggestedAuctionsAsync(Guid userId)
+        public async Task<List<Domain.Entities.Auction>> GetSuggestedAuctionsAsync(Guid userId)
         {
             var recentKeywords = await dbContext.SearchHistories
                 .Where(sh => sh.UserId == userId)
@@ -91,7 +93,7 @@ namespace Bidzy.Application.Repository
             selectedIds.UnionWith(suggestedAuctions.Select(a => a.Id));
 
             // Step 3: Fill remaining slots with general scheduled auctions
-            var fallbackAuctions = new List<Auction>();
+            var fallbackAuctions = new List<Domain.Entities.Auction>();
             if (activeAuctions.Count + suggestedAuctions.Count < 20)
             {
                 fallbackAuctions = await dbContext.Auctions
@@ -167,7 +169,7 @@ namespace Bidzy.Application.Repository
             selectedIds.UnionWith(suggestedAuctions.Select(a => a.Id));
 
             // Step 3: Fill remaining slots with fallback auctions
-            var fallbackAuctions = new List<Auction>();
+            var fallbackAuctions = new List<Domain.Entities.Auction>();
             if (activeAuctions.Count + suggestedAuctions.Count < 20)
             {
                 fallbackAuctions = await dbContext.Auctions
@@ -200,7 +202,7 @@ namespace Bidzy.Application.Repository
 
             return result;
         }
-        public async Task<List<Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status)
+        public async Task<List<Domain.Entities.Auction>> GetAllAuctionsByStatusAsync(AuctionStatus status)
         {
             return await dbContext.Auctions
                 .Where(x => x.Status == status)
@@ -210,7 +212,7 @@ namespace Bidzy.Application.Repository
                     .ThenInclude(a => a.Bidder)
                 .ToListAsync();
         }
-        public async Task<List<Auction>> GetAllActiveOrScheduledAuctionAsync()
+        public async Task<List<Domain.Entities.Auction>> GetAllActiveOrScheduledAuctionAsync()
         {
             return await dbContext.Auctions
                 .Where(x => x.Status == AuctionStatus.Scheduled || x.Status == AuctionStatus.Active)
@@ -236,7 +238,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async Task<Auction?> GetAuctionByIdAsync(Guid id)
+        public async Task<Domain.Entities.Auction?> GetAuctionByIdAsync(Guid id)
         {
             return await dbContext.Auctions
                 .Include(a => a.Product)
@@ -244,14 +246,14 @@ namespace Bidzy.Application.Repository
                 .Include(b => b.WinningBid)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
-        public async Task<Auction?> GetAuctionByIdLowAsync(Guid id)
+        public async Task<Domain.Entities.Auction?> GetAuctionByIdLowAsync(Guid id)
         {
             return await dbContext.Auctions
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
 
-        public async Task<Auction?> AddAuctionAsync(Auction auction)
+        public async Task<Domain.Entities.Auction?> AddAuctionAsync(Domain.Entities.Auction auction)
         {
             dbContext.Auctions.Add(auction);
             await dbContext.SaveChangesAsync();
@@ -260,14 +262,14 @@ namespace Bidzy.Application.Repository
             return saved_auction;
         }
 
-        public async Task<Auction> UpdateAuctionAsync(Auction auction)
+        public async Task<Domain.Entities.Auction> UpdateAuctionAsync(Domain.Entities.Auction auction)
         {
             dbContext.Auctions.Update(auction);
             await dbContext.SaveChangesAsync();
             return auction;
         }
 
-        public async Task<Auction> DeleteAuctionAsync(Guid id)
+        public async Task<Domain.Entities.Auction> DeleteAuctionAsync(Guid id)
         {
             var auction = await dbContext.Auctions.FirstOrDefaultAsync(x => x.Id == id);
             if (auction == null)
@@ -279,7 +281,7 @@ namespace Bidzy.Application.Repository
             return auction;
         }
 
-        public async Task<List<Auction>> GetAuctionsByUserIdAsync(Guid userId)
+        public async Task<List<Domain.Entities.Auction>> GetAuctionsByUserIdAsync(Guid userId)
         {
             return await dbContext.Auctions
                 .Where(b => b.Bids.Any(b => b.BidderId == userId) || b.Product.SellerId == userId)
@@ -288,7 +290,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async Task<Auction> GetAuctionDetailsByAuctionIdAsync(Guid auctionId)
+        public async Task<Domain.Entities.Auction> GetAuctionDetailsByAuctionIdAsync(Guid auctionId)
         {
             var auction = await dbContext.Auctions
                 .Include(a => a.Product)
@@ -338,7 +340,7 @@ namespace Bidzy.Application.Repository
             return count;
         }
 
-        public async Task<List<Auction>> GetAllShopAuctionDetailsAsync(Guid id)
+        public async Task<List<Domain.Entities.Auction>> GetAllShopAuctionDetailsAsync(Guid id)
         {
             return await dbContext.Auctions
                 .Where(a => a.Product.SellerId == id)
@@ -356,7 +358,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async Task<Auction?> GetAllShopAuctionDetailsByIdAsync(Guid auctionId)
+        public async Task<Domain.Entities.Auction?> GetAllShopAuctionDetailsByIdAsync(Guid auctionId)
         {
             return await dbContext.Auctions
                 .Include(a => a.Product)
@@ -372,7 +374,7 @@ namespace Bidzy.Application.Repository
                 .Include(u => u.participations)
                 .FirstOrDefaultAsync(a => a.Id == auctionId);
         }
-        public async Task<PagedResult<Auction>> SearchAuctionsAsync(AuctionSearchParams searchParams)
+        public async Task<PagedResult<Domain.Entities.Auction>> SearchAuctionsAsync(AuctionSearchParams searchParams)
         {
             var keyword = searchParams.Title?.ToLower();
 
@@ -398,14 +400,14 @@ namespace Bidzy.Application.Repository
                 .Take(searchParams.PageSize)
                 .ToListAsync();
 
-            return new PagedResult<Auction>
+            return new PagedResult<Domain.Entities.Auction>
             {
                 TotalCount = totalCount,
                 Items = items
             };
         }
 
-        public async Task<IEnumerable<Auction>> GetFullAuctionsByIdsAsync(IEnumerable<Guid> auctionIds)
+        public async Task<IEnumerable<Domain.Entities.Auction>> GetFullAuctionsByIdsAsync(IEnumerable<Guid> auctionIds)
         {
             return await dbContext.Auctions
                 .Where(a => auctionIds.Contains(a.Id)) // Filter by the list of provided IDs
@@ -420,7 +422,7 @@ namespace Bidzy.Application.Repository
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId)
+        public async Task<IEnumerable<Domain.Entities.Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId)
         {
             return await dbContext.Auctions
                 .Where(a => a.WinningBid.Bidder.Id == userId) // Filter for auctions won by this user
