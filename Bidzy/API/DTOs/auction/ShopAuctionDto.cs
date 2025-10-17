@@ -1,7 +1,7 @@
-﻿using Bidzy.API.DTOs.bidDtos;
+﻿using Bidzy.API.DTOs.bid;
 using Bidzy.Domain.Enum;
 
-namespace Bidzy.API.DTOs.auctionDtos
+namespace Bidzy.API.DTOs.auction
 {
     public class ShopAuctionDto
     {

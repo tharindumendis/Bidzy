@@ -1,5 +1,5 @@
 ﻿using Bidzy.API.DTOs.Admin;
-using Bidzy.API.DTOs.userDtos;
+using Bidzy.API.DTOs.user;
 using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 

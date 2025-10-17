@@ -1,6 +1,6 @@
 using System;
 
-namespace Bidzy.API.DTOs.appReviewDtos
+namespace Bidzy.API.DTOs.appReview
 {
     public class AppReviewReadDto
     {

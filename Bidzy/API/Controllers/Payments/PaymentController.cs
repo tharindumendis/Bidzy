@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Bidzy.API.DTOs.paymentDtos;
+using Bidzy.API.DTOs.payment;
 using Bidzy.Application.Repository.Auction;
 using Bidzy.Application.Repository.Bid;
 using Bidzy.Application.Repository.Payment;

@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.userDtos;
+﻿using Bidzy.API.DTOs.user;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.Search;
 using Bidzy.Application.Repository.User;

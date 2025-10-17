@@ -1,6 +1,5 @@
 ﻿using Bidzy.API.Controllers;
 using Bidzy.API.DTOs.Admin;
-using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.Auction;
 using Bidzy.Application.Repository.Product;

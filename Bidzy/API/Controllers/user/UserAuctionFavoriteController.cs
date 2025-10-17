@@ -1,5 +1,5 @@
 ﻿using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.favoriteAuctionsDtos;
+using Bidzy.API.DTOs.favoriteAuctions;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.User;
 using Microsoft.AspNetCore.Mvc;

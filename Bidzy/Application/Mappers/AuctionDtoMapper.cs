@@ -1,5 +1,5 @@
-﻿using Bidzy.API.DTOs.auctionDtos;
-using Bidzy.API.DTOs.bidDtos;
+﻿using Bidzy.API.DTOs.auction;
+using Bidzy.API.DTOs.bid;
 using Bidzy.Application.DTOs;
 using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;

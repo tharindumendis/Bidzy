@@ -1,7 +1,7 @@
 ﻿using Bidzy.API.DTOs.Admin;
-using Bidzy.API.DTOs.auctionDtos;
-using Bidzy.API.DTOs.bidDtos;
-using Bidzy.API.DTOs.userDtos;
+using Bidzy.API.DTOs.auction;
+using Bidzy.API.DTOs.bid;
+using Bidzy.API.DTOs.user;
 
 namespace Bidzy.Application.Services.Admin
 {

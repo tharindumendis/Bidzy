@@ -1,6 +1,5 @@
 ﻿using Bidzy.API.DTOs;
 using Bidzy.API.DTOs.Admin;
-using Bidzy.API.DTOs.userDtos;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Services.Admin;
 using Microsoft.AspNetCore.Mvc;

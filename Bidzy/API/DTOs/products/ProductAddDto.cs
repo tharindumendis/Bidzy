@@ -2,7 +2,7 @@
 using Bidzy.Domain.Entities;
 using Microsoft.Extensions.FileProviders;
 
-namespace Bidzy.API.DTOs.productsDtos
+namespace Bidzy.API.DTOs.products
 {
     public class ProductAddDto
     {

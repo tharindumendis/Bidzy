@@ -1,4 +1,4 @@
-﻿namespace Bidzy.API.DTOs.NotificationDtos
+﻿namespace Bidzy.API.DTOs.notification
 {
     public class NotificationSeenDto
     {

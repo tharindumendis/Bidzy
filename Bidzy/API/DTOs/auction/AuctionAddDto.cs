@@ -1,7 +1,7 @@
 ﻿using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 
-namespace Bidzy.API.DTOs.auctionDtos
+namespace Bidzy.API.DTOs.auction
 {
     public class AuctionAddDto
     {

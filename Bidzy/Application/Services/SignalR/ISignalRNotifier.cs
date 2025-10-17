@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.NotificationDtos;
+﻿using Bidzy.API.DTOs.notification;
 using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Services.SignalR

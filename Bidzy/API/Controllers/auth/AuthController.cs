@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using Bidzy.API.DTOs.userDtos;
+using Bidzy.API.DTOs.user;
 using Bidzy.API.Hubs;
 using Bidzy.Application;
 using Bidzy.Application.DTOs;

@@ -1,6 +1,6 @@
-version: "3.8"
+# version: "3.8"
 
-services:   
+services:
   backend:
     build:
       context: ./Bidzy              # Make sure your Dockerfile is in the same folder as this compose file
@@ -30,6 +30,7 @@ services:
       IpRateLimiting__RealIpHeader: "X-Real-IP"
       IpRateLimiting__ClientIdHeader: "X-ClientId"
       IpRateLimiting__HttpStatusCode: "429"
+
     networks:
       - bidzy-net
 
@@ -45,6 +46,27 @@ services:
       - db-data:/var/opt/mssql   # fixed path; correct for SQL Server on Linux containers
     networks:
       - bidzy-net
+
+  frontend:
+
+    build:
+      context: ./Bidzy-Frontend
+      dockerfile: Dockerfile
+    container_name: bidzy-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_BASE_URL: "http://backend:8080"
+      NEXT_PUBLIC_AUCTION_API_URL: "http://backend:8080/api"
+      NEXT_PUBLIC_AUCTION_HUB_URL: "http://backend:8080/auctionHub"
+      NEXT_PUBLIC_BID_HUB_URL: "http://backend:8080/bidHub"
+      NEXT_PUBLIC_USER_HUB_URL: "http://backend:8080/userHub"
+    networks:
+      - bidzy-net
+    depends_on:
+      - backend
+
+ 
 
 volumes:
   db-data:

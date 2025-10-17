@@ -6,7 +6,7 @@ using Bidzy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Bidzy.Domain.Entities;
 using Bidzy.API.DTOs.Common;
-using Bidzy.API.DTOs.auctionDtos;
+using Bidzy.API.DTOs.auction;
 
 namespace Bidzy.Application.Repository
 {

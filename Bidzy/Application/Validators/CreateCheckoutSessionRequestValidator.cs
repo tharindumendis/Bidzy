@@ -1,5 +1,5 @@
 using FluentValidation;
-using Bidzy.API.DTOs.paymentDtos;
+using Bidzy.API.DTOs.payment;
 
 namespace Bidzy.Application.Validators
 {

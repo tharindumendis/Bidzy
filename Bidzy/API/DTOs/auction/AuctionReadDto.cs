@@ -1,4 +1,4 @@
-﻿namespace Bidzy.API.DTOs.auctionDtos
+﻿namespace Bidzy.API.DTOs.auction
 {
     public class AuctionReadDto
     {

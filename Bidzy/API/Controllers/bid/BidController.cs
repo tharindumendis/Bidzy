@@ -1,5 +1,5 @@
 ﻿using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.bidDtos;
+using Bidzy.API.DTOs.bid;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.Bid;
 using Bidzy.Application.Services.Bid;

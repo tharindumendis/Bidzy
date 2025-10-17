@@ -1,6 +1,6 @@
-﻿using Bidzy.API.DTOs.bidDtos;
+﻿using Bidzy.API.DTOs.bid;
 
-namespace Bidzy.API.DTOs.auctionDtos
+namespace Bidzy.API.DTOs.auction
 {
     public class BidderAuctionDto
     {

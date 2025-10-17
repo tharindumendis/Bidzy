@@ -1,8 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Claims;
 using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.favoriteAuctionsDtos;
-using Bidzy.API.DTOs.NotificationDtos;
+using Bidzy.API.DTOs.notification;
 using Bidzy.Application.DTOs;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Notification;

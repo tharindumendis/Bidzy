@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Bidzy.API.DTOs.paymentDtos;
+using Bidzy.API.DTOs.payment;
 using Bidzy.Application.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

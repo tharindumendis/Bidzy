@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.appReviewDtos;
+using Bidzy.API.DTOs.appReview;
 using Bidzy.Application.Repository.Review;
 using Bidzy.Application.Repository.User;
 using Bidzy.Application.Services;

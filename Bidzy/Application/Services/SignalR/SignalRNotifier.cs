@@ -1,6 +1,5 @@
 ﻿using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.bidDtos;
-using Bidzy.API.DTOs.NotificationDtos;
+using Bidzy.API.DTOs.notification;
 using Bidzy.API.Hubs;
 using Bidzy.Application.Mappers;
 using Bidzy.Domain.Entities;

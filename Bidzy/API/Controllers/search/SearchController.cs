@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.auctionDtos;
+using Bidzy.API.DTOs.auction;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository;
 using Bidzy.Application.Repository.Auction;

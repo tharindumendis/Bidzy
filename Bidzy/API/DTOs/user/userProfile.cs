@@ -1,4 +1,4 @@
-﻿namespace Bidzy.API.DTOs.userDtos
+﻿namespace Bidzy.API.DTOs.user
 {
     public class userProfile
     {

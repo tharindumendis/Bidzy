@@ -1,4 +1,4 @@
-﻿namespace Bidzy.API.DTOs.bidDtos
+﻿namespace Bidzy.API.DTOs.bid
 {
     public class BidUpdateDto
     {

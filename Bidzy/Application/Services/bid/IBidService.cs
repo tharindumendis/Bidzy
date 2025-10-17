@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.bidDtos;
+﻿using Bidzy.API.DTOs.bid;
 using Bidzy.API.DTOs.Common;
 using Bidzy.Domain.Entities;
 

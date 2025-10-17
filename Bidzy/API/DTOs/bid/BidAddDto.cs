@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Bidzy.API.DTOs.bidDtos
+namespace Bidzy.API.DTOs.bid
 {
     public class BidAddDto
     {

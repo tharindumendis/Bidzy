@@ -1,4 +1,4 @@
-﻿namespace Bidzy.API.DTOs.favoriteAuctionsDtos
+﻿namespace Bidzy.API.DTOs.favoriteAuctions
 {
     public class userAuctionFavoriteReadDto
     {

@@ -1,6 +1,6 @@
 ﻿using Bidzy.Domain.Enum;
 
-namespace Bidzy.API.DTOs.userDtos
+namespace Bidzy.API.DTOs.user
 {
     public class UserReadDto
     {

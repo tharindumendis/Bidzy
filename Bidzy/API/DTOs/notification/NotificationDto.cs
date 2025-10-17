@@ -1,6 +1,6 @@
 ﻿using Microsoft.Identity.Client;
 
-namespace Bidzy.API.DTOs.NotificationDtos
+namespace Bidzy.API.DTOs.notification
 {
     public class NotificationDto
     {

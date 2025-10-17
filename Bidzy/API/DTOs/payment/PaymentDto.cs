@@ -1,4 +1,4 @@
-namespace Bidzy.API.DTOs.paymentDtos
+namespace Bidzy.API.DTOs.payment
 {
     public class PaymentDto
     {

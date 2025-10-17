@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Bidzy.API.DTOs.userDtos
+namespace Bidzy.API.DTOs.user
 {
     public class ExitEmailDto
     {

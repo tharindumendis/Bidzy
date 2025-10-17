@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.productsDtos;
+using Bidzy.API.DTOs.products;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.Product;
 using Bidzy.Application.Repository.Tag;

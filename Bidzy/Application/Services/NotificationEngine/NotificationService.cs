@@ -1,5 +1,4 @@
-﻿using Bidzy.API.DTOs.NotificationDtos;
-using Bidzy.Application.Repository.Notification;
+﻿using Bidzy.Application.Repository.Notification;
 using Bidzy.Application.Repository.User;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.SignalR;

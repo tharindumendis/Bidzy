@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.productsDtos;
+﻿using Bidzy.API.DTOs.products;
 using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Mappers

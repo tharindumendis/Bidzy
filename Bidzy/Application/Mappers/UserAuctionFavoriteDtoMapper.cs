@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.favoriteAuctionsDtos;
+﻿using Bidzy.API.DTOs.favoriteAuctions;
 using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Mappers

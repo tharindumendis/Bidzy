@@ -1,5 +1,4 @@
 ﻿using Bidzy.API.DTOs.Admin;
-using Bidzy.API.DTOs.userDtos;
 using Bidzy.Domain.Entities;
 
 namespace Bidzy.Application.Services.Admin

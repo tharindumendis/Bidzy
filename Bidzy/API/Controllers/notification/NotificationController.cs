@@ -1,4 +1,4 @@
-﻿using Bidzy.API.DTOs.NotificationDtos;
+﻿using Bidzy.API.DTOs.notification;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.Notification;
 using Microsoft.AspNetCore.Authorization;
