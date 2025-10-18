@@ -134,7 +134,7 @@ namespace Bidzy.Application.Services.NotificationEngine
                 Id = Guid.NewGuid(),
                 UserId = targetAuction.Product.SellerId,
                 Message = $"Your auction for {targetAuction.Product.Title} has been cancelled.",
-                Type = NotificationType.AUCTIONCANCLLED,
+                Type = NotificationType.AUCTIONCANCELLED,
                 Link = targetAuction.Id.ToString(),
                 IsSeen = false
             });
@@ -146,7 +146,7 @@ namespace Bidzy.Application.Services.NotificationEngine
                     Id = Guid.NewGuid(),
                     UserId = participation.userId,
                     Message = $"The auction for {targetAuction.Product.Title} you participated in has been cancelled.",
-                    Type = NotificationType.AUCTIONCANCLLED,
+                    Type = NotificationType.AUCTIONCANCELLED,
                     Link = targetAuction.Id.ToString(),
                     IsSeen = false
                 });
@@ -159,7 +159,7 @@ namespace Bidzy.Application.Services.NotificationEngine
                     Id = Guid.NewGuid(),
                     UserId = fav.userId,
                     Message = $"The auction for {targetAuction.Product.Title} you favorited has been cancelled.",
-                    Type = NotificationType.AUCTIONCANCLLED,
+                    Type = NotificationType.AUCTIONCANCELLED,
                     Link = targetAuction.Id.ToString(),
                     IsSeen = false
                 });

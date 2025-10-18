@@ -1,6 +1,20 @@
 # version: "3.8"
 
 services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
+    container_name: bidzy-db
+    environment:
+      SA_PASSWORD: "BidzyNSBM@2025!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - db-data:/var/opt/mssql   # fixed path; correct for SQL Server on Linux containers
+    networks:
+      - bidzy-net
+
+      
   backend:
     build:
       context: ./Bidzy              # Make sure your Dockerfile is in the same folder as this compose file
@@ -34,20 +48,9 @@ services:
     networks:
       - bidzy-net
 
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
-    container_name: bidzy-db
-    environment:
-      SA_PASSWORD: "BidzyNSBM@2025!"
-      ACCEPT_EULA: "Y"
-    ports:
-      - "1433:1433"
-    volumes:
-      - db-data:/var/opt/mssql   # fixed path; correct for SQL Server on Linux containers
-    networks:
-      - bidzy-net
 
   frontend:
+
     build:
       context: ./Bidzy-Frontend
       dockerfile: Dockerfile

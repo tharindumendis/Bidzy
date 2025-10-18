@@ -1,15 +1,18 @@
-﻿using Bidzy.API.DTOs.auction;
-using Bidzy.API.DTOs.Common;
+﻿using Bidzy.API.DTOs;
 using Bidzy.Application.DTOs;
+using Bidzy.Application.Repository.Auction;
 using Bidzy.Domain.Enum;
 using Bidzy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bidzy.Domain.Entities;
+using Bidzy.API.DTOs.Common;
+using Bidzy.API.DTOs.auction;
 
-namespace Bidzy.Application.Repository.Auction
+namespace Bidzy.Application.Repository.auction
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly ApplicationDbContext  dbContext;
 
         public AuctionRepository(ApplicationDbContext dbContext)
         {
@@ -379,7 +382,7 @@ namespace Bidzy.Application.Repository.Auction
                 .Include(a => a.Product)
                     .ThenInclude(p => p.Tags)
                 .Where(a =>
-                    a.Status != AuctionStatus.Cancelled && a.Status != AuctionStatus.Ended &&
+                    (a.Status != AuctionStatus.Cancelled && a.Status != AuctionStatus.Ended) &&
                     (
                         string.IsNullOrEmpty(keyword) ||
                         a.Product.Title.ToLower().Contains(keyword) ||
@@ -422,7 +425,7 @@ namespace Bidzy.Application.Repository.Auction
         public async Task<IEnumerable<Domain.Entities.Auction>> GetFullWonAuctionsByUserIdAsync(Guid userId)
         {
             return await dbContext.Auctions
-                .Where(a => a.WinningBidId == userId) // Filter for auctions won by this user
+                .Where(a => a.WinningBid.Bidder.Id == userId) // Filter for auctions won by this user
                 .Include(a => a.Product)
                     .ThenInclude(s => s.Seller)
                 .Include(a => a.Product)

@@ -12,6 +12,6 @@ namespace Bidzy.Application.Repository.User
         Task<Domain.Entities.User?> AddUserAsync(Domain.Entities.User user);
         Task<Domain.Entities.User?> UpdateUserAsync(Domain.Entities.User user);
         Task<Domain.Entities.User?> DeleteUserAsync(Guid id);
-        Task<bool> IsExistByUserEmailAsync(string email);    
+        Task<bool> IsExistByUserEmailAsync(string email);
     }
 }

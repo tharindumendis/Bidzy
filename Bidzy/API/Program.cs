@@ -2,6 +2,8 @@ using System.Text;
 using AspNetCoreRateLimit;
 using Bidzy.API.Hubs;
 using Bidzy.Application.Converters;
+using Bidzy.Application.Repository;
+using Bidzy.Application.Repository.auction;
 using Bidzy.Application.Repository.Auction;
 using Bidzy.Application.Repository.Bid;
 using Bidzy.Application.Repository.Notification;
