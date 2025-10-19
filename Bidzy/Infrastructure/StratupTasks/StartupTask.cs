@@ -37,7 +37,7 @@ namespace Bidzy.Infrastructure.StratupTasks
                 
                 User Admin = await userRepository.GetUserByEmailAsync("admin@bidzy.com");
 
-                if (Admin != null )
+                if (Admin != null)
                 {
                     await userRepository.DeleteUserAsync(Admin.Id);
                     Console.Write("Admin user Deleted");
@@ -46,9 +46,10 @@ namespace Bidzy.Infrastructure.StratupTasks
                 {
 
                     string pass = PasswordHasher.Hash("adminpass");
+                    Guid id = Guid.NewGuid();
                     User newAdmin = new User
                     {
-                        Id = Guid.NewGuid(),
+                        Id = id,
                         FullName = "Admin",
                         Email = "admin@bidzy.com",
                         imageUrl = "/Image/profile/admin",
