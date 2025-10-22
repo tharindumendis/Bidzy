@@ -18,10 +18,6 @@ Welcome to the backend of **Bidzy**, a scalable and modular auction platform bui
 - [🧠 Suggestion Engine](#-suggestion-engine)
 - [🧩 Admin Workflow (BPMN)](#-admin-workflow-bpmn)
 - [📈 Scalability](#-scalability)
-- [📊 Monitoring & Logging](#-monitoring--logging)
-- [📃 API Documentation](#-api-documentation)
-- [🛠️ Contributing](#️-contributing)
-- [📃 License](#-license)
 
 ---
 
