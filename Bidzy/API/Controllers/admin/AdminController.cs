@@ -2,12 +2,14 @@
 using Bidzy.API.DTOs.Admin;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Services.Admin;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bidzy.API.Controllers.Admin
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService adminService;

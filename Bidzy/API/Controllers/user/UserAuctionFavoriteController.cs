@@ -2,6 +2,7 @@
 using Bidzy.API.DTOs.favoriteAuctions;
 using Bidzy.Application.Mappers;
 using Bidzy.Application.Repository.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bidzy.API.Controllers.User
@@ -16,7 +17,7 @@ namespace Bidzy.API.Controllers.User
         {
             this.userAuctionFavoriteRepository = userAuctionFavoriteRepository;
         }
-
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> AddFavorite([FromBody] userAuctionFavoriteCreateDto favoriteCreateDto, [FromQuery] Guid userId)
         {
@@ -31,7 +32,7 @@ namespace Bidzy.API.Controllers.User
             return Ok("Auction added to favorites successfully.");
 
         }
-
+        [Authorize]
         [HttpDelete]
         public async Task<IActionResult> RemoveFavorite([FromQuery] Guid userId, [FromQuery] Guid auctionId)
         {
@@ -44,6 +45,7 @@ namespace Bidzy.API.Controllers.User
             return Ok("Auction removed from favorites successfully.");
         }
 
+        [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetUserFavorites([FromRoute] Guid userId)
         {

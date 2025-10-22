@@ -1,13 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 using Bidzy.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bidzy.API.Controllers.Delivery
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DeliveryController : ControllerBase
     {
         private readonly ApplicationDbContext _db;

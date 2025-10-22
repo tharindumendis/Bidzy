@@ -22,7 +22,7 @@ namespace Bidzy.API.Controllers.Bid
             this.bidRepository = bidRepository;
             this.bidService = bidService;
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllBids()
         {
@@ -60,18 +60,6 @@ namespace Bidzy.API.Controllers.Bid
             return Ok(bid.ToReadDto());
         }
 
-        //[Authorize]
-        //[HttpGet("user")]
-        //public async Task<IActionResult> GetBidsByUserId()
-        //{
-        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    var bids = await bidRepository.GetBidsByUserIdAsync(Guid.Parse(userId));
-        //    if (bids == null || !bids.Any())
-        //    {
-        //        return NotFound("No bids found for this user.");
-        //    }
-        //    return Ok(bids.Select(b=>b.ToReadDto()));
-        //}
 
         [HttpGet("auction/{auctionId}")]
         public async Task<IActionResult> GetBiddersByAuctionId([FromRoute] Guid auctionId)
@@ -84,6 +72,7 @@ namespace Bidzy.API.Controllers.Bid
             return Ok(bidder.Select(b => b.ToReadDto()));
         }
 
+        [Authorize(Roles = "Seller,Bidder")]
         [HttpPost]
         public async Task<IActionResult> CreateBid([FromBody] BidAddDto bidAddDto)
         {
@@ -95,6 +84,7 @@ namespace Bidzy.API.Controllers.Bid
             return Ok(bid.ToReadDto());
         }
 
+        [Authorize(Roles = "Seller,Bidder")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> UpdateBid([FromRoute] Guid id, [FromBody] BidUpdateDto bidUpdateDto)
         {
@@ -108,6 +98,7 @@ namespace Bidzy.API.Controllers.Bid
             return Ok(updatedBid);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteBidAsync([FromRoute] Guid id)
         {
@@ -119,6 +110,7 @@ namespace Bidzy.API.Controllers.Bid
             return NoContent();
         }
 
+        [Authorize]
         [HttpGet("myActivity")]
         public async Task<IActionResult> GetBidderActivity()
         {

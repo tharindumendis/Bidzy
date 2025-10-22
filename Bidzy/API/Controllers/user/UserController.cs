@@ -16,7 +16,7 @@ namespace Bidzy.API.Controllers.User
         private readonly IAuthService authService = authService;
         private readonly ISearchhistoryRepository searchhistoryRepository = searchhistoryRepository;
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -49,6 +49,7 @@ namespace Bidzy.API.Controllers.User
             return Ok(updatedUser);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
         {
@@ -71,6 +72,7 @@ namespace Bidzy.API.Controllers.User
             return Ok(user.ToProfileDto());
         }
 
+        [Authorize]
         [HttpDelete ("clear/{userId}")]
         public async Task<IActionResult> ClearSearchHistoryAsync(Guid userId)
         {

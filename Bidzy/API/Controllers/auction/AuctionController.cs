@@ -66,15 +66,7 @@ namespace Bidzy.API.Controllers.Auction
             return Ok(auctions.ToReadDto());
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> CreateAuction([FromBody] AuctionAddDto auctionAddDto)
-        //{
-        //    DateTime rowStartTime = auctionAddDto.StartTime;
-        //    DateTime rowEndTime = auctionAddDto.EndTime;
-        //    return Ok(await _auctionEngine.CreateAuctionAsync(auctionAddDto));
-        //}
-
-
+        [Authorize(Roles = "Admin,Seller")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuction([FromRoute] Guid id, [FromBody] AuctionUpdateDto auctionUpdateDto)
         {
@@ -87,7 +79,7 @@ namespace Bidzy.API.Controllers.Auction
             var updatedAuction = await auctionRepository.UpdateAuctionAsync(auction);
             return Ok(updatedAuction);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuction([FromRoute] Guid id)
         {
@@ -99,7 +91,7 @@ namespace Bidzy.API.Controllers.Auction
             return NoContent();
         }
 
-
+        [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetAuctionsByUserId([FromRoute] Guid userId)
         {

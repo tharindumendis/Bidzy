@@ -11,6 +11,7 @@ using System.Security.Claims;
 namespace Bidzy.API.Controllers.Shop
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Seller")]
     public class ShopController : ControllerBase
     {
         private readonly IAuctionRepository auctionRepository;
@@ -23,7 +24,6 @@ namespace Bidzy.API.Controllers.Shop
             this.auctionEngine = auctionEngine;
             this.productRepository = productRepository;
         }
-        [Authorize]
         [HttpGet("auctions")]
         public async Task<IActionResult> GetAllShopAuctionDetails()
         {
@@ -38,7 +38,6 @@ namespace Bidzy.API.Controllers.Shop
             }
             return Ok(auctions.Select(a => a.ToshopAuctionDto()));
         }
-        [Authorize]
         [HttpGet("products")]
         public async Task<IActionResult> GetAllShopProductDetails()
         {
@@ -52,7 +51,6 @@ namespace Bidzy.API.Controllers.Shop
             return Ok(products.Select(a => a.ToReadDto()));
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateAuction([FromForm] AuctionAddDto auctionAddDto)
         {

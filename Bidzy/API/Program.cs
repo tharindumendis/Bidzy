@@ -253,7 +253,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+app.UseHangfireDashboard();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

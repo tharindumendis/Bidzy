@@ -9,6 +9,7 @@ namespace Bidzy.API.Controllers.Notification
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class NotificationController : ControllerBase
     {
         private readonly INotificationRepository notificationRepository;

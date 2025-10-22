@@ -55,7 +55,7 @@ namespace Bidzy.API.Controllers.Product
             return Ok(createdProduct);
             
         }
-
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct([FromRoute] Guid id, [FromBody] ProductsUpdateDto productUpdateDto)
         {
@@ -78,6 +78,7 @@ namespace Bidzy.API.Controllers.Product
             return Ok(updatedProduct);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid id)
         {
@@ -88,6 +89,8 @@ namespace Bidzy.API.Controllers.Product
             }
             return NoContent();
         }
+
+        [Authorize]
         [HttpGet("user/{sellerId}")]
         public async Task<IActionResult> GetProductsByUserId([FromRoute] Guid sellerId)
         {

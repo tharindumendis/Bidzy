@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Bidzy.API.Controllers;
+using Bidzy.API.Controllers.Auction;
+using Bidzy.API.Controllers.Auth;
 using Bidzy.API.DTOs;
-using Bidzy.API.DTOs.userDtos;
+using Bidzy.API.DTOs.user;
 using Bidzy.Application.Repository.User;
+using Bidzy.Application.Services.Admin;
 using Bidzy.Application.Services.Auth;
 using Bidzy.Application.Services.Email;
 using Bidzy.Application.Services.Image;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +25,9 @@ namespace Bidzy.Test.API.Controller
         private readonly IEmailJobService _emailJobService;
         private readonly IImageService _imageService;
         private readonly IMemoryCache _memoryCache;
+        private readonly IAdminService _adminService;
+        private readonly IAdminDashboardHubService _adminDashboardHubService;
+        private readonly Bidzy.API.Controllers.Auth.AuthController controller;
 
         public AuthControllerTests()
         {
@@ -31,6 +36,18 @@ namespace Bidzy.Test.API.Controller
             _emailJobService = A.Fake<IEmailJobService>();
             _imageService = A.Fake<IImageService>();
             _memoryCache = A.Fake<IMemoryCache>();
+            _adminDashboardHubService = A.Fake<AdminDashboardHubService>();
+            _adminService = A.Fake<IAdminService>();
+            controller = new AuthController(
+            _userRepository,
+            _authService,
+            _emailJobService,
+            _memoryCache,
+            _imageService,
+            _adminDashboardHubService,
+            _adminService
+        );
+
         }
 
         [Fact]
@@ -49,7 +66,6 @@ namespace Bidzy.Test.API.Controller
             A.CallTo(() => _userRepository.GetUserByEmailAsync(user.Email)).Returns(user);
             A.CallTo(() => _authService.GenerateJwtToken(user.Id, user.Email, user.Role.ToString())).Returns("mocked-token");
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.Login(loginDto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -64,7 +80,6 @@ namespace Bidzy.Test.API.Controller
             var loginDto = new LoginDto { Email = "unknown@example.com", Password = "password123" };
             A.CallTo(() => _userRepository.GetUserByEmailAsync(loginDto.Email)).Returns((User)null);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.Login(loginDto);
 
             Assert.IsType<UnauthorizedObjectResult>(result);
@@ -85,7 +100,6 @@ namespace Bidzy.Test.API.Controller
 
             A.CallTo(() => _userRepository.GetUserByEmailAsync(user.Email)).Returns(user);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.Login(loginDto);
 
             Assert.IsType<UnauthorizedObjectResult>(result);
@@ -100,10 +114,9 @@ namespace Bidzy.Test.API.Controller
 
             A.CallTo(() => _memoryCache.TryGetValue("user@example.com", out value)).Returns(false);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.AddUser(userAddDto);
 
-            Assert.IsType<BadRequestResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
@@ -115,7 +128,6 @@ namespace Bidzy.Test.API.Controller
             A.CallTo(() => _userRepository.GetUserByEmailAsync(emailDto.Email)).Returns(user);
             A.CallTo(() => _emailJobService.SendOTP(A<string>._, emailDto.Email)).Returns(Task.CompletedTask);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.ForgotPassword(emailDto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -130,7 +142,6 @@ namespace Bidzy.Test.API.Controller
             var emailDto = new ExitEmailDto { Email = "unknown@example.com" };
             A.CallTo(() => _userRepository.GetUserByEmailAsync(emailDto.Email)).Returns((User)null);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.ForgotPassword(emailDto);
 
             Assert.IsType<BadRequestObjectResult>(result);
@@ -150,7 +161,6 @@ namespace Bidzy.Test.API.Controller
 
             A.CallTo(() => _memoryCache.TryGetValue(dto.Email, out value)).Returns(false);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.ResetPassword(dto);
 
             var badResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -173,7 +183,6 @@ namespace Bidzy.Test.API.Controller
 
             A.CallTo(() => _memoryCache.TryGetValue(dto.Email, out value)).Returns(true);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.ResetPassword(dto);
 
             var badResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -188,7 +197,6 @@ namespace Bidzy.Test.API.Controller
             var dto = new ExitEmailDto { Email = "user@example.com" };
             A.CallTo(() => _userRepository.IsExistByUserEmailAsync(dto.Email)).Returns(true);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.CheckExitEmail(dto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -203,7 +211,6 @@ namespace Bidzy.Test.API.Controller
             var dto = new ExitEmailDto { Email = "user@example.com", Action = "send" };
             A.CallTo(() => _emailJobService.SendOTP(A<string>._, dto.Email)).Returns(Task.CompletedTask);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.CheckOtp(dto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -220,7 +227,6 @@ namespace Bidzy.Test.API.Controller
 
             A.CallTo(() => _memoryCache.TryGetValue(dto.Email, out value)).Returns(true);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
             var result = await controller.CheckOtp(dto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -243,7 +249,6 @@ namespace Bidzy.Test.API.Controller
             object cachedOtp = "123456"; // actual stored OTP
             A.CallTo(() => _memoryCache.TryGetValue(dto.Email, out cachedOtp)).Returns(true);
 
-            var controller = new AuthController(_userRepository, _authService, _emailJobService, _memoryCache, _imageService);
 
             // Act
             var result = await controller.CheckOtp(dto);

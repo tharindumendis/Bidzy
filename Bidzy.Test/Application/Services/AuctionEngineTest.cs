@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Bidzy.API.DTOs.auctionDtos;
+using Bidzy.API.DTOs.auction;
 using Bidzy.Application.Repository.Auction;
 using Bidzy.Application.Repository.Bid;
 using Bidzy.Application.Services.AuctionEngine;
@@ -9,7 +9,7 @@ using Bidzy.Application.Services.LiveService;
 using Bidzy.Application.Services.NotificationEngine;
 using Bidzy.Application.Services.NotificationSchedulerService;
 using Bidzy.Application.Services.Scheduler;
-using Bidzy.Domain.Enties;
+using Bidzy.Domain.Entities;
 using Bidzy.Domain.Enum;
 using FakeItEasy;
 using Xunit;
