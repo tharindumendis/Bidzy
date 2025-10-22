@@ -149,15 +149,12 @@ dotnet test
 
 - JWT-based authentication
 - Role-based access control (Admin, Seller, Bidder)
-- OAuth2 support for third-party login
 
 ---
 
 ## 🧠 Suggestion Engine
 
 - Rule-based filtering (category, price, tags)
-- Deduplication and fallback logic
-- Optional ML-based ranking (external service)
 
 ---
 
