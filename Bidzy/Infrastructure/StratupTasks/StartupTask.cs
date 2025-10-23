@@ -4,6 +4,7 @@ using Bidzy.Application.Repository.User;
 using Bidzy.Application.Services.Auth;
 using Bidzy.Application.Services.LiveService;
 using Bidzy.Domain.Entities;
+using Bidzy.Domain.Enum;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -32,10 +33,9 @@ namespace Bidzy.Infrastructure.StratupTasks
             {
 
 
-                int activeCount = await auctionRepository.ActiveAuctionCountAsync();
-                int scheduledCount = await auctionRepository.ScheduledAuctionCountAsync();
                 
                 User Admin = await userRepository.GetUserByEmailAsync("admin@bidzy.com");
+
 
                 if (Admin != null)
                 {
@@ -47,6 +47,8 @@ namespace Bidzy.Infrastructure.StratupTasks
 
                     string pass = PasswordHasher.Hash("adminpass");
                     Guid id = Guid.NewGuid();
+                    DateTime date = DateTime.UtcNow;
+                    UserRole role = UserRole.Admin;
                     User newAdmin = new User
                     {
                         Id = id,
@@ -54,16 +56,18 @@ namespace Bidzy.Infrastructure.StratupTasks
                         Email = "admin@bidzy.com",
                         imageUrl = "/Image/profile/admin",
                         Phone = "0778279843",
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = date,
                         IsActive = true,
-                        Role = Domain.Enum.UserRole.Admin,
+                        Role = role,
                         PasswordHash = pass,
 
                     };
-                    await userRepository.AddUserAsync(newAdmin);
+                    var saveduser = await userRepository.AddUserAsync(newAdmin);
                     Console.Write("new admin added");
                 }
 
+                int activeCount = await auctionRepository.ActiveAuctionCountAsync();
+                int scheduledCount = await auctionRepository.ScheduledAuctionCountAsync();
                 await liveCountService.UpdateScheduledCount(scheduledCount);
                 await liveCountService.UpdateOngoingCount(activeCount);
             }
